@@ -1,0 +1,130 @@
+#rantfile -- 07-Jan-2009
+import "md5"
+
+_VER_MAJ = 0
+_VER_MIN = 1
+
+#
+# This does all the heavy lifting of the version file
+#
+class BuildVersion
+	attr_reader :major, :minor, :build
+	attr_writer :major, :minor, :build
+
+	#constructor
+	def initialize(filename, major, minor, build)
+		@major = major
+		@minor = minor
+		@build = build
+		@filename = filename
+
+		# read version file into memory, if it exists.
+		if File.exists?(@filename) == TRUE
+			lx = IO.readlines(@filename)
+
+			# parse lines
+			lx.each do |line|
+				lx = line.split("=")
+				if lx[0] == "VERSION"
+					# ... do nothing.
+				elsif lx[0] == "VER_MAJ"
+					@major = lx[1].to_i
+				elsif lx[0] == "VER_MIN"
+					@minor = lx[1].to_i
+				elsif lx[0] == "VER_BUILD"
+					@build = lx[1].to_i
+				else
+					STDERR.puts "Error! Not a VERSION file I created."
+
+					@major = major
+					@minor = minor
+					@build = build
+				end
+			end
+		end
+
+	end
+
+	# serialise
+	def to_s
+		"BuildVersion: v#{@major}.#{@minor}.#build"
+	end
+
+	def IncrementBuild
+		@build = @build + 1
+	end
+
+	def IncrementMinor
+		@minor = @minor + 1
+		@build = 0
+	end
+
+	def IncrementMajor
+		@major = @major + 1
+		@minor = 0
+		@build = 0
+	end
+
+	def WriteVersion
+		# Delete file if it exists
+		if File.exists?(@filename) == TRUE
+			File.delete(@filename)
+		end
+
+		# Open a new one and write, only if it succeeded
+		fp = File.new(@filename, "w")
+		if fp != nil
+			fp.puts "VERSION=#{@major}.#{@minor}.#{@build}"
+			fp.puts "VER_MAJ=#{@major}"
+			fp.puts "VER_MIN=#{@minor}"
+			fp.puts "VER_BUILD=#{@build}"
+			fp.close
+		end
+	end
+end
+
+
+cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
+
+CC = "gcc"
+CFLAGSX = "-O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH -Wstrict-overflow=0 "
+
+alfm = %w( version.o main.o memwatch.o lua_helper.o lua_api.o )
+
+gen Action do
+	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s
+end
+
+task :all => ["fixversion", "app"] do
+end
+
+
+task "fixversion" do
+	s = Dir["version.o"]
+	if s.length > 0
+		sys.rm s
+	end
+
+	# now build lua helper files
+	sys "lua", "lua_helper.lua"
+end
+
+desc "Build alfm program."
+task :app => alfm do |t|
+	sys "#{CC} -o alfm #{t.prerequisites.join(' ')} stucore/libstucore.a -llua5.1"
+
+	cBV.IncrementBuild
+	cBV.WriteVersion
+end
+
+desc "Cleanup..."
+task :clean do
+	x = Dir["*.{bak,o,obj}"] + Dir["alfm"] + Dir["memwatch.log"]  + Dir["lua_helper.c"]
+	if x.length > 0
+		sys.rm_f x
+	end
+end
+
+gen Rule, '.o' => '.c' do |t|
+	sys "#{CC} #{CFLAGS} -c -o #{t.name} #{t.source}"
+end

@@ -1,0 +1,14 @@
+#ifndef LUA_API_H
+#define LUA_API_H
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+/* LUA EXT REF */
+/* LUA END EXT REF */
+
+#ifdef __cplusplus
+};
+#endif
+#endif
+
