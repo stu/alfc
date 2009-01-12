@@ -4,7 +4,7 @@
 extern "C"{
 #endif
 
-extern uGlobalData *pushGlobalData(lua_State *L);
+extern uGlobalData *pushGlobalData(lua_State *L, uGlobalData *gb);
 extern uGlobalData *checkGlobalData(lua_State *L, int index);
 extern int RegisterGlobalData(uGlobalData *gb, lua_State *l);
 
