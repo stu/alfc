@@ -5,11 +5,13 @@
 
 lua_State *_Gl;
 
-void ExecuteScript(char *sn)
+int ExecuteScript(char *sn)
 {
 	char *outbuff;
 	int maxsize;
 	FILE *fp;
+
+	int rc = 0;
 
 	lua_State *l;
 	int v;
@@ -18,7 +20,7 @@ void ExecuteScript(char *sn)
 	if(fp == NULL)
 	{
 		LogError("cant load file : %s\n", sn);
-		return;
+		return -1;
 	}
 
 	fseek(fp, 0x0L, SEEK_END);
@@ -30,7 +32,7 @@ void ExecuteScript(char *sn)
 	{
 		LogError("No memory for script %s\n", sn);
 		fclose(fp);
-		return;
+		return -1;
 	}
 
 	fread(outbuff, 1, maxsize, fp);
@@ -43,6 +45,7 @@ void ExecuteScript(char *sn)
 	if(v != 0)
 	{
 		LogError("cant load file : %s, error %s\n", sn, lua_tostring(l, -1));
+		rc = -1;
 	}
 	else
 	{
@@ -51,11 +54,14 @@ void ExecuteScript(char *sn)
 		{
 			LogError("script : %s\n", sn);
 			LogError("lua error : %s\n", lua_tostring(l, -1));
+			rc = -1;
 		}
 	}
 
 	lua_close(l);
 	free(outbuff);
+
+	return rc;
 }
 
 /* register lua funcs */

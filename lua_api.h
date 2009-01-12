@@ -7,6 +7,8 @@ extern "C"{
 /* LUA EXT REF */
 extern int gme_debug_msg(lua_State *L);
 extern int gme_GetVersionString(lua_State *L);
+extern int gme_ConvertDirectoryName(lua_State *L);
+extern int gme_ExecuteScript(lua_State *L);
 /* LUA END EXT REF */
 
 #ifdef __cplusplus
