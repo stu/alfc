@@ -1,1 +1,1 @@
-debug_msg("Welcome to ALFM v" .. GetVersionString() .. "\n")
+debug_msg("\n** Welcome to ALFM v" .. GetVersionString() .. " **\n")

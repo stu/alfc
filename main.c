@@ -119,6 +119,34 @@ static void CreateBaselineINIFile(uGlobalData *gdata)
 	INI_UpdateItem(gdata->optfile, "scripts", "shutdown_file", "$HOME/.alfm/shutdown.lua");
 }
 
+static void ExecStartupScript(uGlobalData *gdata)
+{
+	char *fn;
+	char *cfn;
+
+	fn = INI_get(gdata->optfile, "scripts", "startup_file");
+	if(fn != NULL)
+	{
+		cfn = ConvertDirectoryName(fn);
+		ExecuteScript(cfn);
+		free(cfn);
+	}
+}
+
+static void ExecShutdownScript(uGlobalData *gdata)
+{
+	char *fn;
+	char *cfn;
+
+	fn = INI_get(gdata->optfile, "scripts", "shutdown_file");
+	if(fn != NULL)
+	{
+		cfn = ConvertDirectoryName(fn);
+		ExecuteScript(cfn);
+		free(cfn);
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	uGlobalData *gdata;
@@ -142,6 +170,11 @@ int main(int argc, char *argv[])
 			CreateBaselineINIFile(gdata);
 		}
 
+		ExecStartupScript(gdata);
+
+
+
+		ExecShutdownScript(gdata);
 		INI_save(gdata->optfilename, gdata->optfile);
 		INI_unload(gdata->optfile);
 

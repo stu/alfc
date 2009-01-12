@@ -3,4 +3,5 @@ stucore
 *.bak
 *.o
 .rant.meta
+lua_helper.c
 
