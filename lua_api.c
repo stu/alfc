@@ -104,3 +104,24 @@ int gme_GetOption(lua_State *L)
 
 	return 1;
 }
+
+int gme_SetOption(lua_State *L)
+{
+
+	uGlobalData *gd;
+	struct lstr group;
+	struct lstr item;
+	struct lstr val;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(group, 1);
+	GET_LUA_STRING(item, 2);
+	GET_LUA_STRING(val, 2);
+
+	INI_UpdateItem(gd->optfile, group.data, item.data, val.data);
+
+	return 0;
+}
+
