@@ -89,7 +89,7 @@ cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
 CC = "gcc"
 CFLAGSX = "-O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH -Wstrict-overflow=0 "
 
-alfm = %w( version.o main.o memwatch.o lua_helper.o lua_api.o )
+alfm = %w( version.o main.o memwatch.o lua_helper.o lua_api.o options.o )
 
 gen Action do
 	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s

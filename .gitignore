@@ -4,4 +4,7 @@ stucore
 *.o
 .rant.meta
 lua_helper.c
+alfm
+version
+*.log
 
