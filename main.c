@@ -84,7 +84,7 @@ static void ExecStartupScript(uGlobalData *gdata)
 	if(fn != NULL)
 	{
 		cfn = ConvertDirectoryName(fn);
-		ExecuteScript(cfn);
+		ExecuteScript(gdata, cfn);
 		free(cfn);
 	}
 }
@@ -98,7 +98,7 @@ static void ExecShutdownScript(uGlobalData *gdata)
 	if(fn != NULL)
 	{
 		cfn = ConvertDirectoryName(fn);
-		ExecuteScript(cfn);
+		ExecuteScript(gdata, cfn);
 		free(cfn);
 	}
 }

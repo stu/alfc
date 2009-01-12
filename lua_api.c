@@ -1,5 +1,92 @@
 #include "headers.h"
 
+#define GLOBALDATA "uGlobalData"
+
+static uGlobalData *toGlobalData(lua_State *L, int index)
+{
+	uGlobalData *bar = (uGlobalData *)lua_touserdata(L, index);
+	if (bar == NULL) luaL_typerror(L, index, GLOBALDATA);
+	return bar;
+}
+
+uGlobalData *checkGlobalData(lua_State *L, int index)
+{
+	uGlobalData *bar;
+	luaL_checktype(L, index, LUA_TUSERDATA);
+	bar = (uGlobalData *)luaL_checkudata(L, index, GLOBALDATA);
+	if (bar == NULL) luaL_typerror(L, index, GLOBALDATA);
+	return bar;
+}
+
+uGlobalData *pushGlobalData(lua_State *L)
+{
+	uGlobalData *bar = (uGlobalData *)lua_newuserdata(L, sizeof(uGlobalData));
+	luaL_getmetatable(L, GLOBALDATA);
+	lua_setmetatable(L, -2);
+	return bar;
+}
+
+static int uGlobalData_new (lua_State *L)
+{
+	uGlobalData *bar = pushGlobalData(L);
+	assert(bar != NULL);
+
+	return 1;
+}
+
+static const luaL_reg uGlobalData_methods[] = {
+	{"new",           uGlobalData_new},
+
+	{0, 0}
+};
+
+static int uGlobalData_gc (lua_State *L)
+{
+	return 0;
+}
+
+static int uGlobalData_tostring (lua_State *L)
+{
+	char buff[32];
+
+	sprintf(buff, "%p", (void*)toGlobalData(L, 1));
+	lua_pushfstring(L, GLOBALDATA " (%s)", buff);
+	return 1;
+}
+
+
+static const luaL_reg uGlobalData_meta[] =
+{
+	{"__gc",       uGlobalData_gc},
+	{"__tostring", uGlobalData_tostring},
+	{0, 0}
+};
+
+int RegisterGlobalData(uGlobalData *gb, lua_State *l)
+{
+	uGlobalData *gx;
+
+	luaL_openlib(l, GLOBALDATA, uGlobalData_methods, 0);
+	luaL_newmetatable(l, GLOBALDATA);
+
+	luaL_openlib(l, 0, uGlobalData_meta, 0);    /* fill metatable */
+	lua_pushliteral(l, "__index");
+	lua_pushvalue(l, -3);               /* dup methods table*/
+	lua_rawset(l, -3);                  /* metatable.__index = methods */
+	lua_pushliteral(l, "__metatable");
+	lua_pushvalue(l, -3);               /* dup methods table*/
+	lua_rawset(l, -3);                  /* hide metatable: metatable.__metatable = methods */
+	lua_pop(l, 1);                      /* drop metatable */
+
+
+	gx = pushGlobalData(l);
+	memmove(gx, gb, sizeof(uGlobalData));
+	lua_setglobal(l, GLOBALDATA);
+
+	return 1;
+}
+
+
 // prints a debug message
 int gme_debug_msg(lua_State *L)
 {
@@ -47,10 +134,24 @@ int gme_ConvertDirectoryName(lua_State *L)
 int gme_ExecuteScript(lua_State *L)
 {
 	struct lstr scr;
+	uGlobalData *gd;
+	char *fn;
 
-	GET_LUA_STRING(scr, 1);
+	gd = checkGlobalData(L, 1);
+	GET_LUA_STRING(scr, 2);
 
-	lua_pushnumber(L, ExecuteScript(scr.data));
+	fn = ConvertDirectoryName(scr.data);
+	lua_pushnumber(L, ExecuteScript(gd, fn));
+	free(fn);
 
 	return 1;
+}
+
+// gets an option
+// param: Group Name
+// parma: Key Name
+int gme_GetOption(lua_State *L)
+{
+
+	return 0;
 }

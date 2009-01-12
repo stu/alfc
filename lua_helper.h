@@ -13,8 +13,8 @@ struct lstr
 #define GET_LUA_STRING(a,b) (a.data = (char*)luaL_checklstring(L, (b), &a.length))
 
 
-extern int ExecuteScript(char *sn);
-extern void RegisterGameFuncs(lua_State *l);
+extern int ExecuteScript(uGlobalData *gb, char *sn);
+extern void RegisterGameFuncs(uGlobalData *gb, lua_State *l);
 
 #ifdef __cplusplus
 };

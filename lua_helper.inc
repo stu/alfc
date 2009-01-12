@@ -5,7 +5,7 @@
 
 lua_State *_Gl;
 
-int ExecuteScript(char *sn)
+int ExecuteScript(uGlobalData *gb, char *sn)
 {
 	char *outbuff;
 	int maxsize;
@@ -39,7 +39,7 @@ int ExecuteScript(char *sn)
 	fclose(fp);
 
 	l = lua_open();
-	RegisterGameFuncs(l);
+	RegisterGameFuncs(gb, l);
 
 	v = luaL_loadbuffer(l, (char*)outbuff, maxsize, sn);
 	if(v != 0)
@@ -65,11 +65,14 @@ int ExecuteScript(char *sn)
 }
 
 /* register lua funcs */
-void RegisterGameFuncs(lua_State *l)
+void RegisterGameFuncs(uGlobalData *gb, lua_State *l)
 {
-	luaopen_base(l);
+	/*luaopen_base(l);
 	luaopen_string(l);
-	luaopen_table(l);
+	luaopen_table(l);*/
+	luaL_openlibs(l);
+
+	RegisterGlobalData(gb, l);
 
 /* LUA EXT REF */
 /* LUA END EXT REF */
@@ -77,6 +80,8 @@ void RegisterGameFuncs(lua_State *l)
 	lua_pushnumber(l, VMAJ); lua_setglobal(l, "VERSION_MAJ");
 	lua_pushnumber(l, VMIN); lua_setglobal(l, "VERSION_MIN");
 	lua_pushnumber(l, VBUILD); lua_setglobal(l, "VERSION_BUILD");
+
+
 
 	lua_settop(l, 0);
 }
