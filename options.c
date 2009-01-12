@@ -9,7 +9,7 @@ static void CreateHomeDirectory(void)
 
 	q = ConvertDirectoryName("$HOME/.alfm");
 
-	mkdir(q, 0644);
+	mkdir(q, 0744);
 
 	free(q);
 }
