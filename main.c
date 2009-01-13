@@ -237,9 +237,9 @@ int main(int argc, char *argv[])
 
 	if(gdata != NULL)
 	{
+		LoadOptions(gdata);
 		gdata->screen->init(gdata);
 
-		LoadOptions(gdata);
 		ExecStartupScript(gdata);
 
 
@@ -256,7 +256,16 @@ int main(int argc, char *argv[])
 		gdata->lstLeft = GetFiles(gdata, gdata->left_dir);
 		gdata->lstRight = GetFiles(gdata, gdata->right_dir);
 
-		gdata->screen->print("{Welcome to Another Linux FileManager}");
+		gdata->screen->set_style(gdata, STYLE_TITLE);
+		gdata->screen->set_cursor(1, 1);
+		gdata->screen->erase_eol();
+		gdata->screen->print("Well, this is it Welcome to Another Linux FileManager sdfsdfsdf\n");
+
+
+		gdata->screen->set_style(gdata, STYLE_NORMAL);
+		gdata->screen->set_cursor(5, 1);
+		gdata->screen->erase_eol();
+		gdata->screen->print("here {we go}....\n");
 		gdata->screen->get_keypress();
 
 

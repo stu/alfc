@@ -1,7 +1,6 @@
 Requires a git clone of 'stucore' to build
-
 git clone bloodycactus.com:stucore.git
 
-
 Also requires a lua 5.1 library to link against.
+And NCurses for the ncurses driver
 

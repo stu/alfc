@@ -4,6 +4,28 @@
 extern "C"{
 #endif
 
+
+#define STYLE_TITLE			1
+#define STYLE_NORMAL		2
+
+#define CLR_BLACK			3
+#define CLR_RED				4
+#define CLR_GREEN			5
+#define CLR_BROWN			6
+#define CLR_BLUE			7
+#define CLR_MAGENTA			8
+#define CLR_CYAN			9
+#define CLR_GREY			10
+#define CLR_DK_GREY			11
+#define CLR_BR_RED			12
+#define CLR_BR_GREEN		13
+#define CLR_YELLOW			14
+#define CLR_BR_BLUE			15
+#define CLR_BR_MAGENTA		16
+#define CLR_BR_CYAN			17
+#define CLR_WHITE			18
+
+
 typedef struct udtGlobals uGlobalData;
 
 typedef struct udtScreenDriver
@@ -19,6 +41,10 @@ typedef struct udtScreenDriver
 	int (*get_keypress)(void);
 
 	void (*print)(const char *s);
+
+	void (*set_style)(uGlobalData *gdata, int style);
+	void (*set_cursor)(int row, int col);
+	void (*erase_eol)(void);
 } uScreenDriver;
 
 struct udtGlobals
@@ -35,6 +61,12 @@ struct udtGlobals
 	DList	*lstRight;
 
 	uScreenDriver *screen;
+
+	uint32_t	clr_background;
+	uint32_t	clr_foreground;
+	uint32_t	clr_title_fg;
+	uint32_t	clr_title_bg;
+
 };
 
 

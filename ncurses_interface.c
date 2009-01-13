@@ -1,32 +1,29 @@
 #include "headers.h"
 
-#define STYLE_TITLE			1
-#define STYLE_NORMAL		2
-
-#define CLR_BLACK			3
-#define CLR_RED				4
-#define CLR_GREEN			5
-#define CLR_BROWN			6
-#define CLR_BLUE			7
-#define CLR_MAGENTA			8
-#define CLR_CYAN			9
-#define CLR_GREY			10
-#define CLR_DK_GREY			11
-#define CLR_BR_RED			12
-#define CLR_BR_GREEN		13
-#define CLR_YELLOW			14
-#define CLR_BR_BLUE			15
-#define CLR_BR_MAGENTA		16
-#define CLR_BR_CYAN			17
-#define CLR_WHITE			18
-
-
 static int intCurCol;
 static int intCurRow;
 static int intMaxHeight;
 static int intMaxWidth;
 
 static int intMaxColourPairs;
+
+
+static int nc_convert_colour(int color)
+{
+	switch(color)
+	{
+		case CLR_BLACK: return COLOR_BLACK; break;
+		case CLR_RED: return COLOR_RED; break;
+		case CLR_GREEN: return COLOR_GREEN; break;
+		case CLR_BROWN: return COLOR_YELLOW; break;
+		case CLR_BLUE: return COLOR_BLUE; break;
+		case CLR_MAGENTA: return COLOR_MAGENTA; break;
+		case CLR_CYAN: return COLOR_CYAN; break;
+		case CLR_GREY: return COLOR_WHITE; break;
+	}
+
+	return COLOR_WHITE;
+}
 
 static void setcolour(int bgc, int fgc)
 {
@@ -36,7 +33,7 @@ static void setcolour(int bgc, int fgc)
 		fgc |= A_BOLD;
 	}
 
-	attrset(COLOR_PAIR(bgc)|fgc);
+	attrset(COLOR_PAIR(bgc) | fgc);
 }
 
 
@@ -162,20 +159,25 @@ static int nc_screen_init(uGlobalData *gdata)
 
 	LogInfo("Can handle %i colourpairs\n", intMaxColourPairs);
 
-	init_pair(CLR_BLACK,	CLR_BLACK,		CLR_BLACK);
-	init_pair(CLR_RED,		CLR_RED,		CLR_BLACK);
-	init_pair(CLR_GREEN,	CLR_GREEN,		CLR_BLACK);
-	init_pair(CLR_BROWN,	CLR_BROWN,		CLR_BLACK);
-	init_pair(CLR_BLUE,		CLR_BLUE,		CLR_BLACK);
-	init_pair(CLR_MAGENTA,	CLR_MAGENTA,	CLR_BLACK);
-	init_pair(CLR_CYAN,		CLR_CYAN,		CLR_BLACK);
-	init_pair(CLR_GREY,		CLR_WHITE,		CLR_BLACK);
+	init_pair(CLR_BLACK,	COLOR_BLACK,	COLOR_BLACK);
+	init_pair(CLR_RED,		COLOR_RED,		COLOR_BLACK);
+	init_pair(CLR_GREEN,	COLOR_GREEN,	COLOR_BLACK);
+	init_pair(CLR_BROWN,	COLOR_YELLOW,	COLOR_BLACK);
+	init_pair(CLR_BLUE,		COLOR_BLUE,		COLOR_BLACK);
+	init_pair(CLR_MAGENTA,	COLOR_MAGENTA,	COLOR_BLACK);
+	init_pair(CLR_CYAN,		COLOR_CYAN,		COLOR_BLACK);
+	init_pair(CLR_GREY,		COLOR_WHITE,	COLOR_BLACK);
 
 
-	init_pair(STYLE_TITLE,	COLOR_BLACK,	CLR_WHITE);		// title bar
-	init_pair(STYLE_NORMAL, COLOR_CYAN,		CLR_WHITE);		// default
-	setcolour(STYLE_NORMAL, A_NORMAL);
+	init_pair(STYLE_TITLE,
+				nc_convert_colour(gdata->clr_title_fg),
+				nc_convert_colour(gdata->clr_title_bg));		// title bar
 
+	init_pair(STYLE_NORMAL,
+				nc_convert_colour(gdata->clr_foreground),
+				nc_convert_colour(gdata->clr_background));		// default
+
+	gdata->screen->set_style(gdata, STYLE_NORMAL);
 
 	gdata->screen->cls();
 	LogWrite("NCurses init done\n");
@@ -247,6 +249,22 @@ static void nc_cls(void)
 	intCurRow=0;
 }
 
+static void nc_set_style(uGlobalData *gdata, int style)
+{
+	switch(style)
+	{
+		case STYLE_NORMAL:
+			setcolour(STYLE_NORMAL, A_NORMAL);
+			//setcolour(nc_convert_colour(gdata->clr_foreground), nc_convert_colour(gdata->clr_background));
+			break;
+
+		case STYLE_TITLE:
+			setcolour(STYLE_TITLE, A_NORMAL);
+			//setcolour(nc_convert_colour(gdata->clr_title_fg), nc_convert_colour(gdata->clr_title_bg));
+			break;
+	}
+}
+
 uScreenDriver screen_ncurses =
 {
 	nc_screen_init,		// init screen
@@ -256,4 +274,7 @@ uScreenDriver screen_ncurses =
 	nc_get_screen_width,
 	nc_get_keypress,
 	nc_print_string,
+	nc_set_style,
+	setcursor,
+	erase_eol,
 };

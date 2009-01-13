@@ -86,10 +86,49 @@ static void CreateBaselineINIFile(uGlobalData *gdata)
 
 	INI_UpdateItem(gdata->optfile, "scripts", "startup_file", "$HOME/.alfm/startup.lua");
 	INI_UpdateItem(gdata->optfile, "scripts", "shutdown_file", "$HOME/.alfm/shutdown.lua");
+
+	INI_UpdateItem(gdata->optfile, "colours", "background", "blue");
+}
+
+static int decode_colour(char *s, int def)
+{
+	int i;
+
+	struct uc{
+		char *c;
+		int b;
+	} cols[] =
+	{
+		{"black", CLR_BLACK},
+		{"blue", CLR_BLUE},
+		{"red", CLR_RED},
+		{"green", CLR_GREEN},
+		{"brown", CLR_BROWN},
+		{"yellow", CLR_YELLOW},
+		{"grey", CLR_GREY},
+		{"white", CLR_WHITE},
+		{"cyan", CLR_CYAN},
+		{"magenta", CLR_MAGENTA},
+		{NULL, 0}
+	};
+
+	if(s == NULL) return def;
+
+	for(i=0; cols[i].c != NULL; i++)
+	{
+		if(stricmp(cols[i].c, s) == 0)
+		{
+			return cols[i].b;
+		}
+	}
+
+	return def;
 }
 
 void LoadOptions(uGlobalData *gdata)
 {
+	char *x;
+
 	gdata->optfilename = ConvertDirectoryName("$HOME/.alfm/options.ini");
 	gdata->optfile = INI_load(gdata->optfilename);
 	if(gdata->optfile == NULL)
@@ -97,6 +136,16 @@ void LoadOptions(uGlobalData *gdata)
 		gdata->optfile = INI_EmptyINF();
 		CreateBaselineINIFile(gdata);
 	}
+
+	x = INI_get(gdata->optfile, "colours", "background");
+	gdata->clr_background = decode_colour(x, CLR_BLACK);
+	x = INI_get(gdata->optfile, "colours", "foreground");
+	gdata->clr_foreground = decode_colour(x, CLR_GREY);
+
+	x = INI_get(gdata->optfile, "colours", "title_fg");
+	gdata->clr_title_fg = decode_colour(x, CLR_GREY);
+	x = INI_get(gdata->optfile, "colours", "title_bg");
+	gdata->clr_title_bg = decode_colour(x, CLR_BLACK);
 }
 
 void SaveOptions(uGlobalData *gdata)
