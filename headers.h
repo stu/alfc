@@ -20,3 +20,5 @@
 #include "lua_api.h"
 #include "options.h"
 
+// screen config
+#include "ncurses_interface.h"

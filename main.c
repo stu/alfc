@@ -230,16 +230,18 @@ int main(int argc, char *argv[])
 
 
 	gdata = NewGlobalData();
+	gdata->screen = &screen_ncurses;
+
+
 	SetupStartDirectories(gdata);
 
 	if(gdata != NULL)
 	{
-		DList *lst;
+		gdata->screen->init(gdata);
 
 		LoadOptions(gdata);
-
-
 		ExecStartupScript(gdata);
+
 
 		free(gdata->left_dir);
 		gdata->left_dir = GetOptionDir(gdata, "left_startup", "mru_left");
@@ -250,23 +252,37 @@ int main(int argc, char *argv[])
 		LogInfo("Start in left : %s\n", gdata->left_dir);
 		LogInfo("Start in right : %s\n", gdata->right_dir);
 
-		lst = GetFiles(gdata, gdata->left_dir);
-		dlist_destroy(lst);
-		free(lst);
+
+		gdata->lstLeft = GetFiles(gdata, gdata->left_dir);
+		gdata->lstRight = GetFiles(gdata, gdata->right_dir);
+
+		gdata->screen->print("{Welcome to Another Linux FileManager}");
+		gdata->screen->get_keypress();
+
+
 
 		ExecShutdownScript(gdata);
 
+		// cleanup...
 
 		SaveOptions(gdata);
 		INI_unload(gdata->optfile);
 
+		gdata->screen->deinit(gdata);
+
 		chdir(gdata->startup_path);
+
+		dlist_destroy(gdata->lstLeft);
+		dlist_destroy(gdata->lstRight);
+		free(gdata->lstLeft);
+		free(gdata->lstRight);
 
 		free(gdata->startup_path);
 		free(gdata->left_dir);
 		free(gdata->right_dir);
 
 		free(gdata->optfilename);
+
 		free(gdata);
 	}
 

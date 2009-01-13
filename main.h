@@ -4,8 +4,24 @@
 extern "C"{
 #endif
 
+typedef struct udtGlobals uGlobalData;
 
-typedef struct udtGlobals
+typedef struct udtScreenDriver
+{
+	int (*init)(uGlobalData *gdata);
+	int (*deinit)(uGlobalData *gdata);
+
+	void (*cls)(void);
+
+	int (*get_screen_height)(void);
+	int (*get_screen_width)(void);
+
+	int (*get_keypress)(void);
+
+	void (*print)(const char *s);
+} uScreenDriver;
+
+struct udtGlobals
 {
 	char	*optfilename;
 	INIFILE *optfile;
@@ -15,7 +31,12 @@ typedef struct udtGlobals
 
 	char	*startup_path;
 
-} uGlobalData;
+	DList	*lstLeft;
+	DList	*lstRight;
+
+	uScreenDriver *screen;
+};
+
 
 extern char* GetCurrentWorkingDirectory(void);
 extern char* ConvertDirectoryName(const char *x);

@@ -88,8 +88,9 @@ cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
 
 CC = "gcc"
 CFLAGSX = "-O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH -Wstrict-overflow=0 "
+LIBS = "-lncurses -llua5.1"
 
-alfm = %w( version.o main.o memwatch.o lua_helper.o lua_api.o options.o )
+alfm = %w( version.o main.o memwatch.o lua_helper.o lua_api.o options.o ncurses_interface.o )
 
 gen Action do
 	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s
@@ -111,7 +112,7 @@ end
 
 desc "Build alfm program."
 task :app => alfm do |t|
-	sys "#{CC} -o alfm #{t.prerequisites.join(' ')} stucore/libstucore.a -llua5.1"
+	sys "#{CC} -o alfm #{t.prerequisites.join(' ')} stucore/libstucore.a #{LIBS}"
 
 	cBV.IncrementBuild
 	cBV.WriteVersion
