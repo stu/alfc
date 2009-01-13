@@ -145,3 +145,48 @@ int gme_GetCurrentWorkingDirectory(lua_State *L)
 	return 1;
 }
 
+
+int gme_ClearScreen(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	gd->screen->cls();
+
+	return 0;
+}
+
+int gme_GetScreenHeight(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	gd->screen->get_screen_height();
+
+	return 0;
+}
+
+int gme_GetScreenWidth(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	gd->screen->get_screen_width();
+
+	return 0;
+}
+
+int gme_Print(lua_State *L)
+{
+	struct lstr msg;
+	uGlobalData *gd;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(msg, 1);
+
+	gd->screen->print(msg.data);
+
+	return 0;
+}
