@@ -2,8 +2,43 @@
 #include <sys/types.h>
 
 #include "headers.h"
+#include "stucore/stucore_config.h"
 
-static void CreateHomeDirectory(void)
+int IsTrue(const char *s)
+{
+	char *p;
+	char *q;
+	char *z;
+	int rc;
+
+	p = strdup(s);
+	q = p;
+
+	while(*q != 0 && (*q == 0x20 || *q == 0x09))
+		q++;
+
+	z = strchr(p, 0x0);
+	z -= 1;
+
+	while(z > p && (*z == 0x20 || *z == 0x09))
+	{
+		*z = 0;
+		z -= 1;
+	}
+
+
+	rc = -1;
+	if(stricmp(q, "true") == 0)
+		rc = 0;
+	else if(stricmp(q, "yes") == 0)
+		rc = 0;
+
+	free(p);
+
+	return rc;
+}
+
+void CreateHomeDirectory(void)
 {
 	char *q;
 

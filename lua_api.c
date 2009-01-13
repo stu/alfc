@@ -131,8 +131,17 @@ int gme_SaveOptions(lua_State *L)
 	assert(gd != NULL);
 
 	CreateHomeDirectory();
-	INI_save(gdata->optfilename, gdata->optfile);
+	INI_save(gd->optfilename, gd->optfile);
 
 	return 0;
+}
+
+int gme_GetCurrentWorkingDirectory(lua_State *L)
+{
+	char *x = GetCurrentWorkingDirectory();
+	lua_pushstring(L, x);
+	free(x);
+
+	return 1;
 }
 
