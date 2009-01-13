@@ -68,5 +68,4 @@ void SaveOptions(uGlobalData *gdata)
 {
 	CreateHomeDirectory();
 	INI_save(gdata->optfilename, gdata->optfile);
-	INI_unload(gdata->optfile);
 }

@@ -127,7 +127,9 @@ int main(int argc, char *argv[])
 
 		ExecShutdownScript(gdata);
 
+
 		SaveOptions(gdata);
+		INI_unload(gdata->optfile);
 
 		free(gdata->optfilename);
 		free(gdata);

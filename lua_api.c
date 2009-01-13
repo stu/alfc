@@ -107,7 +107,6 @@ int gme_GetOption(lua_State *L)
 
 int gme_SetOption(lua_State *L)
 {
-
 	uGlobalData *gd;
 	struct lstr group;
 	struct lstr item;
@@ -121,6 +120,18 @@ int gme_SetOption(lua_State *L)
 	GET_LUA_STRING(val, 2);
 
 	INI_UpdateItem(gd->optfile, group.data, item.data, val.data);
+
+	return 0;
+}
+
+int gme_SaveOptions(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	CreateHomeDirectory();
+	INI_save(gdata->optfilename, gdata->optfile);
 
 	return 0;
 }
