@@ -301,6 +301,9 @@ static void DrawFileListWindow(uGlobalData *gd, uWindow *win, DList *lstFiles)
 	int i;
 	char *p;
 
+	int max_namelen;
+	int max_sizelen;
+
 	gd->screen->draw_border(win);
 
 	depth = win->height - 2;
@@ -312,6 +315,9 @@ static void DrawFileListWindow(uGlobalData *gd, uWindow *win, DList *lstFiles)
 	i = 0;
 
 	win->highlight_line = depth / 2;
+
+	max_sizelen = 10;
+	max_namelen = (win->width - max_sizelen - 5);
 
 	while(e != NULL && i < depth)
 	{
@@ -327,9 +333,20 @@ static void DrawFileListWindow(uGlobalData *gd, uWindow *win, DList *lstFiles)
 		gd->screen->set_cursor( 2 + i + win->offset_row, 2 + win->offset_col );
 
 		memset(buff, ' ', 1024);
-		sprintf(buff, "%-30s %10li", de->name, de->stat_buff.st_size);
-		p = strchr(buff, 0x0);
+
+		if(strlen(de->name) > max_namelen)
+		{
+			memmove(buff, de->name, max_namelen);
+			memmove(buff + max_namelen - 3, "...", 3);
+		}
+		else
+			memmove(buff, de->name, strlen(de->name));
+
+		sprintf(buff + max_namelen + 2, "%10li", de->stat_buff.st_size);
+		p = strchr(buff + max_namelen + 2, 0x0);
 		*p = ' ';
+
+
 
 		buff[ win->width - 2] = 0;
 
