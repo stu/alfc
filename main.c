@@ -426,6 +426,17 @@ int main(int argc, char *argv[])
 		gdata->screen = &screen_ncurses;
 		gdata->screen->init(gdata);
 
+		if(gdata->screen->get_screen_width() < 60 || gdata->screen->get_screen_height() < 20)
+		{
+			int r, c;
+
+			c = gdata->screen->get_screen_width();
+			r = gdata->screen->get_screen_height();
+			gdata->screen->deinit(gdata);
+			LogError("Display is %i.%i, it must be at least 20x60", r, c);
+			exit(1);
+		}
+
 		GetUserInfo(gdata);
 
 		LogInfo("" LUA_RELEASE "\n");
