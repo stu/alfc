@@ -161,9 +161,10 @@ int gme_GetScreenHeight(lua_State *L)
 	uGlobalData *gd;
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
-	gd->screen->get_screen_height();
 
-	return 0;
+	lua_pushnumber(L, gd->screen->get_screen_height());
+
+	return 1;
 }
 
 int gme_GetScreenWidth(lua_State *L)
@@ -171,9 +172,9 @@ int gme_GetScreenWidth(lua_State *L)
 	uGlobalData *gd;
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
-	gd->screen->get_screen_width();
+	lua_pushnumber(L, gd->screen->get_screen_width());
 
-	return 0;
+	return 1;
 }
 
 int gme_Print(lua_State *L)

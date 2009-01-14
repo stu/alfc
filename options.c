@@ -154,6 +154,10 @@ void LoadOptions(uGlobalData *gdata)
 		CreateBaselineINIFile(gdata);
 	}
 
+	x = INI_get(gdata->optfile, "options", "compress_filesize");
+	if(IsTrue(x) == 0)
+		gdata->compress_filesize = 1;
+
 	x = INI_get(gdata->optfile, "colours", "background");
 	gdata->clr_background = decode_colour(x, CLR_GREY);
 	x = INI_get(gdata->optfile, "colours", "foreground");

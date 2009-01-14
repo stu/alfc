@@ -293,6 +293,33 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 	return lst;
 }
 
+static uint32_t convert_kb(off_t a)
+{
+	uint32_t x;
+
+	x = a / 1024;
+
+	return x;
+}
+
+static uint32_t convert_mb(off_t a)
+{
+	uint32_t x;
+
+	x = a / (1024*1024);
+
+	return x;
+}
+
+static uint32_t convert_gb(off_t a)
+{
+	uint32_t x;
+
+	x = a / (1024*1024*1024);
+
+	return x;
+}
+
 static void DrawFileListWindow(uGlobalData *gd, uWindow *win, DList *lstFiles, char *dpath)
 {
 	int depth;
@@ -328,7 +355,11 @@ static void DrawFileListWindow(uGlobalData *gd, uWindow *win, DList *lstFiles, c
 	e = dlist_head(lstFiles);
 	i = 0;
 
-	max_sizelen = 10;
+	if(gd->compress_filesize == 0)
+		max_sizelen = 10;
+	else
+		max_sizelen = 7;
+
 	max_namelen = (win->width - max_sizelen - 5);
 
 	while(e != NULL && i < depth)
@@ -339,7 +370,7 @@ static void DrawFileListWindow(uGlobalData *gd, uWindow *win, DList *lstFiles, c
 
 		if(i == win->highlight_line)
 		{
-				gd->screen->set_style(gd, STYLE_HIGHLIGHT);
+			gd->screen->set_style(gd, STYLE_HIGHLIGHT);
 		}
 
 		gd->screen->set_cursor( 2 + i + win->offset_row, 2 + win->offset_col );
@@ -354,7 +385,19 @@ static void DrawFileListWindow(uGlobalData *gd, uWindow *win, DList *lstFiles, c
 		else
 			memmove(buff, de->name, strlen(de->name));
 
-		sprintf(buff + max_namelen + 2, "%10li", de->stat_buff.st_size);
+		if(gd->compress_filesize == 0)
+			sprintf(buff + max_namelen + 2, "%10li", de->stat_buff.st_size);
+		else
+		{
+			convert_mb(de->stat_buff.st_size);
+			if(de->stat_buff.st_size < 1024L*1024L)
+				sprintf(buff + max_namelen + 2, "%5ikb",convert_kb(de->stat_buff.st_size));
+			else if(de->stat_buff.st_size < 1024L*1024L*1024L)
+				sprintf(buff + max_namelen + 2, "%5imb", convert_mb(de->stat_buff.st_size));
+			else if(de->stat_buff.st_size < 1024L*1024L*1024L*1024L)
+				sprintf(buff + max_namelen + 2, "%5igb", convert_gb(de->stat_buff.st_size));
+		}
+
 		p = strchr(buff + max_namelen + 2, 0x0);
 		*p = ' ';
 
@@ -372,8 +415,8 @@ static void DrawFileListWindow(uGlobalData *gd, uWindow *win, DList *lstFiles, c
 		i += 1;
 	}
 
-
-
+	// set cursor to lower corner of screen...
+	gd->screen->set_cursor(gd->screen->get_screen_height(),gd->screen->get_screen_width());
 }
 
 static void BuildWindowLayout(uGlobalData *gd)

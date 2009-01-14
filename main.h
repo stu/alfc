@@ -88,6 +88,7 @@ struct udtGlobals
 	DList	*lstLeft;
 	DList	*lstRight;
 
+	int		compress_filesize;
 	int		selected_window;
 
 	uScreenDriver *screen;
