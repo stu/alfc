@@ -103,6 +103,15 @@ struct udtGlobals
 	uWindow		*win_left;
 	uWindow		*win_right;
 
+
+	// user info
+	char	*strRealName;
+	char	*strLoginName;
+	char	*strHomeDirectory;
+	char	*strShell;
+	uint32_t	uid;
+	uint32_t	gid;
+
 };
 
 

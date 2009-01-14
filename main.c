@@ -1,4 +1,42 @@
+#include <pwd.h>
 #include "headers.h"
+
+static void GetUserInfo(uGlobalData *gd)
+{
+	struct passwd *passwd;
+	char *x;
+	char *p;
+
+	passwd = getpwuid(getuid());
+
+	x = strdup(passwd->pw_gecos);
+	p = strchr(x, 0x0);
+	p--;
+
+	while(p>x)
+	{
+		if(*p == ',' && *(p+1)==0) *p = 0x0;
+		if(*p == ' ' && *(p+1)==0) *p = 0x0;
+
+		p--;
+	}
+
+	LogInfo("The Real User Name is [%s]\n", x);
+	LogInfo("The Login Name is %s\n", passwd->pw_name);
+	LogInfo("The Home Directory is %s\n", passwd->pw_dir);
+	LogInfo("The Login Shell is %s\n", passwd->pw_shell);
+	LogInfo("The uid is %lu\n", (unsigned long) getpwuid(getuid())->pw_uid);
+	LogInfo("The gid is %lu\n\n", (unsigned long) getpwuid(getuid())->pw_gid);
+
+	gd->strRealName = strdup(x);
+	gd->strLoginName = strdup(passwd->pw_name);
+	gd->strHomeDirectory = strdup(passwd->pw_dir);
+	gd->strShell = strdup(passwd->pw_shell);
+	gd->uid = getpwuid(getuid())->pw_uid;
+	gd->gid = getpwuid(getuid())->pw_gid;
+
+	free(x);
+}
 
 static uGlobalData* NewGlobalData(void)
 {
@@ -348,19 +386,20 @@ int main(int argc, char *argv[])
 
 	LogWrite_Startup(0, LOG_INFO | LOG_DEBUG | LOG_ERROR, 5000);
 
-	LogInfo("" LUA_RELEASE "\n");
-	LogInfo("" LUA_COPYRIGHT "\n");
-	LogInfo("" LUA_AUTHORS "\n");
-
 	gdata = NewGlobalData();
 
 	if(gdata != NULL)
 	{
 		SetupStartDirectories(gdata);
-
 		LoadOptions(gdata);
 		gdata->screen = &screen_ncurses;
 		gdata->screen->init(gdata);
+
+		GetUserInfo(gdata);
+
+		LogInfo("" LUA_RELEASE "\n");
+		LogInfo("" LUA_COPYRIGHT "\n");
+		LogInfo("" LUA_AUTHORS "\n");
 
 		BuildWindowLayout(gdata);
 		gdata->selected_window = WINDOW_LEFT;
@@ -413,6 +452,11 @@ int main(int argc, char *argv[])
 		free(gdata->right_dir);
 
 		free(gdata->optfilename);
+
+		free(gdata->strRealName);
+		free(gdata->strLoginName);
+		free(gdata->strHomeDirectory);
+		free(gdata->strShell);
 
 		free(gdata);
 
