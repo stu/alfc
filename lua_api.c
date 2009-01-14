@@ -263,3 +263,31 @@ int gme_SetColour(lua_State *L)
 
 	return 0;
 }
+
+int gme_GetRuntimeOption_CompressFilesize(lua_State *L)
+{
+	uGlobalData *gd;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	lua_pushnumber(L, gd->compress_filesize);
+	return 1;
+}
+
+int gme_SetRuntimeOption_CompressFilesize(lua_State *L)
+{
+	uGlobalData *gd;
+	int v;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	v = luaL_checknumber(L, 1);
+	if(v == 1)
+		gd->compress_filesize = 1;
+	else
+		gd->compress_filesize = 0;
+
+	return 0;
+}
