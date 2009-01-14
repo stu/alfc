@@ -215,6 +215,11 @@ static void init_style(int style, uint32_t fg, uint32_t bg)
 	init_pair(style, nc_convert_colour(fg) & 0xFF, nc_convert_colour(bg) & 0xFF);
 }
 
+static void nc_init_style(int style, uint32_t fg, uint32_t bg)
+{
+	init_style(style, fg, bg);
+}
+
 static int nc_screen_init(uGlobalData *gdata)
 {
 	int i;
@@ -361,5 +366,6 @@ uScreenDriver screen_ncurses =
 	nc_set_style,
 	setcursor,
 	erase_eol,
-	nc_draw_frame
+	nc_draw_frame,
+	nc_init_style
 };

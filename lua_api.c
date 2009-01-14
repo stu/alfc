@@ -191,3 +191,74 @@ int gme_Print(lua_State *L)
 	return 0;
 }
 
+int gme_GetUserID(lua_State *L)
+{
+	uGlobalData *gd;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	lua_pushnumber(L, gd->uid);
+	return 1;
+}
+
+
+int gme_GetUserGroup(lua_State *L)
+{
+	uGlobalData *gd;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	lua_pushnumber(L, gd->gid);
+	return 1;
+}
+
+int gme_SetColour(lua_State *L)
+{
+	//SetColour(title_background, "red")
+	uGlobalData *gd;
+	int style;
+	struct lstr clr;
+	uint32_t c;
+
+	style = luaL_checknumber(L, 1);
+	GET_LUA_STRING(clr, 2);
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	c = decode_colour(clr.data, -1);
+	if(c == -1)
+		return luaL_error(L, "Unknown colour %s", clr.data);
+
+	switch(style)
+	{
+		case e_highlight_background:
+			gd->clr_hi_background = c;
+			gd->screen->init_style(STYLE_HIGHLIGHT, gd->clr_hi_foreground, gd->clr_hi_background);
+			break;
+		case e_highlight_foreground:
+			gd->clr_hi_foreground = c;
+			gd->screen->init_style(STYLE_HIGHLIGHT, gd->clr_hi_foreground, gd->clr_hi_background);
+			break;
+		case e_background:
+			gd->clr_background = c;
+			gd->screen->init_style(STYLE_NORMAL, gd->clr_foreground, gd->clr_background);
+			break;
+		case e_foreground:
+			gd->clr_foreground = c;
+			gd->screen->init_style(STYLE_NORMAL, gd->clr_foreground, gd->clr_background);
+			break;
+		case e_title_foreground:
+			gd->clr_title_fg = c;
+			gd->screen->init_style(STYLE_TITLE, gd->clr_title_fg, gd->clr_title_bg);
+			break;
+		case e_title_background:
+			gd->clr_title_bg = c;
+			gd->screen->init_style(STYLE_TITLE, gd->clr_title_fg, gd->clr_title_bg);
+			break;
+	}
+
+	return 0;
+}

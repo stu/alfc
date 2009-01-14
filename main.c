@@ -328,8 +328,6 @@ static void DrawFileListWindow(uGlobalData *gd, uWindow *win, DList *lstFiles, c
 	e = dlist_head(lstFiles);
 	i = 0;
 
-	win->highlight_line = depth / 2;
-
 	max_sizelen = 10;
 	max_namelen = (win->width - max_sizelen - 5);
 

@@ -98,7 +98,7 @@ static void CreateBaselineINIFile(uGlobalData *gdata)
 	INI_UpdateItem(gdata->optfile, "colours", "background", "blue");
 }
 
-static int decode_colour(char *s, int def)
+int decode_colour(char *s, int def)
 {
 	int i;
 

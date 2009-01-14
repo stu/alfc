@@ -69,6 +69,7 @@ typedef struct udtScreenDriver
 	void (*erase_eol)(void);
 
 	void (*draw_border)(uWindow *win);
+	void (*init_style)(int style, uint32_t fg, uint32_t bg);
 } uScreenDriver;
 
 #define WINDOW_LEFT	0
@@ -112,6 +113,18 @@ struct udtGlobals
 	uint32_t	uid;
 	uint32_t	gid;
 
+};
+
+enum
+{
+	e_highlight_background = 1,
+	e_highlight_foreground,
+
+	e_background,
+	e_foreground,
+
+	e_title_foreground,
+	e_title_background
 };
 
 

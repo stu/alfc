@@ -4,6 +4,7 @@
 extern "C"{
 #endif
 
+extern int decode_colour(char *s, int def);
 extern void CreateHomeDirectory(void);
 extern int IsTrue(const char *s);
 extern void LoadOptions(uGlobalData *gdata);

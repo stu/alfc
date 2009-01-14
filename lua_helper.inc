@@ -81,7 +81,13 @@ void RegisterGameFuncs(uGlobalData *gb, lua_State *l)
 	lua_pushnumber(l, VMIN); lua_setglobal(l, "VERSION_MIN");
 	lua_pushnumber(l, VBUILD); lua_setglobal(l, "VERSION_BUILD");
 
-
+	// colour setting constants
+	lua_pushnumber(l, e_title_foreground); lua_setglobal(l, "title_foreground");
+	lua_pushnumber(l, e_title_background); lua_setglobal(l, "title_background");
+	lua_pushnumber(l, e_background); lua_setglobal(l, "background");
+	lua_pushnumber(l, e_foreground); lua_setglobal(l, "foreground");
+	lua_pushnumber(l, e_highlight_background); lua_setglobal(l, "highlight_background");
+	lua_pushnumber(l, e_highlight_foreground); lua_setglobal(l, "highlight_foreground");
 
 	lua_settop(l, 0);
 }
