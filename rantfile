@@ -4,6 +4,30 @@ import "md5"
 _VER_MAJ = 0
 _VER_MIN = 1
 
+
+y = RUBY_PLATFORM.scan(/(mswin32|mingw32|bccwin32|msdosdjgpp|os2|amigaos|cygwin)/)
+case y.to_s
+	when "mswin32", "mingw32", "bccwin32", "msdosdjgpp"
+		@strPlatform = "ALFC_WIN32"
+		var[:exec] = "alfc.exe"
+		var[:lua] = "lua.exe"
+		var[:luac] = "luac.exe"
+		var[:libs] = "-lpdcurses -llua"
+	when "cygwin"
+		@strPlatform = "ALFC_UNIXLIKE"
+		var[:exec] = "alfc.exe"
+		var[:lua] = "lua.exe"
+		var[:luac] = "luac.exe"
+		var[:libs] = "-lpdcurses -llua"
+	else
+		@strPlatform = "ALFC_UNIXLIKE"
+		var[:exec] = "alfc"
+		var[:lua] = "lua"
+		var[:luac] = "luac"
+		var[:libs] = "-lncurses -llua5.1"
+end
+
+
 #
 # This does all the heavy lifting of the version file
 #
@@ -87,10 +111,10 @@ end
 cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
 
 CC = "gcc"
-CFLAGSX = "-O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH -Wstrict-overflow=0 "
-LIBS = "-lncurses -llua5.1"
+CFLAGSX = "-O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH "
+LIBS = ""
 
-alfm = %w( version.o main.o memwatch.o lua_helper.o lua_api.o options.o ncurses_interface.o )
+alfc = %w( version.o main.o memwatch.o lua_helper.o lua_api.o options.o ncurses_interface.o )
 
 gen Action do
 	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s
@@ -107,12 +131,12 @@ task "fixversion" do
 	end
 
 	# now build lua helper files
-	sys "lua", "lua_helper.lua"
+	sys "#{var[:lua]}", "lua_helper.lua"
 end
 
-desc "Build alfm program."
-task :app => alfm do |t|
-	sys "#{CC} -o alfm #{t.prerequisites.join(' ')} stucore/libstucore.a #{LIBS}"
+desc "Build alfc program."
+task :app => alfc do |t|
+	sys "#{CC} -o #{var[:exec]}  #{t.prerequisites.join(' ')} stucore/libstucore.a #{var[:libs]}"
 
 	cBV.IncrementBuild
 	cBV.WriteVersion
@@ -120,7 +144,7 @@ end
 
 desc "Cleanup..."
 task :clean do
-	x = Dir["*.{bak,o,obj}"] + Dir["alfm"] + Dir["memwatch.log"]  + Dir["lua_helper.c"]
+	x = Dir["*.{bak,o,obj}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["lua_helper.c"]
 	if x.length > 0
 		sys.rm_f x
 	end

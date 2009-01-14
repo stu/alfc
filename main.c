@@ -1,14 +1,30 @@
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
- #include <errno.h>
-
 #include "headers.h"
 
 static uGlobalData* NewGlobalData(void)
 {
 	return calloc(1, sizeof(uGlobalData));
+}
+
+static char* x_getenv(const char *s)
+{
+#ifdef __MINGW_H
+	if(strcmp(s, "HOME") == 0)
+	{
+		char *p;
+
+		p = getenv("HOME");
+		if(p != NULL)
+			return p;
+
+		p = getenv("USERPROFILE");
+		if(p != NULL)
+			return p;
+
+		return NULL;
+	}
+	else
+#endif
+		return getenv(s);
 }
 
 /* Convert environment variables to actual strings */
@@ -19,6 +35,7 @@ char* ConvertDirectoryName(const char *x)
 	char *a;
 	char *p;
 	char *q;
+	char *z;
 
 	a = strdup(x);
 	p = malloc(1024);
@@ -55,7 +72,7 @@ char* ConvertDirectoryName(const char *x)
 			if(p[0] != 0 && p[strlen(p)-1] != '/')
 				strcat(p, "/");
 
-			env = getenv(q);
+			env = x_getenv(q);
 			*z = c;
 
 			if(env != NULL)
@@ -74,6 +91,31 @@ char* ConvertDirectoryName(const char *x)
 			q = strchr(q, 0);
 		}
 	}
+
+
+	for(q = p, z = p; *q != 0; )
+	{
+		switch(*q)
+		{
+			case '\\':
+				*z = '/';
+				z++;
+				q++;
+				break;
+
+			case '"':
+				q++;
+				break;
+
+			default:
+				*z = *q;
+				z++;
+				q++;
+				break;
+		}
+	}
+
+	*z = 0;
 
 	free(a);
 	return realloc(p, 16 + strlen(p));
@@ -150,15 +192,8 @@ static void SetupStartDirectories(uGlobalData *gdata)
 	gdata->startup_path = strdup(x);
 
 	free(x);
-
 }
 
-
-struct udtDirEntry
-{
-	char *name;
-	struct stat stat_buff;
-};
 static void FreeListEntry(void *x)
 {
 	struct udtDirEntry *de = x;
@@ -184,20 +219,22 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 		if(d != NULL)
 		{
 			struct dirent *dr;
-			struct udtDirEntry *de;
+			uDirEntry *de;
 
 			dr = readdir(d);
 			while(dr != NULL)
 			{
-				de = malloc(sizeof(struct udtDirEntry));
-				memset(de, 0x0, sizeof(struct udtDirEntry));
+				de = malloc(sizeof(uDirEntry));
+				memset(de, 0x0, sizeof(uDirEntry));
 
 				de->name = strdup(dr->d_name);
+#ifdef __MINGW_H
+				stat(de->name, &de->stat_buff);
+#else
 				lstat(de->name, &de->stat_buff);
+#endif
 
 				dlist_ins(lst, de);
-				LogInfo("got %i - %s\n", de->stat_buff.st_size, de->name);
-
 				dr = readdir(d);
 			}
 
@@ -218,30 +255,117 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 	return lst;
 }
 
+static void DrawFileListWindow(uGlobalData *gd, uWindow *win, DList *lstFiles)
+{
+	int depth;
+	char buff[1024];
+	DLElement *e;
+	int i;
+	char *p;
+
+	gd->screen->draw_border(win);
+
+	depth = win->height - 2;
+
+	if(depth > dlist_size(lstFiles))
+		depth = dlist_size(lstFiles);
+
+	e = dlist_head(lstFiles);
+	i = 0;
+
+	win->highlight_line = depth / 2;
+
+	while(e != NULL && i < depth)
+	{
+		uDirEntry *de;
+		de = dlist_data(e);
+		e = dlist_next(e);
+
+		if(i == win->highlight_line)
+		{
+				gd->screen->set_style(gd, STYLE_HIGHLIGHT);
+		}
+
+		gd->screen->set_cursor( 2 + i + win->offset_row, 2 + win->offset_col );
+
+		memset(buff, ' ', 1024);
+		sprintf(buff, "%-30s %10li", de->name, de->stat_buff.st_size);
+		p = strchr(buff, 0x0);
+		*p = ' ';
+
+		buff[ win->width - 2] = 0;
+
+		gd->screen->print(buff);
+
+		if(i == win->highlight_line)
+		{
+			gd->screen->set_style(gd, STYLE_NORMAL);
+		}
+
+		i += 1;
+	}
+
+
+
+}
+
+static void BuildWindowLayout(uGlobalData *gd)
+{
+	uWindow *w;
+
+	int mw = gd->screen->get_screen_width() - 0;
+
+	if(gd->win_left == NULL)
+		w = calloc(1, sizeof(uWindow));
+	else
+		w = gd->win_left;
+
+	w->offset_row = 0;
+	w->offset_col = (gd->screen->get_screen_width() - mw) / 2;
+	w->width = mw/2;
+	w->height = gd->screen->get_screen_height() - 5;
+	gd->win_left = w;
+
+	if(gd->win_right == NULL)
+		w = calloc(1, sizeof(uWindow));
+	else
+		w = gd->win_right;
+
+	w->offset_row = 0;
+	w->offset_col = gd->screen->get_screen_width() / 2;
+	w->width = gd->screen->get_screen_width() - gd->win_left->width;
+	w->height = gd->screen->get_screen_height() - 5;
+	gd->win_right = w;
+}
+
 int main(int argc, char *argv[])
 {
 	uGlobalData *gdata;
 
-	LogWrite_Startup(0, LOG_INFO | LOG_DEBUG | LOG_ERROR);
+#ifdef MEMWATCH
+	remove("memwatch.log");
+#endif
+
+	LogWrite_Startup(0, LOG_INFO | LOG_DEBUG | LOG_ERROR, 5000);
 
 	LogInfo("" LUA_RELEASE "\n");
 	LogInfo("" LUA_COPYRIGHT "\n");
 	LogInfo("" LUA_AUTHORS "\n");
 
-
 	gdata = NewGlobalData();
-	gdata->screen = &screen_ncurses;
-
-
-	SetupStartDirectories(gdata);
 
 	if(gdata != NULL)
 	{
+		SetupStartDirectories(gdata);
+
 		LoadOptions(gdata);
+		gdata->screen = &screen_ncurses;
 		gdata->screen->init(gdata);
 
-		ExecStartupScript(gdata);
+		BuildWindowLayout(gdata);
+		gdata->selected_window = WINDOW_LEFT;
 
+		ExecStartupScript(gdata);
 
 		free(gdata->left_dir);
 		gdata->left_dir = GetOptionDir(gdata, "left_startup", "mru_left");
@@ -257,18 +381,13 @@ int main(int argc, char *argv[])
 		gdata->lstRight = GetFiles(gdata, gdata->right_dir);
 
 		gdata->screen->set_style(gdata, STYLE_TITLE);
-		gdata->screen->set_cursor(1, 1);
-		gdata->screen->erase_eol();
-		gdata->screen->print("Well, this is it Welcome to Another Linux FileManager sdfsdfsdf\n");
+		gdata->screen->set_cursor(1, ((COLS - (strlen(" Welcome to {A}nother {L}inux {F}ile{M}anager ") - 8))/2));
+		gdata->screen->print(" Welcome to {A}nother {L}inux {F}ile{M}anager ");
 
+		DrawFileListWindow(gdata, gdata->win_left, gdata->lstLeft);
+		DrawFileListWindow(gdata, gdata->win_right, gdata->lstRight);
 
-		gdata->screen->set_style(gdata, STYLE_NORMAL);
-		gdata->screen->set_cursor(5, 1);
-		gdata->screen->erase_eol();
-		gdata->screen->print("here {we go}....\n");
 		gdata->screen->get_keypress();
-
-
 
 		ExecShutdownScript(gdata);
 
@@ -286,6 +405,9 @@ int main(int argc, char *argv[])
 		free(gdata->lstLeft);
 		free(gdata->lstRight);
 
+		free(gdata->win_left);
+		free(gdata->win_right);
+
 		free(gdata->startup_path);
 		free(gdata->left_dir);
 		free(gdata->right_dir);
@@ -293,9 +415,9 @@ int main(int argc, char *argv[])
 		free(gdata->optfilename);
 
 		free(gdata);
-	}
 
-	LogWrite_Shutdown();
+		LogWrite_Shutdown();
+	}
 
 	return 0;
 }

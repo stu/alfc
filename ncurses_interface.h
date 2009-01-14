@@ -4,7 +4,7 @@
 extern "C"{
 #endif
 
-#include <ncurses.h>
+#include <curses.h>
 
 extern uScreenDriver screen_ncurses;
 
@@ -12,3 +12,4 @@ extern uScreenDriver screen_ncurses;
 }
 #endif
 #endif // _NCURSES_INTERFACE_H
+

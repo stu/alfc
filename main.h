@@ -4,29 +4,51 @@
 extern "C"{
 #endif
 
+enum
+{
+	STYLE_TITLE = 1,
+	STYLE_NORMAL,
+	STYLE_HIGHLIGHT,
 
-#define STYLE_TITLE			1
-#define STYLE_NORMAL		2
-
-#define CLR_BLACK			3
-#define CLR_RED				4
-#define CLR_GREEN			5
-#define CLR_BROWN			6
-#define CLR_BLUE			7
-#define CLR_MAGENTA			8
-#define CLR_CYAN			9
-#define CLR_GREY			10
-#define CLR_DK_GREY			11
-#define CLR_BR_RED			12
-#define CLR_BR_GREEN		13
-#define CLR_YELLOW			14
-#define CLR_BR_BLUE			15
-#define CLR_BR_MAGENTA		16
-#define CLR_BR_CYAN			17
-#define CLR_WHITE			18
-
+	CLR_BLACK,
+	CLR_RED,
+	CLR_GREEN,
+	CLR_BROWN,
+	CLR_BLUE,
+	CLR_MAGENTA,
+	CLR_CYAN,
+	CLR_GREY,
+	CLR_DK_GREY,
+	CLR_BR_RED,
+	CLR_BR_GREEN,
+	CLR_YELLOW,
+	CLR_BR_BLUE,
+	CLR_BR_MAGENTA,
+	CLR_BR_CYAN,
+	CLR_WHITE
+};
 
 typedef struct udtGlobals uGlobalData;
+
+
+typedef struct udtDirEntry
+{
+	char *name;
+	struct stat stat_buff;
+} uDirEntry;
+
+typedef struct udtWindow
+{
+	int	width;
+	int height;
+
+	int offset_row;
+	int offset_col;
+
+	// stuff to carry for the file list
+	int	highlight_line;
+	int top_line;
+} uWindow;
 
 typedef struct udtScreenDriver
 {
@@ -45,7 +67,12 @@ typedef struct udtScreenDriver
 	void (*set_style)(uGlobalData *gdata, int style);
 	void (*set_cursor)(int row, int col);
 	void (*erase_eol)(void);
+
+	void (*draw_border)(uWindow *win);
 } uScreenDriver;
+
+#define WINDOW_LEFT	0
+#define WINDOW_RIGHT 1
 
 struct udtGlobals
 {
@@ -60,12 +87,21 @@ struct udtGlobals
 	DList	*lstLeft;
 	DList	*lstRight;
 
+	int		selected_window;
+
 	uScreenDriver *screen;
+
+	uint32_t	clr_hi_background;
+	uint32_t	clr_hi_foreground;
 
 	uint32_t	clr_background;
 	uint32_t	clr_foreground;
+
 	uint32_t	clr_title_fg;
 	uint32_t	clr_title_bg;
+
+	uWindow		*win_left;
+	uWindow		*win_right;
 
 };
 
@@ -77,3 +113,4 @@ extern char* ConvertDirectoryName(const char *x);
 }
 #endif
 #endif // _MAIN_H
+

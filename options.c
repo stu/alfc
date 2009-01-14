@@ -1,6 +1,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#ifdef __MINGW_H
+// needed for mkdir on mingw
+#include <io.h>
+#endif
+
 #include "headers.h"
 #include "stucore/stucore_config.h"
 
@@ -42,10 +47,13 @@ void CreateHomeDirectory(void)
 {
 	char *q;
 
-	q = ConvertDirectoryName("$HOME/.alfm");
+	q = ConvertDirectoryName("$HOME/.alfc");
 
+#ifndef __MINGW_H
 	mkdir(q, 0744);
-
+#else
+	mkdir(q);
+#endif
 	free(q);
 }
 
@@ -84,8 +92,8 @@ static void CreateBaselineINIFile(uGlobalData *gdata)
 	INI_UpdateItem(gdata->optfile, "keydefs", "toggle_tag", "SPACE");
 	INI_UpdateItem(gdata->optfile, "keydefs", "homedir", "H");
 
-	INI_UpdateItem(gdata->optfile, "scripts", "startup_file", "$HOME/.alfm/startup.lua");
-	INI_UpdateItem(gdata->optfile, "scripts", "shutdown_file", "$HOME/.alfm/shutdown.lua");
+	INI_UpdateItem(gdata->optfile, "scripts", "startup_file", "$HOME/.alfc/startup.lua");
+	INI_UpdateItem(gdata->optfile, "scripts", "shutdown_file", "$HOME/.alfc/shutdown.lua");
 
 	INI_UpdateItem(gdata->optfile, "colours", "background", "blue");
 }
@@ -104,11 +112,19 @@ static int decode_colour(char *s, int def)
 		{"red", CLR_RED},
 		{"green", CLR_GREEN},
 		{"brown", CLR_BROWN},
-		{"yellow", CLR_YELLOW},
 		{"grey", CLR_GREY},
-		{"white", CLR_WHITE},
 		{"cyan", CLR_CYAN},
 		{"magenta", CLR_MAGENTA},
+
+		{"darkgrey", CLR_DK_GREY},
+		{"brightred", CLR_BR_RED},
+		{"green", CLR_BR_GREEN},
+		{"yellow", CLR_YELLOW},
+		{"brightblue", CLR_BR_BLUE},
+		{"brightmagenta", CLR_BR_MAGENTA},
+		{"brightcyan", CLR_BR_CYAN},
+		{"white", CLR_WHITE},
+
 		{NULL, 0}
 	};
 
@@ -129,7 +145,8 @@ void LoadOptions(uGlobalData *gdata)
 {
 	char *x;
 
-	gdata->optfilename = ConvertDirectoryName("$HOME/.alfm/options.ini");
+	gdata->optfilename = ConvertDirectoryName("$HOME/.alfc/options.ini");
+	LogInfo("homefile is %s\n", gdata->optfilename);
 	gdata->optfile = INI_load(gdata->optfilename);
 	if(gdata->optfile == NULL)
 	{
@@ -138,14 +155,19 @@ void LoadOptions(uGlobalData *gdata)
 	}
 
 	x = INI_get(gdata->optfile, "colours", "background");
-	gdata->clr_background = decode_colour(x, CLR_BLACK);
+	gdata->clr_background = decode_colour(x, CLR_GREY);
 	x = INI_get(gdata->optfile, "colours", "foreground");
-	gdata->clr_foreground = decode_colour(x, CLR_GREY);
+	gdata->clr_foreground = decode_colour(x, CLR_BLACK);
 
 	x = INI_get(gdata->optfile, "colours", "title_fg");
-	gdata->clr_title_fg = decode_colour(x, CLR_GREY);
+	gdata->clr_title_fg = decode_colour(x, CLR_CYAN);
 	x = INI_get(gdata->optfile, "colours", "title_bg");
 	gdata->clr_title_bg = decode_colour(x, CLR_BLACK);
+
+	x = INI_get(gdata->optfile, "colours", "hi_fg");
+	gdata->clr_hi_foreground = decode_colour(x, CLR_MAGENTA);
+	x = INI_get(gdata->optfile, "colours", "hi_bg");
+	gdata->clr_hi_background = decode_colour(x, CLR_BLACK);
 }
 
 void SaveOptions(uGlobalData *gdata)
