@@ -237,13 +237,14 @@ static int nc_screen_init(uGlobalData *gdata)
 	intMaxWidth = gdata->screen->get_screen_width();
 
 	// init some colour pairs
-	for(i=1; i>0; i++)
+	for(i=1; i > 0; i++)
+	{
 		if(init_pair((char)i, CLR_WHITE, CLR_BLACK)==ERR)
-			i=-1;
+			break;
+	}
 
-	intMaxColourPairs = i;
-
-	LogInfo("Can handle %i colourpairs\n", intMaxColourPairs);
+	intMaxColourPairs = i - 1;
+	//LogInfo("Can handle %i colourpairs\n", intMaxColourPairs);
 
 	init_pair(CLR_BLACK,	COLOR_BLACK,	COLOR_BLACK);
 	init_pair(CLR_RED,		COLOR_RED,		COLOR_BLACK);

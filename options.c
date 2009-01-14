@@ -146,7 +146,7 @@ void LoadOptions(uGlobalData *gdata)
 	char *x;
 
 	gdata->optfilename = ConvertDirectoryName("$HOME/.alfc/options.ini");
-	LogInfo("homefile is %s\n", gdata->optfilename);
+
 	gdata->optfile = INI_load(gdata->optfilename);
 	if(gdata->optfile == NULL)
 	{
