@@ -293,18 +293,32 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 	return lst;
 }
 
-static void DrawFileListWindow(uGlobalData *gd, uWindow *win, DList *lstFiles)
+static void DrawFileListWindow(uGlobalData *gd, uWindow *win, DList *lstFiles, char *dpath)
 {
 	int depth;
 	char buff[1024];
 	DLElement *e;
 	int i;
 	char *p;
+	char *path;
 
 	int max_namelen;
 	int max_sizelen;
 
 	gd->screen->draw_border(win);
+
+	gd->screen->set_style(gd, STYLE_TITLE);
+
+	path = ConvertDirectoryName(dpath);
+	if(strlen(path) < win->width-6)
+		sprintf(buff, "[ %s ]", path);
+	else
+		sprintf(buff, "[ %s ]", path + (strlen(path) - (win->width-6)));
+	free(path);
+
+	gd->screen->set_cursor(win->offset_row + 1, win->offset_col + 2);
+	gd->screen->print(buff);
+	gd->screen->set_style(gd, STYLE_NORMAL);
 
 	depth = win->height - 2;
 
@@ -440,8 +454,8 @@ int main(int argc, char *argv[])
 		gdata->screen->set_cursor(1, ((COLS - (strlen(" Welcome to {A}nother {L}inux {F}ile{M}anager ") - 8))/2));
 		gdata->screen->print(" Welcome to {A}nother {L}inux {F}ile{M}anager ");
 
-		DrawFileListWindow(gdata, gdata->win_left, gdata->lstLeft);
-		DrawFileListWindow(gdata, gdata->win_right, gdata->lstRight);
+		DrawFileListWindow(gdata, gdata->win_left, gdata->lstLeft, gdata->left_dir);
+		DrawFileListWindow(gdata, gdata->win_right, gdata->lstRight, gdata->right_dir);
 
 		gdata->screen->get_keypress();
 
