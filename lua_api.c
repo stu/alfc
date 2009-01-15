@@ -291,3 +291,49 @@ int gme_SetRuntimeOption_CompressFilesize(lua_State *L)
 
 	return 0;
 }
+
+int gme_SetQuitAppFlag(lua_State *L)
+{
+	SetQuitAppFlag(1);
+	return 0;
+}
+
+int gme_SwitchPanes(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	SwitchPanes(gd);
+
+	return 0;
+}
+
+int gme_GetActivePane(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	lua_pushnumber(L, gd->selected_window);
+	return 1;
+}
+
+int gme_SetActivePane(lua_State *L)
+{
+	int v;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	v = luaL_checknumber(L, 1);
+
+	if(v == WINDOW_LEFT || v == WINDOW_RIGHT)
+		SetActivePane(gd, v);
+	else
+		return luaL_error(L, "Unknown window %i (Must be WINDOW_LEFT or WINDOW_RIGHT)", v);
+
+	lua_pushnumber(L, gd->selected_window);
+	return 1;
+}
+

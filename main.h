@@ -29,7 +29,7 @@ enum
 };
 
 typedef struct udtGlobals uGlobalData;
-
+typedef struct udtScreenDriver uScreenDriver;
 
 typedef struct udtDirEntry
 {
@@ -48,32 +48,40 @@ typedef struct udtWindow
 	// stuff to carry for the file list
 	int	highlight_line;
 	int top_line;
+
+	uGlobalData *gd;
+	uScreenDriver *screen;
 } uWindow;
 
-typedef struct udtScreenDriver
+struct udtScreenDriver
 {
-	int (*init)(uGlobalData *gdata);
-	int (*deinit)(uGlobalData *gdata);
+	uGlobalData *gd;
+
+	int (*init)(uScreenDriver *scr);
+	int (*deinit)(void);
 
 	void (*cls)(void);
 
 	int (*get_screen_height)(void);
 	int (*get_screen_width)(void);
 
-	int (*get_keypress)(void);
+	uint32_t (*get_keypress)(void);
 
 	void (*print)(const char *s);
 
-	void (*set_style)(uGlobalData *gdata, int style);
+	void (*set_style)(int style);
 	void (*set_cursor)(int row, int col);
 	void (*erase_eol)(void);
 
 	void (*draw_border)(uWindow *win);
 	void (*init_style)(int style, uint32_t fg, uint32_t bg);
-} uScreenDriver;
+	void (*print_hline)(void);
+	void (*print_vline)(void);
+};
 
 #define WINDOW_LEFT	0
 #define WINDOW_RIGHT 1
+#define MAX_COMMAND_LENGTH	256
 
 struct udtGlobals
 {
@@ -114,6 +122,8 @@ struct udtGlobals
 	uint32_t	uid;
 	uint32_t	gid;
 
+	int			command_length;
+	char		command[MAX_COMMAND_LENGTH];
 };
 
 enum
@@ -128,6 +138,9 @@ enum
 	e_title_background
 };
 
+extern void SetQuitAppFlag(int flag);
+extern void SwitchPanes(uGlobalData *gd);
+extern void SetActivePane(uGlobalData *gd, int p);
 
 extern char* GetCurrentWorkingDirectory(void);
 extern char* ConvertDirectoryName(const char *x);

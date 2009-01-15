@@ -3,7 +3,51 @@
 
 /* build with lua_helper.lua in tools */
 
-lua_State *_Gl;
+int ExecuteString(uGlobalData *gb, char *sn)
+{
+	char *outbuff;
+	int maxsize;
+
+	int rc = 0;
+
+	lua_State *l;
+	int v;
+
+	maxsize = strlen(sn);
+	outbuff = malloc(64 + maxsize);
+
+	if(outbuff == NULL)
+	{
+		LogError("No memory for buffer\n");
+		return -1;
+	}
+
+	memmove(outbuff, sn, maxsize + 1);
+
+	l = lua_open();
+	RegisterGameFuncs(gb, l);
+
+	v = luaL_loadbuffer(l, (char*)outbuff, maxsize, "BUFFER");
+	if(v != 0)
+	{
+		LogError("cant load buffer, error %s\n", lua_tostring(l, -1));
+		rc = -1;
+	}
+	else
+	{
+		v = lua_pcall(l, 0, 0, 0);
+		if(v != 0)
+		{
+			LogError("lua error : %s\n", lua_tostring(l, -1));
+			rc = -1;
+		}
+	}
+
+	lua_close(l);
+	free(outbuff);
+
+	return rc;
+}
 
 int ExecuteScript(uGlobalData *gb, char *sn)
 {
@@ -88,6 +132,9 @@ void RegisterGameFuncs(uGlobalData *gb, lua_State *l)
 	lua_pushnumber(l, e_foreground); lua_setglobal(l, "foreground");
 	lua_pushnumber(l, e_highlight_background); lua_setglobal(l, "highlight_background");
 	lua_pushnumber(l, e_highlight_foreground); lua_setglobal(l, "highlight_foreground");
+
+	lua_pushnumber(l, WINDOW_LEFT); lua_setglobal(l, "WINDOW_LEFT");
+	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
 
 	lua_settop(l, 0);
 }

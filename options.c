@@ -95,7 +95,14 @@ static void CreateBaselineINIFile(uGlobalData *gdata)
 	INI_UpdateItem(gdata->optfile, "scripts", "startup_file", "$HOME/.alfc/startup.lua");
 	INI_UpdateItem(gdata->optfile, "scripts", "shutdown_file", "$HOME/.alfc/shutdown.lua");
 
-	INI_UpdateItem(gdata->optfile, "colours", "background", "blue");
+	INI_UpdateItem(gdata->optfile, "colours", "background", "black");
+	INI_UpdateItem(gdata->optfile, "colours", "foreground", "grey");
+
+	INI_UpdateItem(gdata->optfile, "colours", "title_fg", "white");
+	INI_UpdateItem(gdata->optfile, "colours", "title_bg", "magenta");
+
+	INI_UpdateItem(gdata->optfile, "colours", "hi_fg", "white");
+	INI_UpdateItem(gdata->optfile, "colours", "hi_bg", "blue");
 }
 
 int decode_colour(char *s, int def)
@@ -155,7 +162,7 @@ void LoadOptions(uGlobalData *gdata)
 	}
 
 	x = INI_get(gdata->optfile, "options", "compress_filesize");
-	if(IsTrue(x) == 0)
+	if(x != NULL && IsTrue(x) == 0)
 		gdata->compress_filesize = 1;
 
 	x = INI_get(gdata->optfile, "colours", "background");

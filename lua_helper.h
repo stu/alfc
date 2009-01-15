@@ -12,7 +12,7 @@ struct lstr
 
 #define GET_LUA_STRING(a,b) (a.data = (char*)luaL_checklstring(L, (b), &a.length))
 
-
+extern int ExecuteString(uGlobalData *gb, char *sn);
 extern int ExecuteScript(uGlobalData *gb, char *sn);
 extern void RegisterGameFuncs(uGlobalData *gb, lua_State *l);
 

@@ -1,4 +1,6 @@
 #include "headers.h"
+#include <signal.h>
+#include <ctype.h>
 
 static int intCurCol;
 static int intCurRow;
@@ -17,6 +19,9 @@ static int intStyle;
 #define FRM_B	6
 #define FRM_LR	7
 
+#define ALT_KEY(n)      (ALT0_KEY+(n))
+
+static void terminate_signal(int a);
 static void setcursor(int row, int col);
 
 #define MAX_STYLES	3
@@ -77,6 +82,16 @@ static void dr_outchar(int s)
 	mvaddch(intCurRow, intCurCol, s);
 }
 
+static void nc_print_hline(void)
+{
+	dr_outchar(ACS_HLINE);
+}
+
+static void nc_print_vline(void)
+{
+	dr_outchar(ACS_VLINE);
+}
+
 static void nc_draw_frame(uWindow *w)
 {
 	int i;
@@ -90,32 +105,18 @@ static void nc_draw_frame(uWindow *w)
 
 	for(i = 1 ; i < (w->width-1); i++)
 	{
-		setcursor(1 + w->offset_row, 1 + w->offset_col + i);					dr_outchar(ACS_HLINE);
-		setcursor(w->offset_row + w->height, 1 + w->offset_col + i );			dr_outchar(ACS_HLINE);
+		setcursor(1 + w->offset_row, 1 + w->offset_col + i);					nc_print_hline();
+		setcursor(w->offset_row + w->height, 1 + w->offset_col + i );			nc_print_hline();
 	}
 
 	for(i = 1; i < (w->height-1); i++)
 	{
-		setcursor(1 + w->offset_row + i , 1 + w->offset_col);		dr_outchar(ACS_VLINE);
-		setcursor(1 + w->offset_row + i, w->offset_col + w->width);			dr_outchar(ACS_VLINE);
+		setcursor(1 + w->offset_row + i , 1 + w->offset_col);		nc_print_vline();
+		setcursor(1 + w->offset_row + i, w->offset_col + w->width);			nc_print_vline();
 	}
 
 	setcolour(STYLE_NORMAL, styles[STYLE_NORMAL].s_on);
 }
-
-/*
-static void draw_frame(void)
-{
-	uWindow w;
-
-	w.width = COLS;
-	w.height = LINES;
-	w.offset_row = 0;
-	w.offset_col = 0;
-
-	nc_draw_frame(&w);
-}
-*/
 
 static void nc_print_string(const char *s)
 {
@@ -169,33 +170,63 @@ static void nc_print_string(const char *s)
 	doupdate();
 }
 
-static int nc_get_keypress(void)
+static uint32_t nc_get_keypress(void)
 {
-	int i;
+	uint32_t key = 0;
+	short ch;
 
-	i=getch();
-
-	// parse CURSES codes into our (IBM) scancodes
-	switch(i)
-	{
-		// CR + LF == SAME thing... ack.. ohwell. curses
-		// fucks CTRL-M (0x0D) to (0x0A) when it should return 0x0D
-		case '\n':
-		case '\r':
-			i=0x0D;
-			break;
-
-		// my extended numpad 101/102 keyboard, pdcurses
-		// gives 0x1D0 back for minus, 0x1D1 for plus.
-		// convert them to plus + minus
-		case 0x01D0:
-			i='-';
-			break;
-		case 0x1D1:
-			i='+';
-			break;
+	ch = getch();
+	if (ch == ERR)
+		key = NO_KEY;
+	else if ((ch >= 32) && (ch < 127) && (ch != '`'))
+		key = ch;
+	else if ((ch >= 128) && (ch < 256))
+		key = ALT_KEY(ch-0x80);
+	else if ((ch >= KEY_F0) && (ch <= KEY_F(12)))
+		key = F_KEY(ch-KEY_F0);
+	else if ((ch == '[') || (ch == 27))
+	{  /* start of escape sequence */
+		ch = getch();
+		if ((ch != '[') && (ch != 0x27)) {  /* ALT key */
+			key = ALT_KEY(ch);
+		}
 	}
-	return i;
+	else if (ch == '`')
+	{  /* CTRL key */
+		ch = getch();
+		if ((ch < 256) && isalpha(ch))
+		{
+			ch = toupper(ch);
+			key = CTRL_KEY(ch);
+		}
+		else
+			key = NO_KEY;
+	}
+	else
+	{
+		switch(ch)
+		{
+			case 0x0D:				key = ENTER_KEY;		break;
+			case 0x0A:				key = ENTER_KEY;		break;
+			case KEY_UP:			key = UP_KEY;			break;
+			case KEY_DOWN:			key = DOWN_KEY;			break;
+			case KEY_LEFT:			key = LEFT_KEY;			break;
+			case KEY_RIGHT:			key = RIGHT_KEY;		break;
+			case KEY_PPAGE:			key = PGUP_KEY;			break;
+			case KEY_NPAGE:			key = PGDN_KEY;			break;
+			case KEY_HOME:			key = HOME_KEY;			break;
+			case KEY_END:			key = END_KEY;			break;
+			case KEY_DC:			key = DELETE_KEY;		break;
+			case 127:				key = DELETE_KEY;		break;
+			case KEY_BACKSPACE:		key = BACKSPACE_KEY;	break;
+			case 9:					key = TAB_KEY;    		break;
+			default:
+			if ((ch > 0) && (ch <= 26))
+				key = ch; // CTRL keys
+		}
+	}
+
+	return key;
 }
 
 static void init_style(int style, uint32_t fg, uint32_t bg)
@@ -220,10 +251,22 @@ static void nc_init_style(int style, uint32_t fg, uint32_t bg)
 	init_style(style, fg, bg);
 }
 
-static int nc_screen_init(uGlobalData *gdata)
+static int nc_screen_init(uScreenDriver *scr)
 {
 	int i;
 
+	signal(SIGKILL, terminate_signal ); /*setting SIGKILL signal handler*/
+	signal(SIGQUIT, terminate_signal ); /*setting SIGQUIT signal handler*/
+	signal(SIGSEGV, terminate_signal ); /*setting SIGSEGV signal handler*/
+
+	/*
+		tcgetattr(STDIN_FILENO, &tattr);
+		tcgetattr(STDIN_FILENO, &tattr_bak);
+		tattr.c_lflag &= ~(ICANON|ECHO);
+		tattr.c_cc[VMIN]=1;
+		tattr.c_cc[VTIME]=0;
+		tcsetattr(STDIN_FILENO, TCSAFLUSH, &tattr);
+	 */
 	// initialise ncurses
 	initscr();
 
@@ -238,8 +281,8 @@ static int nc_screen_init(uGlobalData *gdata)
 	raw();						// fork me raw
 	meta(stdscr, TRUE);			// fork me meta
 
-	intMaxHeight = gdata->screen->get_screen_height();
-	intMaxWidth = gdata->screen->get_screen_width();
+	intMaxHeight = scr->get_screen_height();
+	intMaxWidth = scr->get_screen_width();
 
 	// init some colour pairs
 	for(i=1; i > 0; i++)
@@ -260,12 +303,12 @@ static int nc_screen_init(uGlobalData *gdata)
 	init_pair(CLR_CYAN,		COLOR_CYAN,		COLOR_BLACK);
 	init_pair(CLR_GREY,		COLOR_WHITE,	COLOR_BLACK);
 
-	init_style(STYLE_TITLE, gdata->clr_title_fg, gdata->clr_title_bg);					// title bar
-	init_style(STYLE_NORMAL, gdata->clr_foreground, gdata->clr_background);				// default
-	init_style(STYLE_HIGHLIGHT, gdata->clr_hi_foreground, gdata->clr_hi_background);	// highlight line
+	init_style(STYLE_TITLE, scr->gd->clr_title_fg, scr->gd->clr_title_bg);					// title bar
+	init_style(STYLE_NORMAL, scr->gd->clr_foreground, scr->gd->clr_background);				// default
+	init_style(STYLE_HIGHLIGHT, scr->gd->clr_hi_foreground, scr->gd->clr_hi_background);	// highlight line
 
-	gdata->screen->set_style(gdata, STYLE_NORMAL);
-	gdata->screen->cls();
+	scr->set_style(STYLE_NORMAL);
+	scr->cls();
 
 	return 0;
 }
@@ -292,7 +335,7 @@ static void setcursor(int row, int col)
 	doupdate();
 }
 
-static int nc_screen_deinit(uGlobalData *gdata)
+static int nc_screen_deinit(void)
 {
 	setcursor(intMaxHeight, 1);
 
@@ -333,7 +376,7 @@ static void nc_cls(void)
 	intCurRow=0;
 }
 
-static void nc_set_style(uGlobalData *gdata, int style)
+static void nc_set_style(int style)
 {
 	switch(style)
 	{
@@ -354,8 +397,18 @@ static void nc_set_style(uGlobalData *gdata, int style)
 	}
 }
 
+
+static void terminate_signal(int a)
+{
+	nc_screen_deinit();
+	exit(-1);
+}
+
+
 uScreenDriver screen_ncurses =
 {
+	NULL,
+
 	nc_screen_init,		// init screen
 	nc_screen_deinit,	// uninit
 	nc_cls,				// clear scren
@@ -367,5 +420,7 @@ uScreenDriver screen_ncurses =
 	setcursor,
 	erase_eol,
 	nc_draw_frame,
-	nc_init_style
+	nc_init_style,
+	nc_print_hline,
+	nc_print_vline,
 };
