@@ -1,6 +1,12 @@
 #include "headers.h"
+#ifndef __MINGW_H
 #include <signal.h>
+#endif
+#include <curses.h>
 #include <ctype.h>
+
+#define CVT_CTRL_KEY(x) ((x) - 'A' +1)
+
 
 static int intCurCol;
 static int intCurRow;
@@ -19,9 +25,10 @@ static int intStyle;
 #define FRM_B	6
 #define FRM_LR	7
 
-#define ALT_KEY(n)      (ALT0_KEY+(n))
-
+#ifndef __MINGW_H
 static void terminate_signal(int a);
+#endif
+
 static void setcursor(int row, int col);
 
 #define MAX_STYLES	3
@@ -173,23 +180,24 @@ static void nc_print_string(const char *s)
 static uint32_t nc_get_keypress(void)
 {
 	uint32_t key = 0;
-	short ch;
+	int16_t ch;
 
 	ch = getch();
 	if (ch == ERR)
-		key = NO_KEY;
-	else if ((ch >= 32) && (ch < 127) && (ch != '`'))
+		key = 0;
+	else if ((ch >= 0x20 && (ch <= 0x7E ) && (ch != '`')))
 		key = ch;
-	else if ((ch >= 128) && (ch < 256))
-		key = ALT_KEY(ch-0x80);
-	else if ((ch >= KEY_F0) && (ch <= KEY_F(12)))
-		key = F_KEY(ch-KEY_F0);
+	else if ((ch >= 0x80) && (ch <= 0xFF))
+		key = ALFC_KEY_ALT + (ch - 0x80);
+	else if ((ch >= KEY_F0) && (ch <= KEY_F0 + 12))
+		key = ALFC_KEY_F00 + (ch - KEY_F0);
 	else if ((ch == '[') || (ch == 27))
 	{  /* start of escape sequence */
 		ch = getch();
-		if ((ch != '[') && (ch != 0x27)) {  /* ALT key */
-			key = ALT_KEY(ch);
-		}
+		if ((ch != '[') && (ch != 0x27))  /* ALT key */
+			key = ALFC_KEY_ALT + ch;
+		else
+			ch = 0;
 	}
 	else if (ch == '`')
 	{  /* CTRL key */
@@ -197,32 +205,35 @@ static uint32_t nc_get_keypress(void)
 		if ((ch < 256) && isalpha(ch))
 		{
 			ch = toupper(ch);
-			key = CTRL_KEY(ch);
+			key = ALFC_KEY_CTRL + CVT_CTRL_KEY(ch);
 		}
 		else
-			key = NO_KEY;
+			key = 0;
 	}
 	else
 	{
 		switch(ch)
 		{
-			case 0x0D:				key = ENTER_KEY;		break;
-			case 0x0A:				key = ENTER_KEY;		break;
-			case KEY_UP:			key = UP_KEY;			break;
-			case KEY_DOWN:			key = DOWN_KEY;			break;
-			case KEY_LEFT:			key = LEFT_KEY;			break;
-			case KEY_RIGHT:			key = RIGHT_KEY;		break;
-			case KEY_PPAGE:			key = PGUP_KEY;			break;
-			case KEY_NPAGE:			key = PGDN_KEY;			break;
-			case KEY_HOME:			key = HOME_KEY;			break;
-			case KEY_END:			key = END_KEY;			break;
-			case KEY_DC:			key = DELETE_KEY;		break;
-			case 127:				key = DELETE_KEY;		break;
-			case KEY_BACKSPACE:		key = BACKSPACE_KEY;	break;
-			case 9:					key = TAB_KEY;    		break;
+			case 0x0D:				key = ALFC_KEY_ENTER;		break;
+			case 0x0A:				key = ALFC_KEY_ENTER;		break;
+			case KEY_UP:			key = ALFC_KEY_UP;			break;
+			case KEY_DOWN:			key = ALFC_KEY_DOWN;		break;
+			case KEY_LEFT:			key = ALFC_KEY_LEFT;		break;
+			case KEY_RIGHT:			key = ALFC_KEY_RIGHT;		break;
+			case KEY_PPAGE:			key = ALFC_KEY_PAGE_UP;		break;
+			case KEY_NPAGE:			key = ALFC_KEY_PAGE_DOWN;	break;
+			case KEY_HOME:			key = ALFC_KEY_HOME;		break;
+			case KEY_END:			key = ALFC_KEY_END;			break;
+			case KEY_DC:			key = ALFC_KEY_DEL;			break;
+			case 127:				key = ALFC_KEY_DEL;			break;
+#if KEY_DC != 8
+			case 0x08:				key = ALFC_KEY_DEL;			break;
+#endif
+			case KEY_BACKSPACE:		key = ALFC_KEY_BACKSPACE;	break;
+			case 9:					key = ALFC_KEY_TAB;    		break;
 			default:
 			if ((ch > 0) && (ch <= 26))
-				key = ch; // CTRL keys
+				key = ALFC_KEY_CTRL + ch; // CTRL keys
 		}
 	}
 
@@ -255,9 +266,11 @@ static int nc_screen_init(uScreenDriver *scr)
 {
 	int i;
 
+#ifndef __MINGW_H
 	signal(SIGKILL, terminate_signal ); /*setting SIGKILL signal handler*/
 	signal(SIGQUIT, terminate_signal ); /*setting SIGQUIT signal handler*/
 	signal(SIGSEGV, terminate_signal ); /*setting SIGSEGV signal handler*/
+#endif
 
 	/*
 		tcgetattr(STDIN_FILENO, &tattr);
@@ -397,13 +410,13 @@ static void nc_set_style(int style)
 	}
 }
 
-
+#ifndef __MINGW_H
 static void terminate_signal(int a)
 {
 	nc_screen_deinit();
 	exit(-1);
 }
-
+#endif
 
 uScreenDriver screen_ncurses =
 {

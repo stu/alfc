@@ -6,6 +6,43 @@ extern "C"{
 
 enum
 {
+	ALFC_KEY_DOWN = 0x1000,
+	ALFC_KEY_UP,
+	ALFC_KEY_LEFT,
+	ALFC_KEY_RIGHT,
+
+	ALFC_KEY_INS,
+	ALFC_KEY_DEL,
+	ALFC_KEY_BACKSPACE,
+	ALFC_KEY_HOME,
+	ALFC_KEY_END,
+	ALFC_KEY_PAGE_UP,
+	ALFC_KEY_PAGE_DOWN,
+	ALFC_KEY_ENTER,
+	ALFC_KEY_TAB,
+
+	ALFC_KEY_F00,
+	ALFC_KEY_F01,
+	ALFC_KEY_F02,
+	ALFC_KEY_F03,
+	ALFC_KEY_F04,
+	ALFC_KEY_F05,
+	ALFC_KEY_F06,
+	ALFC_KEY_F07,
+	ALFC_KEY_F08,
+	ALFC_KEY_F09,
+	ALFC_KEY_F10,
+	ALFC_KEY_F11,
+	ALFC_KEY_F12,
+
+	ALFC_KEY_ALT = 0x1400,
+	ALFC_KEY_CTRL = 0x1600,
+
+
+};
+
+enum
+{
 	STYLE_TITLE = 1,
 	STYLE_NORMAL,
 	STYLE_HIGHLIGHT,
@@ -88,6 +125,8 @@ struct udtGlobals
 	char	*optfilename;
 	INIFILE *optfile;
 
+	char	*optfilehistory;
+
 	char	*left_dir;
 	char	*right_dir;
 
@@ -124,6 +163,12 @@ struct udtGlobals
 
 	int			command_length;
 	char		command[MAX_COMMAND_LENGTH];
+
+	int			hist_idx;
+	DList		*lstLogHistory;
+
+	DList		*lstMRULeft;
+	DList		*lstMRURight;
 };
 
 enum
@@ -137,6 +182,21 @@ enum
 	e_title_foreground,
 	e_title_background
 };
+
+extern void AddHistory(uGlobalData *gd, char *str, ...);
+
+extern int scroll_up(uGlobalData *gd);
+extern int scroll_down(uGlobalData *gd);
+extern int scroll_home(uGlobalData *gd);
+
+extern DList* GetActiveMRU(uGlobalData *gd);
+extern char* GetActDPath(uGlobalData *gd);
+extern DList* GetActList(uGlobalData *gd);
+extern uWindow* GetActWindow(uGlobalData *gd);
+extern char* GetInActDPath(uGlobalData *gd);
+extern DList* GetInActList(uGlobalData *gd);
+extern uWindow* GetInActWindow(uGlobalData *gd);
+extern uDirEntry* GetHighlightedFile(DList *lstFiles, int idx, int tr);
 
 extern void SetQuitAppFlag(int flag);
 extern void SwitchPanes(uGlobalData *gd);

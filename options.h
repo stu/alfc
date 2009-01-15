@@ -9,6 +9,9 @@ extern void CreateHomeDirectory(void);
 extern int IsTrue(const char *s);
 extern void LoadOptions(uGlobalData *gdata);
 extern void SaveOptions(uGlobalData *gdata);
+extern void SaveHistory(uGlobalData *gd);
+extern void RememberDirectories(uGlobalData *gd);
+extern void SaveMRU(uGlobalData *gd, DList *lst, char *opt);
 
 #ifdef __cplusplus
 }

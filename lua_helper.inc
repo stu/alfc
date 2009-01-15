@@ -30,7 +30,7 @@ int ExecuteString(uGlobalData *gb, char *sn)
 	v = luaL_loadbuffer(l, (char*)outbuff, maxsize, "BUFFER");
 	if(v != 0)
 	{
-		LogError("cant load buffer, error %s\n", lua_tostring(l, -1));
+		LogError("cant load buffer, error %s\nBuffer = %s\n", lua_tostring(l, -1), sn);
 		rc = -1;
 	}
 	else

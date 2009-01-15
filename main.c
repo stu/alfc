@@ -13,6 +13,82 @@
 
 int intFlag = 0;
 
+DList* GetActiveMRU(uGlobalData *gd)
+{
+	if(gd->selected_window == WINDOW_RIGHT)
+		return gd->lstMRURight;
+	else
+		return gd->lstMRULeft;
+}
+
+static void AddMRU(uGlobalData *gd, DList *lstMRU, char *p)
+{
+	char *v;
+	int c;
+
+	dlist_ins_prev(lstMRU, dlist_head(lstMRU), strdup(p));
+
+	v = INI_get(gd->optfile, "options", "mru_count");
+	if(v == NULL)
+		c = 16;
+	else
+		c = atoi(v);
+
+	if(dlist_size(lstMRU) > c)
+	{
+		dlist_remove(lstMRU, dlist_tail(lstMRU), (void*)&v);
+		free(v);
+	}
+}
+
+char* GetActDPath(uGlobalData *gd)
+{
+	if(gd->selected_window == WINDOW_RIGHT)
+		return gd->right_dir;
+	else
+		return gd->left_dir;
+}
+
+char* GetInActDPath(uGlobalData *gd)
+{
+	if(gd->selected_window == WINDOW_LEFT)
+		return gd->right_dir;
+	else
+		return gd->left_dir;
+}
+
+DList* GetActList(uGlobalData *gd)
+{
+	if(gd->selected_window == WINDOW_RIGHT)
+		return gd->lstRight;
+	else
+		return gd->lstLeft;
+}
+
+DList* GetInActList(uGlobalData *gd)
+{
+	if(gd->selected_window == WINDOW_LEFT)
+		return gd->lstRight;
+	else
+		return gd->lstLeft;
+}
+
+uWindow* GetActWindow(uGlobalData *gd)
+{
+	if(gd->selected_window == WINDOW_RIGHT)
+		return gd->win_right;
+	else
+		return gd->win_left;
+}
+
+uWindow* GetInActWindow(uGlobalData *gd)
+{
+	if(gd->selected_window == WINDOW_LEFT)
+		return gd->win_right;
+	else
+		return gd->win_left;
+}
+
 void SetQuitAppFlag(int flag)
 {
 	intFlag = flag;
@@ -232,15 +308,17 @@ static void ExecShutdownScript(uGlobalData *gdata)
 	}
 }
 
-static char* GetOptionDir(uGlobalData *gdata, char *startup, char *group)
+static char* GetOptionDir(uGlobalData *gdata, char *startup, DList *lstMRU)
 {
 	char *r;
+	DLElement *e;
 
 	r = INI_get(gdata->optfile,"options", "remember_dirs");
 	if( IsTrue(r) == 0)
 	{
 		// yes, so get mru0
-		r = INI_get(gdata->optfile, group, "mru0");
+		e = dlist_head(lstMRU);
+		r = dlist_data(e);
 		if(r != NULL)
 			return strdup(r);
 		else
@@ -337,20 +415,114 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 	return lst;
 }
 
-static uint32_t convert_down(off_t a, int count)
+ uint64_t convert_down(uint64_t a, int count)
 {
 	off_t x;
-	uint32_t z;
+	uint64_t z;
 
 	x = a;
+#ifdef __MING_H
+	if(a > INT_MAX)
+		a = INT_MAX;
+#endif
 
 	for( ; count > 0; count--)
-		//x /= 1024;
-		x = x >> 10;
+		x = x / 1024;
 
 	z = x;
 
 	return z;
+}
+
+static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, int max_sizelen)
+{
+	char buff[1024];
+	char *p;
+
+	if(i == win->highlight_line)
+		win->screen->set_style(STYLE_HIGHLIGHT);
+	else
+		win->screen->set_style(STYLE_NORMAL);
+
+	memset(buff, ' ', 1024);
+
+	if(strlen(de->name) > max_namelen)
+	{
+		memmove(buff, de->name, max_namelen);
+		memmove(buff + max_namelen - 3, "...", 3);
+	}
+	else
+		memmove(buff, de->name, strlen(de->name));
+
+	if( S_ISDIR(de->stat_buff.st_mode) == 0 )
+	{
+		if(win->gd->compress_filesize == 0)
+			sprintf(buff + max_namelen + 2, "%10lu", de->stat_buff.st_size);
+		else
+		{
+			uint64_t xx = de->stat_buff.st_size;
+
+			if(xx < 1024)
+			{
+				sprintf(buff + max_namelen + 2, "%5ub ", (uint32_t)xx);
+			}
+			else
+			{
+				xx /= 1024;
+				if(xx < 1024)
+				{
+					sprintf(buff + max_namelen + 2, "%5ukb", (uint32_t)xx);
+				}
+				else
+				{
+					xx /= 1024;
+					if(xx < 1024)
+					{
+						sprintf(buff + max_namelen + 2, "%5umb", (uint32_t)xx);
+					}
+					else
+					{
+						xx /= 1024;
+						if(xx < 1024)
+							sprintf(buff + max_namelen + 2, "%5ugb", (uint32_t)xx);
+						else
+						{
+							sprintf(buff + max_namelen + 2, "%5utb", (uint32_t)(xx/(1024*1024)));
+						}
+					}
+				}
+			}
+		}
+
+		p = strchr(buff + max_namelen + 2, 0x0);
+		*p = ' ';
+	}
+	else
+	{
+		sprintf(buff + max_namelen + 2, "<DIR>");
+		p = strchr(buff + max_namelen + 2, 0x0);
+		*p = ' ';
+	}
+
+	buff[ win->width - 2] = 0;
+
+	win->screen->set_cursor( 2 + i + win->offset_row, 2 + win->offset_col );
+	win->screen->print(buff);
+
+	win->screen->set_style(STYLE_NORMAL);
+}
+
+static int CalcMaxSizeLen(uWindow *w)
+{
+	if(w->gd->compress_filesize == 0)
+		return 10;
+	else
+		return 7;
+}
+
+static int CalcMaxNameLen(uWindow *w, int max_size_len)
+{
+	return (w->width - max_size_len - 5);
 }
 
 static void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
@@ -359,7 +531,6 @@ static void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	char buff[1024];
 	DLElement *e;
 	int i;
-	char *p;
 	char *path;
 
 	int max_namelen;
@@ -386,14 +557,20 @@ static void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 		depth = dlist_size(lstFiles);
 
 	e = dlist_head(lstFiles);
+	i = win->top_line;
+	while(i > 0 && e != NULL)
+	{
+		e = dlist_next(e);
+		i -= 1;
+	}
+
+	if(e == NULL || i > 0)
+		return;
+
 	i = 0;
 
-	if(win->gd->compress_filesize == 0)
-		max_sizelen = 10;
-	else
-		max_sizelen = 7;
-
-	max_namelen = (win->width - max_sizelen - 5);
+	max_sizelen = CalcMaxSizeLen(win);
+	max_namelen = CalcMaxNameLen(win, max_sizelen);
 
 	while(e != NULL && i < depth)
 	{
@@ -401,73 +578,18 @@ static void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 		de = dlist_data(e);
 		e = dlist_next(e);
 
-		if(i == win->highlight_line)
-		{
-			win->screen->set_style(STYLE_HIGHLIGHT);
-		}
+		PrintFileLine(de, i, win, max_namelen, max_sizelen);
 
-		win->screen->set_cursor( 2 + i + win->offset_row, 2 + win->offset_col );
+		i += 1;
+	}
 
-		memset(buff, ' ', 1024);
+	memset(buff, ' ', win->width);
+	buff[win->width-2] = 0;
 
-		if(strlen(de->name) > max_namelen)
-		{
-			memmove(buff, de->name, max_namelen);
-			memmove(buff + max_namelen - 3, "...", 3);
-		}
-		else
-			memmove(buff, de->name, strlen(de->name));
-
-		if( S_ISDIR(de->stat_buff.st_mode) == 0 )
-		{
-			if(win->gd->compress_filesize == 0)
-				sprintf(buff + max_namelen + 2, "%10li", de->stat_buff.st_size);
-			else
-			{
-				off_t xx;
-				xx = de->stat_buff.st_size;
-
-				xx = convert_down(xx, 1);
-				if( xx < 1024)
-					sprintf(buff + max_namelen + 2, "%5ikb", (uint32_t)xx);
-				else
-				{
-					xx = convert_down(xx, 1);
-					if( xx < 1024)
-						sprintf(buff + max_namelen + 2, "%5imb", (uint32_t)xx);
-					else
-					{
-						xx = convert_down(xx, 1);
-						if( xx < 1024)
-							sprintf(buff + max_namelen + 2, "%5igb", (uint32_t)xx);
-						else
-						{
-							xx = convert_down(xx, 1);
-							sprintf(buff + max_namelen + 2, "%5itb", (uint32_t)xx);
-						}
-					}
-				}
-			}
-
-			p = strchr(buff + max_namelen + 2, 0x0);
-			*p = ' ';
-		}
-		else
-		{
-			sprintf(buff + max_namelen + 2, "<DIR>");
-			p = strchr(buff + max_namelen + 2, 0x0);
-			*p = ' ';
-		}
-
-		buff[ win->width - 2] = 0;
-
+	while(i < win->height - 2)
+	{
+		win->screen->set_cursor(2 + i + win->offset_row, 2 + win->offset_col );
 		win->screen->print(buff);
-
-		if(i == win->highlight_line)
-		{
-			win->screen->set_style(STYLE_NORMAL);
-		}
-
 		i += 1;
 	}
 
@@ -475,7 +597,7 @@ static void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	win->screen->set_cursor(win->screen->get_screen_height(),win->screen->get_screen_width());
 }
 
-static char* PrintNumber(off_t num)
+static char* PrintNumber(uint64_t num)
 {
 	char x[32];
 	char y[32];
@@ -483,7 +605,11 @@ static char* PrintNumber(off_t num)
 	char *q;
 	int i;
 
-	sprintf(x, "%li", num);
+#if __WORDSIZE == 64
+	sprintf(x, "%lu", num);
+#else
+	sprintf(x, "%llu", num);
+#endif
 
 	memset(y, ' ', 32);
 	y[31] = 0;
@@ -512,9 +638,35 @@ static char* PrintNumber(off_t num)
 		return strdup(q);
 }
 
-static void DrawFileInfo(uWindow *win,  DList *lstFiles)
+uDirEntry* GetHighlightedFile(DList *lstFiles, int idx, int tr)
 {
 	DLElement *e;
+	e = dlist_head(lstFiles);
+	while(tr > 0 && e != NULL)
+	{
+		tr -= 1;
+		e = dlist_next(e);
+	}
+
+	// beyond end of file list!
+	if(e == NULL || tr > 0)
+		return NULL;
+
+	while(e != NULL && idx > 0)
+	{
+		e = dlist_next(e);
+		idx -= 1;
+	}
+
+	// beyond end of file list!
+	if(e == NULL || idx > 0)
+		return NULL;
+
+	return dlist_data(e);
+}
+
+static void DrawFileInfo(uWindow *win)
+{
 	uDirEntry *de;
 	char *buff;
 	int max_namelen;
@@ -527,20 +679,8 @@ static void DrawFileInfo(uWindow *win,  DList *lstFiles)
 
 	i = win->top_line + win->highlight_line;
 
-	e = dlist_head(lstFiles);
-	while(e != NULL && i > 0)
-	{
-		e = dlist_next(e);
-		i -= 1;
-	}
+	de = GetHighlightedFile(GetActList(win->gd), win->highlight_line, win->top_line);
 
-	// beyond end of file list!
-	if(e == NULL || i > 0)
-		return;
-
-	de = dlist_data(e);
-
-	win->screen->set_cursor(1 + win->offset_row + win->height, 1);
 	win->screen->set_style(STYLE_TITLE);
 
 	buff = malloc(4096);
@@ -549,19 +689,21 @@ static void DrawFileInfo(uWindow *win,  DList *lstFiles)
 
 	size_offset = win->screen->get_screen_width() - (20  + 15);
 	attr_offset = win->screen->get_screen_width() - (15);
-
-	max_namelen = win->screen->get_screen_width() - (size_offset + 2);
+	max_namelen = size_offset - 2;
 	memset(buff, ' ', 4096);
 
 	sprintf(buff, "File: ");
 	if(strlen(de->name) > max_namelen)
 	{
+		LogInfo("namelen=%i, max=%i\n", strlen(de->name), max_namelen);
 		memmove(buff + 6, de->name, max_namelen);
 		memmove(buff + 6 + max_namelen - 3, "...", 3);
 	}
 	else
 		memmove(buff + 6, de->name, strlen(de->name));
 
+	// do size : "Size: 1,123,123,123"
+	memmove(buff + size_offset, "Size: ", 6);
 	if( S_ISDIR(de->stat_buff.st_mode) == 0)
 	{
 		// do size : "Size: 1,123,123,123"
@@ -591,11 +733,19 @@ static void DrawFileInfo(uWindow *win,  DList *lstFiles)
 	if( (de->stat_buff.st_mode & S_IWUSR) == S_IWUSR) buff[attr_offset + 7] = 'w';
 	if( (de->stat_buff.st_mode & S_IXUSR) == S_IXUSR) buff[attr_offset + 8] = 'x';
 #endif
+
+	win->screen->set_cursor(1 + win->offset_row + win->height, 1);
+
+	buff[win->screen->get_screen_width()] = 0;
 	win->screen->print(buff);
-	win->screen->set_cursor(win->offset_row + win->height, win->offset_col + 2);
-	win->screen->print("[ ** ACTIVE ** ]");
+	win->screen->set_style(STYLE_NORMAL);
 
 	free(buff);
+}
+
+static void DrawActiveFileInfo(uGlobalData *gd)
+{
+	DrawFileInfo( GetActWindow(gd));
 }
 
 static void DrawActive(uGlobalData *gd)
@@ -605,19 +755,12 @@ static void DrawActive(uGlobalData *gd)
 
 	gd->screen->set_style(STYLE_TITLE);
 
-	if(gd->selected_window == WINDOW_LEFT)
-		win = gd->win_left;
-	else
-		win = gd->win_right;
+	win = GetActWindow(gd);
 
 	gd->screen->set_cursor(win->offset_row + win->height, win->offset_col + 2);
 	gd->screen->print("[ ** ACTIVE ** ]");
 
-	if(gd->selected_window != WINDOW_LEFT)
-		win = gd->win_left;
-	else
-		win = gd->win_right;
-
+	win = GetInActWindow(gd);
 
 	for(i=0; i<16; i++)
 	{
@@ -625,6 +768,8 @@ static void DrawActive(uGlobalData *gd)
 		gd->screen->print_hline();
 	}
 
+	DrawActiveFileInfo(gd);
+	gd->screen->set_style(STYLE_NORMAL);
 	gd->screen->set_cursor(gd->screen->get_screen_height(), gd->screen->get_screen_width());
 }
 
@@ -663,8 +808,10 @@ static void BuildWindowLayout(uGlobalData *gd)
 	w->height = gd->screen->get_screen_height() - 5;
 	gd->win_right = w;
 
+	gd->win_left->top_line = 0;
+	gd->win_right->top_line = 0;
 	gd->win_left->highlight_line = 0; //8 + w->height/2;
-	gd->win_right->highlight_line = 8;
+	gd->win_right->highlight_line = 0;
 }
 
 static void DrawMenuLine(uGlobalData *gd)
@@ -695,15 +842,11 @@ static void DrawMenuLine(uGlobalData *gd)
 void SwitchPanes(uGlobalData *gd)
 {
 	if(gd->selected_window == WINDOW_RIGHT)
-	{
 		gd->selected_window = WINDOW_LEFT;
-		DrawActive(gd);
-	}
 	else
-	{
 		gd->selected_window = WINDOW_RIGHT;
-		DrawActive(gd);
-	}
+
+	DrawActive(gd);
 }
 
 void SetActivePane(uGlobalData *gd, int p)
@@ -717,7 +860,7 @@ static void exec_internal_command(char *s)
 	if(s == NULL)
 		return;
 
-	if(strcmp(s, ":quit") == 0)
+	if(strcmp(s, ":q") == 0)
 	{
 		SetQuitAppFlag(1);
 	}
@@ -736,6 +879,220 @@ static void DrawCLI(uGlobalData *gd)
 
 	gd->screen->print(gd->command);
 }
+
+static int get_scroll_depth(uWindow *w)
+{
+	if( dlist_size(GetActList(w->gd)) < w->height-2)
+		return dlist_size(GetActList(w->gd));
+	else
+		return (w->height - 2) - 4;
+}
+
+int scroll_home(uGlobalData *gd)
+{
+	GetActWindow(gd)->top_line = 0;
+	GetActWindow(gd)->highlight_line = 0;
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+
+	return 0;
+}
+
+int scroll_up(uGlobalData *gd)
+{
+	uWindow *w;
+	int scroll_depth;
+	int max_sizelen;
+	int max_namelen;
+
+	w = GetActWindow(gd);
+
+	if(w->highlight_line == 0 && w->top_line == 0)
+		return -1;
+
+	scroll_depth = get_scroll_depth(w);
+	max_sizelen = CalcMaxSizeLen(w);
+	max_namelen = CalcMaxNameLen(w, max_sizelen);
+
+	if( (w->top_line == 0) || (w->highlight_line > 4 && w->top_line > 0))
+	{
+		uDirEntry *de;
+
+		w->highlight_line -= 1;
+
+		de = GetHighlightedFile(GetActList(gd), w->highlight_line + 1, w->top_line);
+		PrintFileLine(de, w->highlight_line + 1, w, max_namelen, max_sizelen);
+
+		de = GetHighlightedFile(GetActList(gd), w->highlight_line, w->top_line);
+		PrintFileLine(de, w->highlight_line, w, max_namelen, max_sizelen);
+
+		DrawActiveFileInfo(gd);
+	}
+	else
+	{
+		w->top_line -= 1;
+		DrawFileListWindow(w, GetActList(w->gd), GetActDPath(w->gd));
+		DrawActive(gd);
+	}
+
+	return 0;
+}
+
+int scroll_down(uGlobalData *gd)
+{
+	uWindow *w;
+	int scroll_depth;
+	int max_sizelen;
+	int max_namelen;
+
+	w = GetActWindow(gd);
+
+	if(w->top_line + w->highlight_line + 1 == dlist_size(GetActList(gd)))
+		return -1;
+
+	scroll_depth = get_scroll_depth(w);
+	max_sizelen = CalcMaxSizeLen(w);
+	max_namelen = CalcMaxNameLen(w, max_sizelen);
+
+	// hl is 0 based
+	if( (w->highlight_line + 1 < scroll_depth) || ( w->top_line + 1 + w->highlight_line >= dlist_size(GetActList(gd)) - 4))
+	{
+		uDirEntry *de;
+
+		w->highlight_line += 1;
+
+		de = GetHighlightedFile(GetActList(gd), w->highlight_line - 1, w->top_line);
+		PrintFileLine(de, w->highlight_line - 1, w, max_namelen, max_sizelen);
+
+		de = GetHighlightedFile(GetActList(gd), w->highlight_line, w->top_line);
+		PrintFileLine(de, w->highlight_line, w, max_namelen, max_sizelen);
+
+		DrawActiveFileInfo(gd);
+	}
+	else
+	{
+		w->top_line += 1;
+		DrawFileListWindow(w, GetActList(w->gd), GetActDPath(w->gd));
+		DrawActive(gd);
+	}
+
+	return 0;
+}
+
+void AddHistory(uGlobalData *gd, char *str, ...)
+{
+	char *x;
+
+	x = malloc(8192);
+
+	va_list args;
+	va_start(args, str);
+	vsprintf(x, str, args);
+	va_end(args);
+
+	x = realloc(x, strlen(x) + 1);
+	dlist_ins(gd->lstLogHistory, x);
+}
+
+void updir(uGlobalData *gd)
+{
+	char *cpath;
+
+	cpath = ConvertDirectoryName(  GetActDPath(gd) );
+
+	if( chdir(cpath) != 0)
+	{
+		LogInfo("Could not change to directory %s\n", cpath);
+		free(cpath);
+		return;
+	}
+
+	free(cpath);
+
+	if( chdir("..") != 0)
+	{
+		LogInfo("Could not change up directory\n");
+		return;
+	}
+
+	if(gd->selected_window == WINDOW_LEFT)
+	{
+		free(gd->left_dir);
+		gd->left_dir = GetCurrentWorkingDirectory();
+		AddMRU(gd, gd->lstMRULeft, gd->left_dir);
+		dlist_destroy(gd->lstLeft);
+		free(gd->lstLeft);
+		gd->lstLeft = GetFiles(gd, gd->left_dir);
+	}
+	else
+	{
+		free(gd->right_dir);
+		gd->right_dir = GetCurrentWorkingDirectory();
+		AddMRU(gd, gd->lstMRURight, gd->right_dir);
+		dlist_destroy(gd->lstRight);
+		free(gd->lstRight);
+		gd->lstRight = GetFiles(gd, gd->right_dir);
+	}
+
+	GetActWindow(gd)->top_line = 0;
+	GetActWindow(gd)->highlight_line = 0;
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+}
+
+void downdir(uGlobalData *gd)
+{
+	char *cpath;
+	uDirEntry *de;
+
+	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
+
+	if( S_ISDIR(de->stat_buff.st_mode) == 0 )
+		return;
+
+	cpath = ConvertDirectoryName(  GetActDPath(gd) );
+
+	if( chdir(cpath) != 0)
+	{
+		LogInfo("Could not change to directory %s\n", cpath);
+		free(cpath);
+		return;
+	}
+
+	free(cpath);
+
+
+	if( chdir(de->name) != 0)
+	{
+		LogInfo("Could not change down to directory %s\n", de->name);
+		return;
+	}
+
+	if(gd->selected_window == WINDOW_LEFT)
+	{
+		free(gd->left_dir);
+		gd->left_dir = GetCurrentWorkingDirectory();
+		AddMRU(gd, gd->lstMRULeft, gd->left_dir);
+		dlist_destroy(gd->lstLeft);
+		free(gd->lstLeft);
+		gd->lstLeft = GetFiles(gd, gd->left_dir);
+	}
+	else
+	{
+		free(gd->right_dir);
+		gd->right_dir = GetCurrentWorkingDirectory();
+		AddMRU(gd, gd->lstMRURight, gd->right_dir);
+		dlist_destroy(gd->lstRight);
+		free(gd->lstRight);
+		gd->lstRight = GetFiles(gd, gd->right_dir);
+	}
+
+	GetActWindow(gd)->top_line = 0;
+	GetActWindow(gd)->highlight_line = 0;
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -781,10 +1138,10 @@ int main(int argc, char *argv[])
 		ExecStartupScript(gdata);
 
 		free(gdata->left_dir);
-		gdata->left_dir = GetOptionDir(gdata, "left_startup", "mru_left");
+		gdata->left_dir = GetOptionDir(gdata, "startup_left", gdata->lstMRULeft);
 
 		free(gdata->right_dir);
-		gdata->right_dir = GetOptionDir(gdata, "right_startup", "mru_right");
+		gdata->right_dir = GetOptionDir(gdata, "startup_right",  gdata->lstMRURight);
 
 		LogInfo("Start in left : %s\n", gdata->left_dir);
 		LogInfo("Start in right : %s\n", gdata->right_dir);
@@ -794,23 +1151,11 @@ int main(int argc, char *argv[])
 		gdata->lstRight = GetFiles(gdata, gdata->right_dir);
 
 		gdata->screen->set_style( STYLE_TITLE);
-		gdata->screen->set_cursor(1, ((COLS - (strlen(" Welcome to {A}nother {L}inux {F}ile{M}anager ") - 8))/2));
+		gdata->screen->set_cursor(1, ((gdata->screen->get_screen_width() - (strlen(" Welcome to {A}nother {L}inux {F}ile{M}anager ") - 8))/2));
 		gdata->screen->print(" Welcome to {A}nother {L}inux {F}ile{M}anager ");
 
-		DrawFileListWindow(gdata->win_left, gdata->lstLeft, gdata->left_dir);
-		DrawFileListWindow(gdata->win_right, gdata->lstRight, gdata->right_dir);
-
-		if(gdata->selected_window == WINDOW_LEFT)
-		{
-			DrawFileInfo(gdata->win_left, gdata->lstLeft);
-			DrawActive(gdata);
-		}
-		else
-		{
-			DrawFileInfo(gdata->win_right, gdata->lstRight);
-			DrawActive(gdata);
-		}
-
+		DrawFileListWindow(GetActWindow(gdata), GetActList(gdata), GetActDPath(gdata));
+		DrawFileListWindow(GetInActWindow(gdata), GetInActList(gdata), GetInActDPath(gdata));
 		DrawActive(gdata);
 
 		DrawMenuLine(gdata);
@@ -824,18 +1169,25 @@ int main(int argc, char *argv[])
 
 			switch(key)
 			{
-				// F10
-				case F0_KEY + 10:
+
+				case 0x21B: // ESC-ESC
 					intFlag = 1;
 					break;
 
-				case TAB_KEY:	// TAB
+				// F10
+				case ALFC_KEY_F10:
+					intFlag = 1;
+					break;
+
+				case ALFC_KEY_TAB:	// TAB
 					SwitchPanes(gdata);
 					break;
 
-				case ENTER_KEY:
+				case ALFC_KEY_ENTER:
 					if(gdata->command_length > 0)
 					{
+						AddHistory(gdata, gdata->command);
+
 						// exec string via lua...
 						if(gdata->command[0] == ':')
 							exec_internal_command(gdata->command);
@@ -857,11 +1209,27 @@ int main(int argc, char *argv[])
 					}
 					break;
 
+				case ALFC_KEY_LEFT:
+					updir(gdata);
+					break;
+
+				case ALFC_KEY_RIGHT:
+					downdir(gdata);
+					break;
+
+				case ALFC_KEY_UP:
+					scroll_up(gdata);
+					break;
+
+				case ALFC_KEY_DOWN:
+					scroll_down(gdata);
+					break;
+
 				default:
 					// terminal could send ^H (0x08) or ASCII DEL (0x7F)
-					if(key == DELETE_KEY || (key >= ' ' && key <= 0x7F))
+					if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
 					{
-						if(key == DELETE_KEY)
+						if(key == ALFC_KEY_DEL)
 						{
 							if(gdata->command_length > 0)
 							{
@@ -891,7 +1259,13 @@ int main(int argc, char *argv[])
 		gdata->screen->print("\n");
 		ExecShutdownScript(gdata);
 
+		SaveMRU(gdata, gdata->lstMRULeft, "mru_left");
+		SaveMRU(gdata, gdata->lstMRURight, "mru_right");
+
+		RememberDirectories(gdata);
+
 		// cleanup...
+		SaveHistory(gdata);
 		SaveOptions(gdata);
 		INI_unload(gdata->optfile);
 
@@ -899,6 +1273,14 @@ int main(int argc, char *argv[])
 		free(gdata->screen);
 
 		chdir(gdata->startup_path);
+
+		dlist_destroy(gdata->lstMRULeft);
+		dlist_destroy(gdata->lstMRURight);
+		free(gdata->lstMRULeft);
+		free(gdata->lstMRURight);
+
+		dlist_destroy(gdata->lstLogHistory);
+		free(gdata->lstLogHistory);
 
 		dlist_destroy(gdata->lstLeft);
 		dlist_destroy(gdata->lstRight);
@@ -913,6 +1295,7 @@ int main(int argc, char *argv[])
 		free(gdata->right_dir);
 
 		free(gdata->optfilename);
+		free(gdata->optfilehistory);
 
 		free(gdata->strRealName);
 		free(gdata->strLoginName);

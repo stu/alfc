@@ -315,6 +315,7 @@ int gme_GetActivePane(lua_State *L)
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
 
+
 	lua_pushnumber(L, gd->selected_window);
 	return 1;
 }
@@ -337,3 +338,63 @@ int gme_SetActivePane(lua_State *L)
 	return 1;
 }
 
+int gme_ScrollDown(lua_State *L)
+{
+	int v;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	v = luaL_checknumber(L, 1);
+
+	while(v > 0)
+	{
+		v -= 1;
+		if(scroll_down(gd) == -1)
+			return 0;
+	}
+
+	return 0;
+}
+
+int gme_ScrollUp(lua_State *L)
+{
+	int v;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	v = luaL_checknumber(L, 1);
+
+	while(v > 0)
+	{
+		v -= 1;
+		if(scroll_up(gd) == -1)
+			return 0;
+	}
+
+	return 0;
+}
+
+int gme_ScrollHome(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	scroll_home(gd);
+
+	return 0;
+}
+
+int gme_GetHighlightedFilename(lua_State *L)
+{
+	uDirEntry *de;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line - 1, GetActWindow(gd)->top_line);
+
+	lua_pushstring(L, de->name);
+	return 1;
+}
