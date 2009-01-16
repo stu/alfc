@@ -1157,9 +1157,6 @@ int downdir(uGlobalData *gd)
 void tag(uGlobalData *gd)
 {
 	uDirEntry *de;
-	int max_namelen;
-	int max_sizelen;
-
 
 	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
 	de->tagged ^= 1;
@@ -1168,10 +1165,9 @@ void tag(uGlobalData *gd)
 	else
 		GetActWindow(gd)->tagged_count -= 1;
 
-	// we need to do this, as if its the first/last line it wont refresh
-	max_sizelen = CalcMaxSizeLen(GetActWindow(gd));
-	max_namelen = CalcMaxNameLen(GetActWindow(gd), max_sizelen);
-	PrintFileLine(de,  GetActWindow(gd)->highlight_line,  GetActWindow(gd), max_namelen, max_sizelen);
+	gd->screen->set_style(STYLE_HIGHLIGHT);
+	gd->screen->set_cursor(GetActWindow(gd)->offset_row + GetActWindow(gd)->highlight_line + 2, GetActWindow(gd)->offset_col + 2 );
+	gd->screen->print( de->tagged == 1 ? "+" : " ");
 
 	scroll_down(gd);
 }
