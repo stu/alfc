@@ -131,13 +131,6 @@ static void nc_print_string(const char *s)
 	{
 		switch(*s)
 		{
-			case '}':
-				setcolour(intStyle, styles[intStyle].s_off);
-				break;
-			case '{':
-				setcolour(intStyle, styles[intStyle].s_on);
-				break;
-
 			case '\r':
 			case '\n':							// enter
 		 		intCurCol=0;

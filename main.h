@@ -72,7 +72,12 @@ typedef struct udtScreenDriver uScreenDriver;
 typedef struct udtDirEntry
 {
 	uint8_t	tagged;
-	char *name;
+
+	char 		*name;
+	uint64_t	size;
+	uint32_t	attrs;
+
+
 	struct stat stat_buff;
 } uDirEntry;
 
@@ -173,6 +178,10 @@ struct udtGlobals
 
 	DList		*lstMRULeft;
 	DList		*lstMRURight;
+
+	// global lua funcs
+	char 		*gcode;
+	lua_State	*_GL;
 };
 
 enum

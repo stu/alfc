@@ -1,3 +1,9 @@
+/****h* ALFC/Lua_Helper
+ * FUNCTION
+ *   Helper functions for dealing with Lua scripts
+ *****
+ */
+
 #include "headers.h"
 
 
@@ -7,7 +13,6 @@ int ExecuteString(uGlobalData *gb, char *sn)
 {
 	char *outbuff;
 	int maxsize;
-
 	int rc = 0;
 
 	lua_State *l;
@@ -108,12 +113,128 @@ int ExecuteScript(uGlobalData *gb, char *sn)
 	return rc;
 }
 
+
+int LoadGlobalScript(uGlobalData *gd, char *sn)
+{
+	uint32_t maxsize;
+	FILE *fp;
+	int v;
+	char *cpath;
+
+	cpath = ConvertDirectoryName(sn);
+
+	fp = fopen(cpath, "r");
+	if(fp == NULL)
+	{
+		free(cpath);
+		LogError("cant load file : %s\n", cpath);
+		return -1;
+	}
+
+	fseek(fp, 0x0L, SEEK_END);
+	maxsize = ftell(fp);
+	fseek(fp, 0x0L, SEEK_SET);
+
+	gd->gcode = malloc(64 + maxsize);
+	if(gd->gcode == NULL)
+	{
+		free(cpath);
+		LogError("No memory for script %s\n", cpath);
+		fclose(fp);
+		return -1;
+	}
+
+	fread(gd->gcode, 1, maxsize, fp);
+	fclose(fp);
+	free(cpath);
+
+	gd->_GL = lua_open();
+	RegisterGameFuncs(gd, gd->_GL);
+
+	luaL_loadbuffer(gd->_GL, gd->gcode, maxsize, "GlobalLuaFuncs");
+
+	// call to register globals
+	v = lua_pcall(gd->_GL, 0, 0, 0);			/* call 'SetGlobals' with 0 arguments and 0 result */
+	if(v != 0)
+	{
+		LogError("_gl lua error : %s\n", lua_tostring(gd->_GL, -1));
+		return -1;
+	}
+
+	return 0;
+}
+
+
+/****f* Lua_Helper/CallGlobalFunc
+* FUNCTION
+*	This does the acual call, setup must be done via CallGlobalFunc_Setup
+* SYNOPSIS
+*/
+int CallGlobalFunc(uGlobalData *gd, char *funcname, char *params, ...)
+/*
+* INPUTS
+*	o uGlobalData -- standard for all functions
+*	o funcname -- Name of function to call
+*	o params -- String list of parametes (s=string, i=int)
+*	o ... -- parameter list.. its much like printf
+* RETURNS
+*   error:
+*	o 0 -- No Error
+*	o -1 -- Failed (logged as type LOG_ERROR)
+* AUTHOR
+*	Stu George
+* EXAMPLE
+result = CallGlobalFunc(gd, "MyFunc", "si", "StringParam1", 0x1234);
+* SOURCE
+*/
+{
+	int v;
+	int arg_count;
+	va_list args;
+	char *p;
+
+	va_start(args, params);
+	lua_getfield(gd->_GL, LUA_GLOBALSINDEX, funcname);	/* function to be called */
+
+	p = params;
+	arg_count = 0;
+	while(*p != 0x0)
+	{
+		switch(*p++)
+		{
+			case 's':
+				lua_pushstring(gd->_GL, va_arg(args, char*));
+				break;
+
+			case 'i':
+				lua_pushnumber(gd->_GL, va_arg(args, int));
+				break;
+
+			default:
+				LogError("Unknown parameter");
+				return -1;
+				break;
+		}
+
+		arg_count += 1;
+	}
+
+	v = lua_pcall(gd->_GL, arg_count, 0, 0);
+	if(v != 0)
+	{
+		LogError("global lua error : %s", lua_tostring(gd->_GL, -1));
+		return -1;
+	}
+
+	return 0;
+}
+/******
+*
+*/
+
 /* register lua funcs */
 void RegisterGameFuncs(uGlobalData *gb, lua_State *l)
 {
-	/*luaopen_base(l);
-	luaopen_string(l);
-	luaopen_table(l);*/
 	luaL_openlibs(l);
 
 	RegisterGlobalData(gb, l);

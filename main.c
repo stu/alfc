@@ -416,7 +416,12 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 				lstat(de->name, &de->stat_buff);
 #endif
 
-				if(dirsfirst == 1 && S_ISDIR(de->stat_buff.st_mode) != 0 )
+				de->size = de->stat_buff.st_size;
+				de->attrs = de->stat_buff.st_mode;
+
+				memset(&de->stat_buff, 0x0, sizeof(struct stat));
+
+				if(dirsfirst == 1 && S_ISDIR(de->attrs) != 0 )
 				{
 					if(first_file == NULL)
 						dlist_ins(lstF, de);
@@ -493,13 +498,13 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 	else
 		memmove(buff + 1, de->name, strlen(de->name));
 
-	if( S_ISDIR(de->stat_buff.st_mode) == 0 )
+	if( S_ISDIR(de->attrs) == 0 )
 	{
 		if(win->gd->compress_filesize == 0)
-			sprintf(buff + max_namelen + 2, "%10lu", de->stat_buff.st_size);
+			sprintf(buff + max_namelen + 2, "%10lu", de->size);
 		else
 		{
-			uint64_t xx = de->stat_buff.st_size;
+			uint64_t xx = de->size;
 
 			if(xx < 1024)
 			{
@@ -742,11 +747,11 @@ static void DrawFileInfo(uWindow *win)
 
 	// do size : "Size: 1,123,123,123"
 	memmove(buff + size_offset, "Size: ", 6);
-	if( S_ISDIR(de->stat_buff.st_mode) == 0)
+	if( S_ISDIR(de->attrs) == 0)
 	{
 		// do size : "Size: 1,123,123,123"
 		memmove(buff + size_offset, "Size: ", 6);
-		siz = PrintNumber(de->stat_buff.st_size);
+		siz = PrintNumber(de->size);
 		memmove(buff + size_offset + 6 + (13 - strlen(siz)), siz, strlen(siz));
 		free(siz);
 	}
@@ -755,21 +760,21 @@ static void DrawFileInfo(uWindow *win)
 	memmove(buff + attr_offset, "Attr: ---------", 15);
 
 #ifndef __MINGW_H
-	if( (de->stat_buff.st_mode & S_IRUSR) == S_IRUSR) buff[attr_offset + 6] = 'r';
-	if( (de->stat_buff.st_mode & S_IWUSR) == S_IWUSR) buff[attr_offset + 7] = 'w';
-	if( (de->stat_buff.st_mode & S_IXUSR) == S_IXUSR) buff[attr_offset + 8] = 'x';
+	if( (de->attrs & S_IRUSR) == S_IRUSR) buff[attr_offset + 6] = 'r';
+	if( (de->attrs & S_IWUSR) == S_IWUSR) buff[attr_offset + 7] = 'w';
+	if( (de->attrs & S_IXUSR) == S_IXUSR) buff[attr_offset + 8] = 'x';
 
-	if( (de->stat_buff.st_mode & S_IRGRP) == S_IRGRP) buff[attr_offset + 9] = 'r';
-	if( (de->stat_buff.st_mode & S_IWGRP) == S_IWGRP) buff[attr_offset + 10] = 'w';
-	if( (de->stat_buff.st_mode & S_IXGRP) == S_IXGRP) buff[attr_offset + 11] = 'x';
+	if( (de->attrs & S_IRGRP) == S_IRGRP) buff[attr_offset + 9] = 'r';
+	if( (de->attrs & S_IWGRP) == S_IWGRP) buff[attr_offset + 10] = 'w';
+	if( (de->attrs & S_IXGRP) == S_IXGRP) buff[attr_offset + 11] = 'x';
 
-	if( (de->stat_buff.st_mode & S_IROTH) == S_IROTH) buff[attr_offset + 12] = 'r';
-	if( (de->stat_buff.st_mode & S_IWOTH) == S_IWOTH) buff[attr_offset + 13] = 'w';
-	if( (de->stat_buff.st_mode & S_IWOTH) == S_IWOTH) buff[attr_offset + 14] = 'x';
+	if( (de->attrs & S_IROTH) == S_IROTH) buff[attr_offset + 12] = 'r';
+	if( (de->attrs & S_IWOTH) == S_IWOTH) buff[attr_offset + 13] = 'w';
+	if( (de->attrs & S_IWOTH) == S_IWOTH) buff[attr_offset + 14] = 'x';
 #else
-	if( (de->stat_buff.st_mode & S_IRUSR) == S_IRUSR) buff[attr_offset + 6] = 'r';
-	if( (de->stat_buff.st_mode & S_IWUSR) == S_IWUSR) buff[attr_offset + 7] = 'w';
-	if( (de->stat_buff.st_mode & S_IXUSR) == S_IXUSR) buff[attr_offset + 8] = 'x';
+	if( (de->attrs & S_IRUSR) == S_IRUSR) buff[attr_offset + 6] = 'r';
+	if( (de->attrs & S_IWUSR) == S_IWUSR) buff[attr_offset + 7] = 'w';
+	if( (de->attrs & S_IXUSR) == S_IXUSR) buff[attr_offset + 8] = 'x';
 #endif
 
 	win->screen->set_cursor(1 + win->offset_row + win->height, 1);
@@ -916,7 +921,7 @@ void SetActivePane(uGlobalData *gd, int p)
 	DrawActive(gd);
 }
 
-static void exec_internal_command(char *s)
+static void exec_internal_command(uGlobalData *gd, char *s)
 {
 	char *p;
 
@@ -929,11 +934,7 @@ static void exec_internal_command(char *s)
 	else
 		p -= 1;
 
-	if(strncmp(s, ":q", p - s) == 0)
-	{
-		SetQuitAppFlag(1);
-	}
-
+	CallGlobalFunc(gd, "CLIParse", "s", s);
 }
 
 static void DrawCLI(uGlobalData *gd)
@@ -1143,7 +1144,7 @@ int downdir(uGlobalData *gd)
 
 	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
 
-	if( S_ISDIR(de->stat_buff.st_mode) == 0 )
+	if( S_ISDIR(de->attrs) == 0 )
 		return -1;
 
 	cpath = ConvertDirectoryName(  GetActDPath(gd) );
@@ -1231,7 +1232,7 @@ int main(int argc, char *argv[])
 	remove("memwatch.log");
 #endif
 
-	LogWrite_Startup(0, LOG_INFO | LOG_DEBUG | LOG_ERROR, 5000);
+	LogWrite_Startup(0, LOG_INFO | LOG_DEBUG | LOG_ERROR | LOG_STDERR, 5000);
 
 	gdata = NewGlobalData();
 
@@ -1246,198 +1247,248 @@ int main(int argc, char *argv[])
 		gdata->screen->gd = gdata;
 		gdata->screen->init(gdata->screen);
 
-		LogInfo("" LUA_RELEASE "; " LUA_COPYRIGHT "\n" LUA_AUTHORS "\n\n");
+		LogWrite_SetFlags( LogWrite_GetFlags() & ~LOG_STDERR);
 
-		if(gdata->screen->get_screen_width() < 60 || gdata->screen->get_screen_height() < 20)
+		if( LoadGlobalScript(gdata, INI_get(gdata->optfile, "scripts", "global_funcs")) == 0)
 		{
-			int r, c;
+			LogInfo("" LUA_RELEASE "; " LUA_COPYRIGHT "\n" LUA_AUTHORS "\n\n");
 
-			c = gdata->screen->get_screen_width();
-			r = gdata->screen->get_screen_height();
-			gdata->screen->deinit();
-			LogError("Display is %i.%i, it must be at least 20x60", r, c);
-			exit(1);
-		}
-
-		GetUserInfo(gdata);
-
-		BuildWindowLayout(gdata);
-		gdata->selected_window = WINDOW_LEFT;
-
-		ExecStartupScript(gdata);
-
-		free(gdata->left_dir);
-		gdata->left_dir = GetOptionDir(gdata, "startup_left", gdata->lstMRULeft);
-
-		free(gdata->right_dir);
-		gdata->right_dir = GetOptionDir(gdata, "startup_right",  gdata->lstMRURight);
-
-		LogInfo("Start in left : %s\n", gdata->left_dir);
-		LogInfo("Start in right : %s\n", gdata->right_dir);
-
-
-		gdata->lstLeft = GetFiles(gdata, gdata->left_dir);
-		gdata->lstRight = GetFiles(gdata, gdata->right_dir);
-
-		gdata->screen->set_style( STYLE_TITLE);
-		gdata->screen->set_cursor(1, ((gdata->screen->get_screen_width() - (strlen(" Welcome to {A}nother {L}inux {F}ile{M}anager ") - 8))/2));
-		gdata->screen->print(" Welcome to {A}nother {L}inux {F}ile{M}anager ");
-
-		DrawAll(gdata);
-
-		while(intFlag == 0)
-		{
-			uint32_t key;
-
-			key = gdata->screen->get_keypress();
-
-			switch(key)
+			if(gdata->screen->get_screen_width() < 60 || gdata->screen->get_screen_height() < 20)
 			{
+				int r, c;
 
-				case 0x21B: // ESC-ESC
-					intFlag = 1;
-					break;
-
-				// F10
-				case ALFC_KEY_F10:
-					intFlag = 1;
-					break;
-
-				case ALFC_KEY_TAB:	// TAB
-					SwitchPanes(gdata);
-					break;
-
-				case ALFC_KEY_ENTER:
-					if(gdata->command_length > 0)
-					{
-						AddHistory(gdata, gdata->command);
-
-						// exec string via lua...
-						if(gdata->command[0] == ':')
-							exec_internal_command(gdata->command);
-						else if(gdata->command[0] == '@')
-						{
-							char *fn = ConvertDirectoryName(gdata->command+1);
-							ExecuteScript(gdata, fn);
-							free(fn);
-						}
-						else
-						{
-							ExecuteString(gdata, gdata->command);
-						}
-
-						gdata->command_length = 0;
-						gdata->command[gdata->command_length] = 0;
-
-						DrawCLI(gdata);
-					}
-					break;
-
-				case ALFC_KEY_F12:
-					tag(gdata);
-					DrawStatusInfoLine(gdata);
-					break;
-
-				case ALFC_KEY_LEFT:
-					updir(gdata);
-					break;
-
-				case ALFC_KEY_RIGHT:
-					downdir(gdata);
-					break;
-
-				case ALFC_KEY_UP:
-					scroll_up(gdata);
-					break;
-
-				case ALFC_KEY_DOWN:
-					scroll_down(gdata);
-					break;
-
-				case ALFC_KEY_HOME:
-					scroll_home(gdata);
-					break;
-
-				case ALFC_KEY_END:
-					scroll_end(gdata);
-					break;
-
-				default:
-					// terminal could send ^H (0x08) or ASCII DEL (0x7F)
-					if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
-					{
-						if(key == ALFC_KEY_DEL)
-						{
-							if(gdata->command_length > 0)
-							{
-								gdata->command_length -= 1;
-								gdata->command[gdata->command_length] = 0;
-							}
-						}
-						else
-						{
-							if(gdata->command_length < gdata->screen->get_screen_width() - 10)
-							{
-								gdata->command[gdata->command_length++] = key;
-								gdata->command[gdata->command_length] = 0;
-							}
-						}
-
-						DrawCLI(gdata);
-					}
-					else
-						LogInfo("Unknown key 0x%04x\n", key);
-					break;
+				c = gdata->screen->get_screen_width();
+				r = gdata->screen->get_screen_height();
+				gdata->screen->deinit();
+				LogError("Display is %i.%i, it must be at least 20x60", r, c);
+				exit(1);
 			}
+
+			GetUserInfo(gdata);
+
+			BuildWindowLayout(gdata);
+			gdata->selected_window = WINDOW_LEFT;
+
+			ExecStartupScript(gdata);
+
+			free(gdata->left_dir);
+			gdata->left_dir = GetOptionDir(gdata, "startup_left", gdata->lstMRULeft);
+
+			free(gdata->right_dir);
+			gdata->right_dir = GetOptionDir(gdata, "startup_right",  gdata->lstMRURight);
+
+			LogInfo("Start in left : %s\n", gdata->left_dir);
+			LogInfo("Start in right : %s\n", gdata->right_dir);
+
+
+			gdata->lstLeft = GetFiles(gdata, gdata->left_dir);
+			gdata->lstRight = GetFiles(gdata, gdata->right_dir);
+
+			gdata->screen->set_style( STYLE_TITLE);
+			gdata->screen->set_cursor(1, ((gdata->screen->get_screen_width() - (strlen(" Welcome to {A}nother {L}inux {F}ile{M}anager ") - 8))/2));
+			gdata->screen->print(" Welcome to {A}nother {L}inux {F}ile{M}anager ");
+
+			DrawAll(gdata);
+
+			while(intFlag == 0)
+			{
+				uint32_t key;
+
+				key = gdata->screen->get_keypress();
+
+				switch(key)
+				{
+
+					case 0x21B: // ESC-ESC
+						intFlag = 1;
+						break;
+
+					// F10
+					case ALFC_KEY_F10:
+						intFlag = 1;
+						break;
+
+					case ALFC_KEY_TAB:	// TAB
+						SwitchPanes(gdata);
+						break;
+
+					case ALFC_KEY_ENTER:
+						if(gdata->command_length > 0)
+						{
+							AddHistory(gdata, gdata->command);
+
+							// exec string via lua...
+							if(gdata->command[0] == ':')
+								exec_internal_command(gdata, gdata->command);
+							else if(gdata->command[0] == '@')
+							{
+								char *fn = ConvertDirectoryName(gdata->command+1);
+								ExecuteScript(gdata, fn);
+								free(fn);
+							}
+							else
+							{
+								ExecuteString(gdata, gdata->command);
+							}
+
+							gdata->command_length = 0;
+							gdata->command[gdata->command_length] = 0;
+
+							DrawCLI(gdata);
+						}
+						break;
+
+					case ALFC_KEY_F12:
+						tag(gdata);
+						DrawStatusInfoLine(gdata);
+						break;
+
+					case ALFC_KEY_LEFT:
+						updir(gdata);
+						break;
+
+					case ALFC_KEY_RIGHT:
+						downdir(gdata);
+						break;
+
+					case ALFC_KEY_UP:
+						scroll_up(gdata);
+						break;
+
+					case ALFC_KEY_DOWN:
+						scroll_down(gdata);
+						break;
+
+					case ALFC_KEY_HOME:
+						scroll_home(gdata);
+						break;
+
+					case ALFC_KEY_END:
+						scroll_end(gdata);
+						break;
+
+					default:
+						// terminal could send ^H (0x08) or ASCII DEL (0x7F)
+						if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
+						{
+							if(key == ALFC_KEY_DEL)
+							{
+								if(gdata->command_length > 0)
+								{
+									gdata->command_length -= 1;
+									gdata->command[gdata->command_length] = 0;
+								}
+							}
+							else
+							{
+								if(gdata->command_length < gdata->screen->get_screen_width() - 10)
+								{
+									gdata->command[gdata->command_length++] = key;
+									gdata->command[gdata->command_length] = 0;
+								}
+							}
+
+							DrawCLI(gdata);
+						}
+						else
+							LogInfo("Unknown key 0x%04x\n", key);
+						break;
+				}
+			}
+
+
+			gdata->screen->set_style( STYLE_NORMAL);
+			gdata->screen->set_cursor(gdata->screen->get_screen_height(), gdata->screen->get_screen_width());
+			gdata->screen->print("\n");
+			ExecShutdownScript(gdata);
+
+			SaveMRU(gdata, gdata->lstMRULeft, "mru_left");
+			SaveMRU(gdata, gdata->lstMRURight, "mru_right");
+
+			RememberDirectories(gdata);
+
+			// cleanup...
+			SaveHistory(gdata);
+			SaveOptions(gdata);
 		}
 
-		gdata->screen->set_style( STYLE_NORMAL);
-		gdata->screen->set_cursor(gdata->screen->get_screen_height(), gdata->screen->get_screen_width());
-		gdata->screen->print("\n");
-		ExecShutdownScript(gdata);
+		if(gdata->_GL != NULL)
+			lua_close(gdata->_GL);
 
-		SaveMRU(gdata, gdata->lstMRULeft, "mru_left");
-		SaveMRU(gdata, gdata->lstMRURight, "mru_right");
+		if(gdata->gcode != NULL)
+			free(gdata->gcode);
 
-		RememberDirectories(gdata);
+		if(gdata->optfile != NULL)
+			INI_unload(gdata->optfile);
 
-		// cleanup...
-		SaveHistory(gdata);
-		SaveOptions(gdata);
-		INI_unload(gdata->optfile);
+		if(gdata->screen != NULL)
+		{
+			gdata->screen->deinit();
+			free(gdata->screen);
+		}
 
-		gdata->screen->deinit();
-		free(gdata->screen);
+		if(gdata->startup_path != NULL)
+		{
+			chdir(gdata->startup_path);
+			free(gdata->startup_path);
+		}
 
-		chdir(gdata->startup_path);
+		if(gdata->lstMRULeft != NULL)
+		{
+			dlist_destroy(gdata->lstMRULeft);
+			free(gdata->lstMRULeft);
+		}
 
-		dlist_destroy(gdata->lstMRULeft);
-		dlist_destroy(gdata->lstMRURight);
-		free(gdata->lstMRULeft);
-		free(gdata->lstMRURight);
+		if(gdata->lstMRURight != NULL)
+		{
+			dlist_destroy(gdata->lstMRURight);
+			free(gdata->lstMRURight);
+		}
 
-		dlist_destroy(gdata->lstLogHistory);
-		free(gdata->lstLogHistory);
+		if(gdata->lstLogHistory != NULL)
+		{
+			dlist_destroy(gdata->lstLogHistory);
+			free(gdata->lstLogHistory);
+		}
 
-		dlist_destroy(gdata->lstLeft);
-		dlist_destroy(gdata->lstRight);
-		free(gdata->lstLeft);
-		free(gdata->lstRight);
+		if(gdata->lstLeft != NULL)
+		{
+			dlist_destroy(gdata->lstLeft);
+			free(gdata->lstLeft);
+		}
 
-		free(gdata->win_left);
-		free(gdata->win_right);
+		if(gdata->lstLeft != NULL)
+		{
+			dlist_destroy(gdata->lstRight);
+			free(gdata->lstRight);
+		}
 
-		free(gdata->startup_path);
-		free(gdata->left_dir);
-		free(gdata->right_dir);
 
-		free(gdata->optfilename);
-		free(gdata->optfilehistory);
+		if(gdata->win_left != NULL)
+			free(gdata->win_left);
+		if(gdata->win_right != NULL)
+			free(gdata->win_right);
 
-		free(gdata->strRealName);
-		free(gdata->strLoginName);
-		free(gdata->strHomeDirectory);
-		free(gdata->strShell);
+		if(gdata->left_dir != NULL)
+			free(gdata->left_dir);
+
+		if(gdata->right_dir != NULL)
+			free(gdata->right_dir);
+
+		if(gdata->optfilename != NULL)
+			free(gdata->optfilename);
+
+		if(gdata->optfilehistory != NULL)
+			free(gdata->optfilehistory);
+
+		if(gdata->strRealName != NULL)
+			free(gdata->strRealName);
+		if(gdata->strLoginName != NULL)
+			free(gdata->strLoginName);
+		if(gdata->strHomeDirectory != NULL)
+			free(gdata->strHomeDirectory);
+		if(gdata->strShell != NULL)
+			free(gdata->strShell);
 
 		free(gdata);
 
