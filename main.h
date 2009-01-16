@@ -195,6 +195,7 @@ extern void tag(uGlobalData *gd);
 extern int scroll_up(uGlobalData *gd);
 extern int scroll_down(uGlobalData *gd);
 extern int scroll_home(uGlobalData *gd);
+extern int scroll_end(uGlobalData *gd);
 extern int updir(uGlobalData *gd);
 extern int downdir(uGlobalData *gd);
 

@@ -970,6 +970,31 @@ int scroll_home(uGlobalData *gd)
 	return 0;
 }
 
+int scroll_end(uGlobalData *gd)
+{
+	int d = GetActWindow(gd)->height - 2;
+	int c = dlist_size(GetActList(gd));
+	int tl;
+
+	tl = c - d;
+
+	if(tl < 0)
+	{
+		GetActWindow(gd)->top_line = 0;
+		GetActWindow(gd)->highlight_line = c - 1;
+	}
+	else
+	{
+		GetActWindow(gd)->top_line = tl;
+		GetActWindow(gd)->highlight_line = d - 1;
+	}
+
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+
+	return 0;
+}
+
 int scroll_up(uGlobalData *gd)
 {
 	uWindow *w;
@@ -1330,6 +1355,14 @@ int main(int argc, char *argv[])
 
 				case ALFC_KEY_DOWN:
 					scroll_down(gdata);
+					break;
+
+				case ALFC_KEY_HOME:
+					scroll_home(gdata);
+					break;
+
+				case ALFC_KEY_END:
+					scroll_end(gdata);
 					break;
 
 				default:

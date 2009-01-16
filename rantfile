@@ -120,7 +120,7 @@ gen Action do
 	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s
 end
 
-task :all => ["fixversion", "app"] do
+task :all => ["fixversion", "app", "docs"] do
 end
 
 
@@ -142,9 +142,31 @@ task :app => alfc do |t|
 	cBV.WriteVersion
 end
 
+task "docs" do
+	print "Updating Lua API documentation (html mutli) :: "
+	sys "robodoc --rc robodoc_lua_multi_html.rc"
+
+	print "Updating Lua API documentation (html single) :: "
+	sys "robodoc --rc robodoc_lua_single_html.rc"
+
+	print "Updating Lua API documentation (rtf) :: "
+	sys "robodoc --rc robodoc_lua_rtf.rc"
+
+	################
+
+	print "Updating Core documentation (html mutli) :: "
+	sys "robodoc --rc robodoc_core_multi_html.rc"
+
+	print "Updating Core documentation (html single) :: "
+	sys "robodoc --rc robodoc_core_single_html.rc"
+
+	print "Updating Core documentation (rtf) :: "
+	sys "robodoc --rc robodoc_core_rtf.rc"
+end
+
 desc "Cleanup..."
 task :clean do
-	x = Dir["*.{bak,o,obj}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["lua_helper.c"]
+	x = Dir["*.{bak,o,obj}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["lua_helper.c"] + Dir["doc/*"]
 	if x.length > 0
 		sys.rm_f x
 	end
