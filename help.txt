@@ -1,0 +1,17 @@
+
+Another Linux File Commander
+by Stu George
+
+What is it?
+ALFC is a clone of a famous old DOS program called Norton Commander.
+
+ALFC embeds the Lua scripting language to give you a lot of power
+and flexability in your system management.
+
+Moving Around ALFC
+
+
+
+Credits
+Stu George - Right now, everything
+
