@@ -879,7 +879,7 @@ void DrawStatusInfoLine(uGlobalData *gd)
 	buff[m] = 0;
 
 	gd->screen->set_style(STYLE_TITLE);
-	gd->screen->set_cursor(gd->screen->get_screen_height()-1, 1);
+	gd->screen->set_cursor(gd->screen->get_screen_height()-2, 1);
 	gd->screen->print(buff);
 
 	free(buff);
@@ -904,10 +904,18 @@ void SetActivePane(uGlobalData *gd, int p)
 
 static void exec_internal_command(char *s)
 {
+	char *p;
+
 	if(s == NULL)
 		return;
 
-	if(strcmp(s, ":q") == 0)
+	p = strchr(s, ' ');
+	if(p == NULL)
+		p = strchr(s, 0);
+	else
+		p -= 1;
+
+	if(strncmp(s, ":q", p - s) == 0)
 	{
 		SetQuitAppFlag(1);
 	}
