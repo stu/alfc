@@ -351,10 +351,14 @@ int gme_ScrollDown(lua_State *L)
 	{
 		v -= 1;
 		if(scroll_down(gd) == -1)
-			return 0;
+		{
+			lua_pushnumber(L, -1);
+			return 1;
+		}
 	}
 
-	return 0;
+	lua_pushnumber(L, 0);
+	return 1;
 }
 
 int gme_ScrollUp(lua_State *L)
@@ -370,10 +374,14 @@ int gme_ScrollUp(lua_State *L)
 	{
 		v -= 1;
 		if(scroll_up(gd) == -1)
-			return 0;
+		{
+			lua_pushnumber(L, -1);
+			return 1;
+		}
 	}
 
-	return 0;
+	lua_pushnumber(L, 0);
+	return 1;
 }
 
 int gme_ScrollHome(lua_State *L)
@@ -398,3 +406,39 @@ int gme_GetHighlightedFilename(lua_State *L)
 	lua_pushstring(L, de->name);
 	return 1;
 }
+
+// Toggle tag on highlighted file
+int gme_tag(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	tag(gd);
+
+	return 0;
+}
+
+// returns -1 error, 0 ok
+int gme_ChangeDirUp(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	lua_pushnumber(L, updir(gd));
+	return 1;
+}
+
+// returns -1 error, 0 ok
+int gme_ChangeDirDown(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	lua_pushnumber(L, downdir(gd));
+	return 1;
+}
+
+

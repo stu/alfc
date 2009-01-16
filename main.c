@@ -1041,7 +1041,7 @@ void AddHistory(uGlobalData *gd, char *str, ...)
 	dlist_ins(gd->lstLogHistory, x);
 }
 
-void updir(uGlobalData *gd)
+int updir(uGlobalData *gd)
 {
 	char *cpath;
 
@@ -1051,7 +1051,7 @@ void updir(uGlobalData *gd)
 	{
 		LogInfo("Could not change to directory %s\n", cpath);
 		free(cpath);
-		return;
+		return -1;
 	}
 
 	free(cpath);
@@ -1059,7 +1059,7 @@ void updir(uGlobalData *gd)
 	if( chdir("..") != 0)
 	{
 		LogInfo("Could not change up directory\n");
-		return;
+		return -1;
 	}
 
 	if(gd->selected_window == WINDOW_LEFT)
@@ -1085,9 +1085,11 @@ void updir(uGlobalData *gd)
 	GetActWindow(gd)->highlight_line = 0;
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
+
+	return 0;
 }
 
-void downdir(uGlobalData *gd)
+int downdir(uGlobalData *gd)
 {
 	char *cpath;
 	uDirEntry *de;
@@ -1095,7 +1097,7 @@ void downdir(uGlobalData *gd)
 	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
 
 	if( S_ISDIR(de->stat_buff.st_mode) == 0 )
-		return;
+		return -1;
 
 	cpath = ConvertDirectoryName(  GetActDPath(gd) );
 
@@ -1103,7 +1105,7 @@ void downdir(uGlobalData *gd)
 	{
 		LogInfo("Could not change to directory %s\n", cpath);
 		free(cpath);
-		return;
+		return -1;
 	}
 
 	free(cpath);
@@ -1112,7 +1114,7 @@ void downdir(uGlobalData *gd)
 	if( chdir(de->name) != 0)
 	{
 		LogInfo("Could not change down to directory %s\n", de->name);
-		return;
+		return -1;
 	}
 
 	if(gd->selected_window == WINDOW_LEFT)
@@ -1140,9 +1142,11 @@ void downdir(uGlobalData *gd)
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
 	DrawStatusInfoLine(gd);
+
+	return 0;
 }
 
-static void tag(uGlobalData *gd)
+void tag(uGlobalData *gd)
 {
 	uDirEntry *de;
 	int max_namelen;

@@ -189,9 +189,12 @@ enum
 
 extern void AddHistory(uGlobalData *gd, char *str, ...);
 
+extern void tag(uGlobalData *gd);
 extern int scroll_up(uGlobalData *gd);
 extern int scroll_down(uGlobalData *gd);
 extern int scroll_home(uGlobalData *gd);
+extern int updir(uGlobalData *gd);
+extern int downdir(uGlobalData *gd);
 
 extern DList* GetActiveMRU(uGlobalData *gd);
 extern char* GetActDPath(uGlobalData *gd);
