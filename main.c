@@ -364,12 +364,18 @@ static void FreeListEntry(void *x)
 
 static DList* GetFiles(uGlobalData *gdata, char *path)
 {
-	DList *lst;
+	DList *lstF;
 	DIR *d;
 	char *cpath;
+	int dirsfirst;
+	DLElement *first_file;
 
-	lst = malloc(sizeof(DList));
-	dlist_init(lst, FreeListEntry);
+	dirsfirst = 0;
+	if(IsTrue(INI_get(gdata->optfile, "options", "directories_first"))==0)
+		dirsfirst = 1;
+
+	lstF = malloc(sizeof(DList));
+	dlist_init(lstF, FreeListEntry);
 
 	cpath = ConvertDirectoryName(path);
 
@@ -382,6 +388,7 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 			uDirEntry *de;
 
 			dr = readdir(d);
+			first_file = NULL;
 			while(dr != NULL)
 			{
 				de = malloc(sizeof(uDirEntry));
@@ -394,7 +401,17 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 				lstat(de->name, &de->stat_buff);
 #endif
 
-				dlist_ins(lst, de);
+				if(dirsfirst == 1 && S_ISDIR(de->stat_buff.st_mode) != 0 )
+				{
+					dlist_ins_prev(lstF, first_file, de);
+				}
+				else
+				{
+					dlist_ins(lstF, de);
+					if(first_file == NULL)
+						first_file = dlist_tail(lstF);
+				}
+
 				dr = readdir(d);
 			}
 
@@ -412,7 +429,7 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 
 	free(cpath);
 
-	return lst;
+	return lstF;
 }
 
  uint64_t convert_down(uint64_t a, int count)
@@ -446,13 +463,16 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 
 	memset(buff, ' ', 1024);
 
+	if(de->tagged == 1)
+		buff[0]='+';
+
 	if(strlen(de->name) > max_namelen)
 	{
-		memmove(buff, de->name, max_namelen);
-		memmove(buff + max_namelen - 3, "...", 3);
+		memmove(buff + 1, de->name, max_namelen);
+		memmove(buff + 1 + max_namelen - 3, "...", 3);
 	}
 	else
-		memmove(buff, de->name, strlen(de->name));
+		memmove(buff + 1, de->name, strlen(de->name));
 
 	if( S_ISDIR(de->stat_buff.st_mode) == 0 )
 	{
@@ -839,6 +859,28 @@ static void DrawMenuLine(uGlobalData *gd)
 	free(buff);
 }
 
+void DrawStatusInfoLine(uGlobalData *gd)
+{
+	char *buff;
+	int m = gd->screen->get_screen_width();
+	char *p;
+
+	buff = malloc(4 + m);
+
+	memset(buff, ' ', m);
+
+	sprintf(buff, "Tagged : %i file%c", GetActWindow(gd)->tagged_count, GetActWindow(gd)->tagged_count == 1 ? 0 : 's' );
+	p = strchr(buff, 0x0);
+	*p = ' ';
+	buff[m] = 0;
+
+	gd->screen->set_style(STYLE_TITLE);
+	gd->screen->set_cursor(gd->screen->get_screen_height()-1, 1);
+	gd->screen->print(buff);
+
+	free(buff);
+}
+
 void SwitchPanes(uGlobalData *gd)
 {
 	if(gd->selected_window == WINDOW_RIGHT)
@@ -847,6 +889,7 @@ void SwitchPanes(uGlobalData *gd)
 		gd->selected_window = WINDOW_RIGHT;
 
 	DrawActive(gd);
+	DrawStatusInfoLine(gd);
 }
 
 void SetActivePane(uGlobalData *gd, int p)
@@ -1089,10 +1132,35 @@ void downdir(uGlobalData *gd)
 
 	GetActWindow(gd)->top_line = 0;
 	GetActWindow(gd)->highlight_line = 0;
+	GetActWindow(gd)->tagged_count = 0;
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
+	DrawStatusInfoLine(gd);
 }
 
+static void tag(uGlobalData *gd)
+{
+	uDirEntry *de;
+	int max_namelen;
+	int max_sizelen;
+
+
+	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
+	de->tagged ^= 1;
+	if(de->tagged == 1)
+		GetActWindow(gd)->tagged_count += 1;
+	else
+		GetActWindow(gd)->tagged_count -= 1;
+
+	// we need to do this, as if its the first/last line it wont refresh
+	max_sizelen = CalcMaxSizeLen(GetActWindow(gd));
+	max_namelen = CalcMaxNameLen(GetActWindow(gd), max_sizelen);
+	PrintFileLine(de,  GetActWindow(gd)->highlight_line,  GetActWindow(gd), max_namelen, max_sizelen);
+
+
+
+	scroll_down(gd);
+}
 
 int main(int argc, char *argv[])
 {
@@ -1160,6 +1228,7 @@ int main(int argc, char *argv[])
 
 		DrawMenuLine(gdata);
 		DrawCLI(gdata);
+		DrawStatusInfoLine(gdata);
 
 		while(intFlag == 0)
 		{
@@ -1207,6 +1276,11 @@ int main(int argc, char *argv[])
 
 						DrawCLI(gdata);
 					}
+					break;
+
+				case ALFC_KEY_F12:
+					tag(gdata);
+					DrawStatusInfoLine(gdata);
 					break;
 
 				case ALFC_KEY_LEFT:

@@ -20,6 +20,7 @@ enum
 	ALFC_KEY_PAGE_DOWN,
 	ALFC_KEY_ENTER,
 	ALFC_KEY_TAB,
+	ALFC_KEY_SPACE,
 
 	ALFC_KEY_F00,
 	ALFC_KEY_F01,
@@ -70,6 +71,7 @@ typedef struct udtScreenDriver uScreenDriver;
 
 typedef struct udtDirEntry
 {
+	uint8_t	tagged;
 	char *name;
 	struct stat stat_buff;
 } uDirEntry;
@@ -88,6 +90,8 @@ typedef struct udtWindow
 
 	uGlobalData *gd;
 	uScreenDriver *screen;
+
+	int		tagged_count;
 } uWindow;
 
 struct udtScreenDriver

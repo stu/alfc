@@ -184,13 +184,21 @@ static uint32_t nc_get_keypress(void)
 
 	ch = getch();
 	if (ch == ERR)
+	{
 		key = 0;
+	}
 	else if ((ch >= 0x20 && (ch <= 0x7E ) && (ch != '`')))
+	{
 		key = ch;
+	}
 	else if ((ch >= 0x80) && (ch <= 0xFF))
+	{
 		key = ALFC_KEY_ALT + (ch - 0x80);
+	}
 	else if ((ch >= KEY_F0) && (ch <= KEY_F0 + 12))
+	{
 		key = ALFC_KEY_F00 + (ch - KEY_F0);
+	}
 	else if ((ch == '[') || (ch == 27))
 	{  /* start of escape sequence */
 		ch = getch();
