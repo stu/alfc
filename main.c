@@ -207,12 +207,10 @@ char* ConvertDirectoryName(const char *x)
 	p[0] = 0;
 	q = a;
 
-	z = strchr(q, '~');
-	if(z != NULL)
+	if(q[0] == '~')
 	{
-		strncpy(p, q, z-q);
-		strcat(p, "$HOME");
-		strcat(p, z + 1);
+		strcpy(p, "$HOME");
+		strcat(p, q+1);
 
 		free(a);
 		a = strdup(p);
@@ -730,13 +728,12 @@ static void DrawFileInfo(uWindow *win)
 
 	size_offset = win->screen->get_screen_width() - (20  + 15);
 	attr_offset = win->screen->get_screen_width() - (15);
-	max_namelen = size_offset - 2;
+	max_namelen = size_offset - (2 + 6);
 	memset(buff, ' ', 4096);
 
 	sprintf(buff, "File: ");
 	if(strlen(de->name) > max_namelen)
 	{
-		LogInfo("namelen=%i, max=%i\n", strlen(de->name), max_namelen);
 		memmove(buff + 6, de->name, max_namelen);
 		memmove(buff + 6 + max_namelen - 3, "...", 3);
 	}
