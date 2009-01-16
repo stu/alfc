@@ -408,7 +408,7 @@ int gme_GetHighlightedFilename(lua_State *L)
 }
 
 // Toggle tag on highlighted file
-int gme_tag(lua_State *L)
+int gme_TagHighlightedFile(lua_State *L)
 {
 	uGlobalData *gd;
 	gd = GetGlobalData(L);
@@ -441,4 +441,67 @@ int gme_ChangeDirDown(lua_State *L)
 	return 1;
 }
 
+// tag a file by its filename in active window
+int gme_TagFile(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	struct lstr tf;
+
+	DList *lstFiles;
+	DLElement *d;
+	uDirEntry *de;
+
+	int count;
+
+	GET_LUA_STRING(tf, 1);
+
+	lstFiles = GetActList(gd);
+	d = dlist_head(lstFiles);
+
+	count = 0;
+	while(d != NULL)
+	{
+		de = dlist_data(d);
+
+		if( strcmp(de->name, tf.data) == 0)
+		{
+			de->tagged ^= 1;
+			if(de->tagged == 1)
+				GetActWindow(gd)->tagged_count += 1;
+			else
+				GetActWindow(gd)->tagged_count -= 1;
+
+			// test if its visible
+			if( IsVisible(gd, count) == 1)
+			{
+				count -= GetActWindow(gd)->top_line;
+
+				// redraw filepane
+				if(count == GetActWindow(gd)->highlight_line)
+					gd->screen->set_style(STYLE_HIGHLIGHT);
+				else
+					gd->screen->set_style(STYLE_NORMAL);
+				gd->screen->set_cursor(2 + GetActWindow(gd)->offset_row + count, GetActWindow(gd)->offset_col + 2 );
+				gd->screen->print( de->tagged == 1 ? "+" : " ");
+				gd->screen->set_style(STYLE_NORMAL);
+			}
+
+			// ?? call from here? or just mark dirty?
+			DrawStatusInfoLine(gd);
+
+			lua_pushnumber(L, 0);
+			return 1;
+		}
+
+		d = dlist_next(d);
+		count += 1;
+	}
+
+	// no file found by that name
+	lua_pushnumber(L, -1);
+	return 1;
+}
 

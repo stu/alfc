@@ -189,6 +189,8 @@ enum
 
 extern void AddHistory(uGlobalData *gd, char *str, ...);
 
+extern int IsVisible(uGlobalData *gd, int idx);
+
 extern void tag(uGlobalData *gd);
 extern int scroll_up(uGlobalData *gd);
 extern int scroll_down(uGlobalData *gd);
@@ -211,6 +213,8 @@ extern void SetActivePane(uGlobalData *gd, int p);
 
 extern char* GetCurrentWorkingDirectory(void);
 extern char* ConvertDirectoryName(const char *x);
+
+extern void DrawStatusInfoLine(uGlobalData *gd);
 
 #ifdef __cplusplus
 }

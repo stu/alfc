@@ -13,6 +13,23 @@
 
 int intFlag = 0;
 
+// checks an index is in the visible page or not
+int IsVisible(uGlobalData *gd, int idx)
+{
+	int depth;
+	uWindow *w = GetActWindow(gd);
+
+	depth = w->height - 2;
+
+	if(idx < w->top_line )
+		return 0;
+
+	if( idx > w->top_line + depth )
+		return 0;
+
+	return 1;
+}
+
 DList* GetActiveMRU(uGlobalData *gd)
 {
 	if(gd->selected_window == WINDOW_RIGHT)
@@ -1168,6 +1185,7 @@ void tag(uGlobalData *gd)
 	gd->screen->set_style(STYLE_HIGHLIGHT);
 	gd->screen->set_cursor(GetActWindow(gd)->offset_row + GetActWindow(gd)->highlight_line + 2, GetActWindow(gd)->offset_col + 2 );
 	gd->screen->print( de->tagged == 1 ? "+" : " ");
+	gd->screen->set_style(STYLE_NORMAL);
 
 	scroll_down(gd);
 }
