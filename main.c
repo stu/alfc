@@ -403,7 +403,10 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 
 				if(dirsfirst == 1 && S_ISDIR(de->stat_buff.st_mode) != 0 )
 				{
-					dlist_ins_prev(lstF, first_file, de);
+					if(first_file == NULL)
+						dlist_ins(lstF, de);
+					else
+						dlist_ins_prev(lstF, first_file, de);
 				}
 				else
 				{
@@ -411,6 +414,7 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 					if(first_file == NULL)
 						first_file = dlist_tail(lstF);
 				}
+
 
 				dr = readdir(d);
 			}
@@ -1157,9 +1161,18 @@ static void tag(uGlobalData *gd)
 	max_namelen = CalcMaxNameLen(GetActWindow(gd), max_sizelen);
 	PrintFileLine(de,  GetActWindow(gd)->highlight_line,  GetActWindow(gd), max_namelen, max_sizelen);
 
-
-
 	scroll_down(gd);
+}
+
+void DrawAll(uGlobalData *gd)
+{
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawFileListWindow(GetInActWindow(gd), GetInActList(gd), GetInActDPath(gd));
+	DrawActive(gd);
+
+	DrawMenuLine(gd);
+	DrawCLI(gd);
+	DrawStatusInfoLine(gd);
 }
 
 int main(int argc, char *argv[])
@@ -1222,13 +1235,7 @@ int main(int argc, char *argv[])
 		gdata->screen->set_cursor(1, ((gdata->screen->get_screen_width() - (strlen(" Welcome to {A}nother {L}inux {F}ile{M}anager ") - 8))/2));
 		gdata->screen->print(" Welcome to {A}nother {L}inux {F}ile{M}anager ");
 
-		DrawFileListWindow(GetActWindow(gdata), GetActList(gdata), GetActDPath(gdata));
-		DrawFileListWindow(GetInActWindow(gdata), GetInActList(gdata), GetInActDPath(gdata));
-		DrawActive(gdata);
-
-		DrawMenuLine(gdata);
-		DrawCLI(gdata);
-		DrawStatusInfoLine(gdata);
+		DrawAll(gdata);
 
 		while(intFlag == 0)
 		{
