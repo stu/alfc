@@ -331,6 +331,8 @@ static int nc_screen_init(uScreenDriver *scr)
 	scr->set_style(STYLE_NORMAL);
 	scr->cls();
 
+	LogInfo("Screen is %ix%i\n", LINES, COLS);
+
 	return 0;
 }
 

@@ -1,4 +1,4 @@
-/****h* ALFM/LuaAPI
+/****h* ALFC/LuaAPI
  * FUNCTION
  *   The C<>Lua interface functions used in the Lua scripts.
  *****
@@ -534,7 +534,23 @@ int gme_SetColour(lua_State *L)
 	return 0;
 }
 
-/*
+/****f* LuaAPI/GetRuntimeOption_CompressFilesize
+* FUNCTION
+*	Returns the in-memory option of CompressFilesize
+* SYNOPSIS
+flag = GetRuntimeOption_CompressFilesize()
+* INPUTS
+*	o None
+* RESULTS
+*	flag (integer):
+* 	o 0 - Turn off Compressed filesizes
+* 	o 1 - Turn on Compressed filesizes
+* SEE ALSO
+* 	SetRuntimeOption_CompressFilesize
+* AUTHOR
+*	Stu George
+******
+*/
 int gme_GetRuntimeOption_CompressFilesize(lua_State *L)
 {
 	uGlobalData *gd;
@@ -546,6 +562,23 @@ int gme_GetRuntimeOption_CompressFilesize(lua_State *L)
 	return 1;
 }
 
+/****f* LuaAPI/SetRuntimeOption_CompressFilesize
+* FUNCTION
+*	Sets the in-memory option of CompressFilesize without changing the ondisk option.
+* SYNOPSIS
+SetRuntimeOption_CompressFilesize(Flag)
+* INPUTS
+*	flag (integer):
+* 	o 0 - Turn off Compressed filesizes
+* 	o 1 - Turn on Compressed filesizes
+* RESULTS
+*   o None
+* SEE ALSO
+* 	GetRuntimeOption_CompressFilesize
+* AUTHOR
+*	Stu George
+******
+*/
 int gme_SetRuntimeOption_CompressFilesize(lua_State *L)
 {
 	uGlobalData *gd;
@@ -562,7 +595,7 @@ int gme_SetRuntimeOption_CompressFilesize(lua_State *L)
 
 	return 0;
 }
-*/
+
 
 /****f* LuaAPI/SetQuitAppFlag
 * FUNCTION
