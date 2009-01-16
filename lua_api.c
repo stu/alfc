@@ -505,3 +505,12 @@ int gme_TagFile(lua_State *L)
 	return 1;
 }
 
+int gme_GetTaggedFileCount(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	lua_pushnumber(L, GetActWindow(gd)->tagged_count);
+	return 1;
+}
