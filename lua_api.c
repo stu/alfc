@@ -829,7 +829,7 @@ error = ScrollDown(LineCount)
 *   o 0 -- No Error
 * 	o -1 -- Could not scroll down anymore
 * SEE ALSO
-* 	ScrollUp, ScrollHome, ScrollEnd
+*	ScrollHome, ScrollEnd, ScrollUp, ScrollPageDown, ScrollPageUp
 * AUTHOR
 *	Stu George
 ******
@@ -869,7 +869,7 @@ error = ScrollUp(LineCount)
 *   o 0 -- No Error
 * 	o -1 -- Could not scroll up anymore
 * SEE ALSO
-* 	ScrollDown, ScrollHome, ScrollEnd
+*	ScrollHome, ScrollEnd, ScrollDown, ScrollPageDown, ScrollPageUp
 * AUTHOR
 *	Stu George
 ******
@@ -907,7 +907,7 @@ ScrollHome()
 * RESULTS
 *	o None
 * SEE ALSO
-* 	ScrollUp, ScrollDown, ScrollHome
+*	ScrollHome, ScrollDown, ScrollUp, ScrollPageDown, ScrollPageUp
 * AUTHOR
 *	Stu George
 ******
@@ -932,7 +932,7 @@ ScrollHome()
 * RESULTS
 *	o None
 * SEE ALSO
-* 	ScrollUp, ScrollDown, ScrollEnd
+*	ScrollEnd, ScrollDown, ScrollUp, ScrollPageDown, ScrollPageUp
 * AUTHOR
 *	Stu George
 ******
@@ -1242,3 +1242,60 @@ int gme_GetFileList(lua_State *L)
 
 	return 1;
 }
+
+
+/****f* LuaAPI/ScrollPageDown
+* FUNCTION
+*	Scrolls active window pane down a page. If cursor is not at bottom of the page, it is moved there first
+* 	before it will scroll the page
+* SYNOPSIS
+ScrollPageDown()
+* INPUTS
+*	o None
+* RESULTS
+*	o None
+* SEE ALSO
+*	ScrollHome, ScrollEnd, ScrollDown, ScrollUp, ScrollPageUp
+* AUTHOR
+*	Stu George
+******
+*/
+int gme_ScrollPageDown(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	scroll_page_down(gd);
+
+	return 1;
+}
+
+
+/****f* LuaAPI/ScrollPageUp
+* FUNCTION
+*	Scrolls active window pane up a page. If cursor is not at top of the page, it is moved there first
+* 	before it will scroll the page
+* SYNOPSIS
+ScrollPageUp()
+* INPUTS
+*	o None
+* RESULTS
+*	o None
+* SEE ALSO
+*	ScrollHome, ScrollEnd, ScrollDown, ScrollUp, ScrollPageDown
+* AUTHOR
+*	Stu George
+******
+*/
+int gme_ScrollPageUp(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	scroll_page_up(gd);
+
+	return 1;
+}
+

@@ -120,6 +120,12 @@ int LoadGlobalScript(uGlobalData *gd, char *sn)
 	int v;
 	char *cpath;
 
+	if(sn == NULL)
+	{
+		LogError("cant find global script file. Please setup your options.\n");
+		return -1;
+	}
+
 	cpath = ConvertDirectoryName(sn);
 
 	fp = fopen(cpath, "r");
