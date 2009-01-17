@@ -582,7 +582,7 @@ static int CalcMaxNameLen(uWindow *w, int max_size_len)
 	return (w->width - max_size_len - 5);
 }
 
-static void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
+void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 {
 	int depth;
 	char buff[1024];
@@ -804,7 +804,7 @@ static void DrawActiveFileInfo(uGlobalData *gd)
 	DrawFileInfo( GetActWindow(gd));
 }
 
-static void DrawActive(uGlobalData *gd)
+void DrawActive(uGlobalData *gd)
 {
 	uWindow *win;
 	int i;
@@ -1118,7 +1118,7 @@ void AddHistory(uGlobalData *gd, char *str, ...)
 	dlist_ins(gd->lstLogHistory, x);
 }
 
-static int GetFileIndex(DList *lstFiles, char *name)
+int GetFileIndex(DList *lstFiles, char *name)
 {
 	DLElement *d;
 	uDirEntry *de;
@@ -1138,6 +1138,42 @@ static int GetFileIndex(DList *lstFiles, char *name)
 	}
 
 	return -1;
+}
+
+int SetHighlightedFile(uGlobalData *gd, int idx)
+{
+	int depth = GetActWindow(gd)->height - 2;
+
+	if(idx != -1)
+	{
+		int new_top;
+		int new_hl;
+		int size;
+
+		size = dlist_size(GetActList(gd));
+
+		if(idx > depth/2)
+		{
+			new_top = idx - depth/2;
+			new_hl = depth - (depth/2) - (depth%2);
+
+			if( idx + depth/2 > size   )
+			{
+				new_top = size - depth;
+				new_hl = idx - new_top;
+			}
+		}
+		else
+		{
+			new_top = 0;
+			new_hl = idx;
+		}
+
+		GetActWindow(gd)->highlight_line = new_hl;
+		GetActWindow(gd)->top_line = new_top;
+	}
+
+	return idx;
 }
 
 static void UpdateDir(uGlobalData *gd, char *set_to_highlight)
@@ -1167,27 +1203,7 @@ static void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 	if(set_to_highlight != NULL)
 	{
 		int idx = GetFileIndex(GetActList(gd), set_to_highlight);
-		int depth = GetActWindow(gd)->height - 2;
-
-		if(idx != -1)
-		{
-			int new_top;
-			int new_hl;
-
-			if(idx > depth/2)
-			{
-				new_top = idx - depth/2;
-				new_hl = depth - (depth/2) - (depth%2);
-			}
-			else
-			{
-				new_top = 0;
-				new_hl = idx;
-			}
-
-			GetActWindow(gd)->highlight_line = new_hl;
-			GetActWindow(gd)->top_line = new_top;
-		}
+		SetHighlightedFile(gd, idx);
 	}
 
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));

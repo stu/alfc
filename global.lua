@@ -37,14 +37,39 @@ end
 
 
 -- this wont work when you want a file and directories are first listed....
-local function __FindFirst(command)
-	local fn
-	local fl
+local function __Jump(command)
+	local j
+	local in_dir
+
+	local best_match_length
+	local best_match
+
+	local cmd
 
 	fl = GetFileList()
 
-	for k,v in pairs(fl) do
-		debug_msg("name = " .. v.name .. " size = " .. v.size .. " directory = " .. v.directory)
+	best_match_length = 0
+	best_match = -1
+
+	cmd = trim(command)
+
+	for k, v in ipairs(fl) do
+		for j=1, #cmd do
+
+			if string.sub(v.name, j, j) == string.sub(cmd, j, j) then
+				if j > best_match_length then
+					best_match_length = j
+					best_match = k
+				end
+			else
+				break
+			end
+
+		end
+	end
+
+	if best_match ~= -1 then
+		SetHighlightedFile(best_match - 1)
 	end
 
 end
@@ -59,7 +84,7 @@ function CLIParse(command)
 	cmds[":q "] = __QuitApp
 	cmds[":f "] = __Filter
 	cmds[":s "] = __MakeInactivePaneSame
-	cmds[":ff "] = __FindFirst
+	cmds[":j "] = __Jump
 
 	for k,v in pairs(cmds) do
 		if string.sub(cmd, 1, #k) == k then

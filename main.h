@@ -220,6 +220,9 @@ extern DList* GetInActList(uGlobalData *gd);
 extern uWindow* GetInActWindow(uGlobalData *gd);
 extern uDirEntry* GetHighlightedFile(DList *lstFiles, int idx, int tr);
 
+extern int GetFileIndex(DList *lstFiles, char *name);
+extern int SetHighlightedFile(uGlobalData *gd, int idx);
+
 extern void SetQuitAppFlag(int flag);
 extern void SwitchPanes(uGlobalData *gd);
 extern void SetActivePane(uGlobalData *gd, int p);
@@ -228,6 +231,8 @@ extern char* GetCurrentWorkingDirectory(void);
 extern char* ConvertDirectoryName(const char *x);
 
 extern void DrawStatusInfoLine(uGlobalData *gd);
+extern void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath);
+extern void DrawActive(uGlobalData *gd);
 
 #ifdef __cplusplus
 }

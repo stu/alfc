@@ -957,6 +957,8 @@ filename = GetHighlightedFilename()
 *	o None
 * RESULTS
 *	o filename (string) -- Currently highlighted name in active window pane
+* SEE ALSO
+* 	SetHighlightedFile
 * AUTHOR
 *	Stu George
 ******
@@ -1298,4 +1300,52 @@ int gme_ScrollPageUp(lua_State *L)
 
 	return 1;
 }
+
+/****f* LuaAPI/SetHighlightedFile
+* FUNCTION
+*	Will set the highlight bar in the active window. Accepts Key Index or FileName as input.
+* SYNOPSIS
+index = SetHighlightedFile(FileToHighlight)
+* INPUTS
+*	o FileToHighlight (integer) -- Key Index of file to highlight
+*   o FileToHighlight (string) -- If parameter is string, will search the list for the file to highlight.
+* RESULTS
+*	o index (integer) -- If failure, returns -1, if no error, returns the index of the file highlighted.
+* SEE ALSO
+*	GetHighlightedFilename
+* AUTHOR
+*	Stu George
+******
+*/
+int gme_SetHighlightedFile(lua_State *L)
+{
+	int idx;
+	struct lstr name;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+
+	if(lua_isnumber(L, 1) == 1)
+	{
+		idx = luaL_checknumber(L, 1);
+	}
+	else
+	{
+		GET_LUA_STRING(name, 1);
+		idx = GetFileIndex(GetActList(gd), name.data);
+	}
+
+	if(idx != -1)
+	{
+		idx = SetHighlightedFile(gd, idx);
+		DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+		DrawActive(gd);
+	}
+
+	lua_pushnumber(L, idx);
+
+	return 1;
+}
+
 

@@ -15,6 +15,7 @@ Current speed keyed commands
 
 :q - Quit app
 :s - Make inactive window pane the same
+:j - Jump
 
 (todo)
 :f - Filter window
@@ -25,7 +26,9 @@ Stu George - Right now, everything
 ToDo list for next release
 
 Core
-	- Page Up / Page Down
+	- sorting
+	- filtering
+	- Viewer / Editor (both for hex)
 
 Files
 	- Copy Files
@@ -39,5 +42,5 @@ Directories
 	- Rename Directory
 
 ChangeLog
-20090116 - WIP
+20090111 - Started...
 
