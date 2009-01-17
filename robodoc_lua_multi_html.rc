@@ -74,11 +74,12 @@ item order:
 	RESULTS
 	OUTPUT
     OUTPUTS
-	SEE ALSO
-	AUTHOR
-	HISTORY
-	SOURCE
 	NOTES
+	SEE ALSO
+	EXAMPLE
+	SOURCE
+	HISTORY
+	AUTHOR
 ignore items:
     HISTORY
 headertypes:
