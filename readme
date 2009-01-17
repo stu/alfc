@@ -5,6 +5,7 @@ Also requires a lua 5.1 library to link against.
 And NCurses for the ncurses driver
 
 To build the documentation you need Robodoc installed
+(minimum 4.99.36)
 
 See help.txt for usage and information;
 

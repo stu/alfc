@@ -206,6 +206,9 @@ char* ConvertDirectoryName(const char *x)
 	char *q;
 	char *z;
 
+	if(x == NULL)
+		return strdup("");
+
 	a = strdup(x);
 	p = malloc(1024);
 	assert(p != NULL);
@@ -507,7 +510,11 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 	if( S_ISDIR(de->attrs) == 0 )
 	{
 		if(win->gd->compress_filesize == 0)
+#if __WORDSIZE == 64
 			sprintf(buff + max_namelen + 2, "%10lu", de->size);
+#else
+			sprintf(buff + max_namelen + 2, "%10llu", de->size);
+#endif
 		else
 		{
 			uint64_t xx = de->size;
@@ -1295,15 +1302,59 @@ void tag(uGlobalData *gd)
 
 void scroll_page_down(uGlobalData *gd)
 {
-	int nt;
+	int tl;
 	int depth;
 	int fc;
+	int hl;
 
-	nt = GetActWindow(gd)->top_line;
+	uDirEntry *de;
+	int max_sizelen;
+	int max_namelen;
+
+	max_sizelen = CalcMaxSizeLen(GetActWindow(gd));
+	max_namelen = CalcMaxNameLen(GetActWindow(gd), max_sizelen);
+
+	tl = GetActWindow(gd)->top_line;
 	depth = GetActWindow(gd)->height - 2;
 	fc = dlist_size(GetActList(gd));
+	hl = GetActWindow(gd)->highlight_line;
 
+	if(dlist_size(GetActList(gd)) < depth )
+	{
+		// file list is smaller than our window size, so just bottom out.
+		depth = dlist_size(GetActList(gd));
 
+		GetActWindow(gd)->highlight_line = depth-1;
+
+		de = GetHighlightedFile(GetActList(gd), hl, GetActWindow(gd)->top_line);
+		PrintFileLine(de, hl, GetActWindow(gd), max_namelen, max_sizelen);
+
+		de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
+		PrintFileLine(de, GetActWindow(gd)->highlight_line, GetActWindow(gd), max_namelen, max_sizelen);
+
+		DrawActiveFileInfo(gd);
+		return;
+	}
+	else if( hl < depth - 5 )
+	{
+		// move cursor to bottom of current page
+		GetActWindow(gd)->highlight_line = depth-5;
+
+		de = GetHighlightedFile(GetActList(gd), hl, GetActWindow(gd)->top_line);
+		PrintFileLine(de, hl, GetActWindow(gd), max_namelen, max_sizelen);
+
+		de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
+		PrintFileLine(de, GetActWindow(gd)->highlight_line, GetActWindow(gd), max_namelen, max_sizelen);
+
+		DrawActiveFileInfo(gd);
+
+		return;
+	}
+	else
+	{
+		// scroll actual page
+
+	}
 
 }
 
