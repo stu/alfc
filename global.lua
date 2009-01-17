@@ -35,6 +35,20 @@ local function __MakeInactivePaneSame(command)
 	SwitchPanes()
 end
 
+
+-- this wont work when you want a file and directories are first listed....
+local function __FindFirst(command)
+	local fn
+	local fl
+
+	fl = GetFileList()
+
+	for k,v in pairs(fl) do
+		debug_msg("name = " .. v.name .. " size = " .. v.size .. " directory = " .. v.directory)
+	end
+
+end
+
 function CLIParse(command)
 	local cmd
 	local cmds
@@ -45,6 +59,7 @@ function CLIParse(command)
 	cmds[":q "] = __QuitApp
 	cmds[":f "] = __Filter
 	cmds[":s "] = __MakeInactivePaneSame
+	cmds[":ff "] = __FindFirst
 
 	for k,v in pairs(cmds) do
 		if string.sub(cmd, 1, #k) == k then

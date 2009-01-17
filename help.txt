@@ -22,3 +22,22 @@ Current speed keyed commands
 Credits
 Stu George - Right now, everything
 
+ToDo list for next release
+
+Core
+	- Page Up / Page Down
+
+Files
+	- Copy Files
+	- Move Files
+	- Delete Files
+	- Rename Files
+
+Directories
+	- Create Directory
+	- Delete Directory
+	- Rename Directory
+
+ChangeLog
+20090116 - WIP
+

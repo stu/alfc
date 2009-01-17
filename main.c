@@ -1111,7 +1111,29 @@ void AddHistory(uGlobalData *gd, char *str, ...)
 	dlist_ins(gd->lstLogHistory, x);
 }
 
-static void UpdateDir(uGlobalData *gd)
+static int GetFileIndex(DList *lstFiles, char *name)
+{
+	DLElement *d;
+	uDirEntry *de;
+	int count;
+
+	d = dlist_head(lstFiles);
+	count = 0;
+	while(d != NULL)
+	{
+		de = dlist_data(d);
+
+		if( strcmp(de->name, name) == 0)
+			return count;
+
+		d = dlist_next(d);
+		count += 1;
+	}
+
+	return -1;
+}
+
+static void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 {
 	if(gd->selected_window == WINDOW_LEFT)
 	{
@@ -1134,6 +1156,33 @@ static void UpdateDir(uGlobalData *gd)
 
 	GetActWindow(gd)->top_line = 0;
 	GetActWindow(gd)->highlight_line = 0;
+
+	if(set_to_highlight != NULL)
+	{
+		int idx = GetFileIndex(GetActList(gd), set_to_highlight);
+		int depth = GetActWindow(gd)->height - 2;
+
+		if(idx != -1)
+		{
+			int new_top;
+			int new_hl;
+
+			if(idx > depth/2)
+			{
+				new_top = idx - depth/2;
+				new_hl = depth - (depth/2) - (depth%2);
+			}
+			else
+			{
+				new_top = 0;
+				new_hl = idx;
+			}
+
+			GetActWindow(gd)->highlight_line = new_hl;
+			GetActWindow(gd)->top_line = new_top;
+		}
+	}
+
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
 }
@@ -1153,7 +1202,7 @@ int change_dir(uGlobalData *gd, char *dir)
 
 	free(cpath);
 
-	UpdateDir(gd);
+	UpdateDir(gd, NULL);
 
 	return 0;
 }
@@ -1162,6 +1211,7 @@ int change_dir(uGlobalData *gd, char *dir)
 int updir(uGlobalData *gd)
 {
 	char *cpath;
+	char *scan;
 
 	cpath = ConvertDirectoryName(  GetActDPath(gd) );
 
@@ -1172,15 +1222,21 @@ int updir(uGlobalData *gd)
 		return -1;
 	}
 
-	free(cpath);
+	scan = strchr(cpath, 0);
+	while(scan > cpath && *scan != '/')
+		scan -= 1;
+
+	if(*scan == '/') scan += 1;
 
 	if( chdir("..") != 0)
 	{
+		free(cpath);
 		LogInfo("Could not change up directory\n");
 		return -1;
 	}
 
-	UpdateDir(gd);
+	UpdateDir(gd, scan);
+	free(cpath);
 
 	return 0;
 }
@@ -1213,7 +1269,7 @@ int downdir(uGlobalData *gd)
 		return -1;
 	}
 
-	UpdateDir(gd);
+	UpdateDir(gd, NULL);
 
 	return 0;
 }
@@ -1235,6 +1291,20 @@ void tag(uGlobalData *gd)
 	gd->screen->set_style(STYLE_NORMAL);
 
 	scroll_down(gd);
+}
+
+void scroll_page_down(uGlobalData *gd)
+{
+	int nt;
+	int depth;
+	int fc;
+
+	nt = GetActWindow(gd)->top_line;
+	depth = GetActWindow(gd)->height - 2;
+	fc = dlist_size(GetActList(gd));
+
+
+
 }
 
 void DrawAll(uGlobalData *gd)
@@ -1318,6 +1388,7 @@ int main(int argc, char *argv[])
 			{
 				uint32_t key;
 
+				gdata->screen->set_cursor(gdata->screen->get_screen_height()-1, 5 + strlen(gdata->command));
 				key = gdata->screen->get_keypress();
 
 				switch(key)
@@ -1389,6 +1460,10 @@ int main(int argc, char *argv[])
 
 					case ALFC_KEY_END:
 						scroll_end(gdata);
+						break;
+
+					case ALFC_KEY_PAGE_DOWN:
+						scroll_page_down(gdata);
 						break;
 
 					default:

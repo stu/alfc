@@ -1174,3 +1174,71 @@ int gme_GetTaggedFileCount(lua_State *L)
 	lua_pushnumber(L, GetActWindow(gd)->tagged_count);
 	return 1;
 }
+
+/****f* LuaAPI/GetFileList
+* FUNCTION
+*	Returns a table of file details in the order they are in in memory
+* SYNOPSIS
+tbl = GetFileList()
+* INPUTS
+*	o None
+* RESULTS
+*	o table - table of entries (name, size, directory, tagged)
+* SEE ALSO
+*	TagFile, TagHighlightedFile
+* AUTHOR
+*	Stu George
+* NOTES
+* 	Changing the details in this table does not change whats in memory. This is a local copy only.
+******
+*/
+int gme_GetFileList(lua_State *L)
+{
+	DLElement *e;
+	uDirEntry *de;
+	DList *lst;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	int i;
+
+	lst = GetActList(gd);
+
+	lua_newtable(L);
+
+	i = 1;
+	e = dlist_head(lst);
+	while(e != NULL)
+	{
+		de = dlist_data(e);
+
+		lua_pushnumber(L, i++);
+		lua_newtable(L);
+
+		lua_pushstring(L, "name");
+		lua_pushstring(L, de->name);
+		lua_settable(L, -3);
+
+		lua_pushstring(L, "size");
+		lua_pushnumber(L, de->size);
+		lua_settable(L, -3);
+
+
+		lua_pushstring(L, "directory");
+		if( S_ISDIR(de->attrs) == 0)
+			lua_pushnumber(L, 0);
+		else
+			lua_pushnumber(L, 1);
+		lua_settable(L, -3);
+
+		lua_pushstring(L, "tagged");
+		lua_pushnumber(L, de->tagged);
+		lua_settable(L, -3);
+
+		lua_settable(L, -3);
+
+		e = dlist_next(e);
+	}
+
+	return 1;
+}
