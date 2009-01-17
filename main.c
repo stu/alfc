@@ -1,3 +1,9 @@
+/****h* ALFC/Core
+ * FUNCTION
+ *   Helper functions for dealing with Lua scripts
+ *****
+ */
+
 // triggers mingw include
 #include <stdlib.h>
 
@@ -921,21 +927,37 @@ void SetActivePane(uGlobalData *gd, int p)
 	DrawActive(gd);
 }
 
-static void exec_internal_command(uGlobalData *gd, char *s)
+/****f* Core/exec_internal_command
+* FUNCTION
+*	This is where the command line goes to call its lua function
+* SYNOPSIS
+*/
+static void exec_internal_command(uGlobalData *gd, char *command)
+/*
+* INPUTS
+*	o uGlobalData -- standard for all functions
+*	o command -- entire string to pass to the CLI global lua function
+* RETURNS
+*   o None. We dont care or want to know what comes back.
+* AUTHOR
+*	Stu George
+* EXAMPLE
+exec_internal_command(gd, ":q");
+* SEE ALSO
+* 	Lua_Helper/CallGlobalFunc
+* NOTES
+* 	Strings returned from this function must be free'd.
+* SOURCE
+*/
 {
-	char *p;
-
-	if(s == NULL)
+	if(command == NULL)
 		return;
 
-	p = strchr(s, ' ');
-	if(p == NULL)
-		p = strchr(s, 0);
-	else
-		p -= 1;
-
-	CallGlobalFunc(gd, "CLIParse", "s,s", s);
+	CallGlobalFunc(gd, "CLIParse", "s", command);
 }
+/*
+*****
+*/
 
 static void DrawCLI(uGlobalData *gd)
 {
