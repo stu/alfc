@@ -179,54 +179,100 @@ int CallGlobalFunc(uGlobalData *gd, char *funcname, char *params, ...)
 *	o ... -- parameter list.. its much like printf
 * RETURNS
 *   error:
-*	o 0 -- No Error
+*	o n -- Number of arguements returned from script
 *	o -1 -- Failed (logged as type LOG_ERROR)
 * AUTHOR
 *	Stu George
 * EXAMPLE
-result = CallGlobalFunc(gd, "MyFunc", "si", "StringParam1", 0x1234);
+ret_count = CallGlobalFunc(gd, "MyFunc", "si,s", "StringParam1", 0x1234, &string_result);
+* NOTES
+* 	Strings returned from this function must be free'd.
 * SOURCE
 */
 {
 	int v;
 	int arg_count;
+	int arg_out_count;
 	va_list args;
 	char *p;
+	int flag = 0;
 
 	va_start(args, params);
 	lua_getfield(gd->_GL, LUA_GLOBALSINDEX, funcname);	/* function to be called */
 
 	p = params;
 	arg_count = 0;
-	while(*p != 0x0)
+
+	while(*p != 0x0 && flag == 0)
 	{
 		switch(*p++)
 		{
 			case 's':
 				lua_pushstring(gd->_GL, va_arg(args, char*));
+				arg_count += 1;
 				break;
 
 			case 'i':
 				lua_pushnumber(gd->_GL, va_arg(args, int));
+				arg_count += 1;
 				break;
 
 			default:
-				LogError("Unknown parameter");
-				return -1;
+				flag = 1;
 				break;
 		}
-
-		arg_count += 1;
 	}
 
-	v = lua_pcall(gd->_GL, arg_count, 0, 0);
+	arg_out_count = strlen(p);
+
+	v = lua_pcall(gd->_GL, arg_count, arg_out_count, 0);
 	if(v != 0)
 	{
 		LogError("global lua error : %s", lua_tostring(gd->_GL, -1));
+		va_end(args);
 		return -1;
 	}
 
-	return 0;
+
+	v = 0;
+	arg_out_count = 0 - arg_out_count;
+
+	while(*p != 0x0)
+	{
+		switch(*p++)
+		{
+			case 'i':
+				if(!lua_isnumber(gd->_GL, arg_out_count))
+					LogError("Expected integer.. but was not!");
+				else
+					*va_arg(args, int*) = lua_tointeger(gd->_GL, arg_out_count);
+				break;
+
+			case 's':
+				if(!lua_isstring(gd->_GL, arg_out_count))
+					LogError("Expected string.. but was not!");
+				else
+				{
+					const char *x;
+					x = lua_tostring(gd->_GL, arg_out_count);
+					if(x != NULL)
+						*va_arg(args, char**) = (char*)strdup(x);
+					else
+						*va_arg(args, char**) = NULL;
+				}
+				break;
+
+			default:
+				break;
+		}
+
+		v += 1;
+		arg_out_count += 1;
+	}
+
+	va_end(args);
+
+	return v;
 }
 /******
 *

@@ -934,7 +934,7 @@ static void exec_internal_command(uGlobalData *gd, char *s)
 	else
 		p -= 1;
 
-	CallGlobalFunc(gd, "CLIParse", "s", s);
+	CallGlobalFunc(gd, "CLIParse", "s,s", s);
 }
 
 static void DrawCLI(uGlobalData *gd)
