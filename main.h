@@ -207,6 +207,7 @@ extern int scroll_home(uGlobalData *gd);
 extern int scroll_end(uGlobalData *gd);
 extern int updir(uGlobalData *gd);
 extern int downdir(uGlobalData *gd);
+extern int change_dir(uGlobalData *gd, char *dir);
 
 extern DList* GetActiveMRU(uGlobalData *gd);
 extern char* GetActDPath(uGlobalData *gd);

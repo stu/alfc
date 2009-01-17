@@ -6,7 +6,6 @@
 
 #include "headers.h"
 
-
 /* build with lua_helper.lua in tools */
 
 int ExecuteString(uGlobalData *gb, char *sn)

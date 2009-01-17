@@ -11,6 +11,13 @@ and flexability in your system management.
 Moving Around ALFC
 
 
+Current speed keyed commands
+
+:q - Quit app
+:s - Make inactive window pane the same
+
+(todo)
+:f - Filter window
 
 Credits
 Stu George - Right now, everything

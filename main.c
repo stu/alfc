@@ -1111,27 +1111,8 @@ void AddHistory(uGlobalData *gd, char *str, ...)
 	dlist_ins(gd->lstLogHistory, x);
 }
 
-int updir(uGlobalData *gd)
+static void UpdateDir(uGlobalData *gd)
 {
-	char *cpath;
-
-	cpath = ConvertDirectoryName(  GetActDPath(gd) );
-
-	if( chdir(cpath) != 0)
-	{
-		LogInfo("Could not change to directory %s\n", cpath);
-		free(cpath);
-		return -1;
-	}
-
-	free(cpath);
-
-	if( chdir("..") != 0)
-	{
-		LogInfo("Could not change up directory\n");
-		return -1;
-	}
-
 	if(gd->selected_window == WINDOW_LEFT)
 	{
 		free(gd->left_dir);
@@ -1155,6 +1136,51 @@ int updir(uGlobalData *gd)
 	GetActWindow(gd)->highlight_line = 0;
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
+}
+
+int change_dir(uGlobalData *gd, char *dir)
+{
+	char *cpath;
+
+	cpath = ConvertDirectoryName( dir );
+
+	if( chdir(cpath) != 0)
+	{
+		LogInfo("Could not change to directory %s\n", cpath);
+		free(cpath);
+		return -1;
+	}
+
+	free(cpath);
+
+	UpdateDir(gd);
+
+	return 0;
+}
+
+
+int updir(uGlobalData *gd)
+{
+	char *cpath;
+
+	cpath = ConvertDirectoryName(  GetActDPath(gd) );
+
+	if( chdir(cpath) != 0)
+	{
+		LogInfo("Could not change to directory %s\n", cpath);
+		free(cpath);
+		return -1;
+	}
+
+	free(cpath);
+
+	if( chdir("..") != 0)
+	{
+		LogInfo("Could not change up directory\n");
+		return -1;
+	}
+
+	UpdateDir(gd);
 
 	return 0;
 }
@@ -1187,31 +1213,7 @@ int downdir(uGlobalData *gd)
 		return -1;
 	}
 
-	if(gd->selected_window == WINDOW_LEFT)
-	{
-		free(gd->left_dir);
-		gd->left_dir = GetCurrentWorkingDirectory();
-		AddMRU(gd, gd->lstMRULeft, gd->left_dir);
-		dlist_destroy(gd->lstLeft);
-		free(gd->lstLeft);
-		gd->lstLeft = GetFiles(gd, gd->left_dir);
-	}
-	else
-	{
-		free(gd->right_dir);
-		gd->right_dir = GetCurrentWorkingDirectory();
-		AddMRU(gd, gd->lstMRURight, gd->right_dir);
-		dlist_destroy(gd->lstRight);
-		free(gd->lstRight);
-		gd->lstRight = GetFiles(gd, gd->right_dir);
-	}
-
-	GetActWindow(gd)->top_line = 0;
-	GetActWindow(gd)->highlight_line = 0;
-	GetActWindow(gd)->tagged_count = 0;
-	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
-	DrawActive(gd);
-	DrawStatusInfoLine(gd);
+	UpdateDir(gd);
 
 	return 0;
 }

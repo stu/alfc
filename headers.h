@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <regex.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 

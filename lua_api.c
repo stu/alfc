@@ -28,6 +28,84 @@ int RegisterGlobalData(uGlobalData *gb, lua_State *l)
 	return 1;
 }
 
+static char* rtrim(const char *s)
+{
+	char *p;
+	char *x;
+
+	if(*s == 0x0)
+		return strdup("");
+
+	x = strdup(s);
+
+	p = strchr(x, 0x0);
+	p -= 1;
+
+	while(p > x && isspace(*p) != 0 )
+		p--;
+
+	*(p+1)=0;
+
+	p = strdup(x);
+	free(x);
+
+	return p;
+}
+
+static char* ltrim(const char *s)
+{
+	const char *p;
+
+	p = s;
+	while(*p != 0x0 && isspace(*p) != 0)
+		p++;
+
+	return strdup(p);
+}
+
+int gme_trim(lua_State *L)
+{
+	struct lstr strx;
+	char *a, *b;
+
+	GET_LUA_STRING(strx, 1);
+
+	a = ltrim(strx.data);
+	b = rtrim(a);
+
+	free(a);
+	lua_pushstring(L, b);
+	free(b);
+
+	return 1;
+}
+
+int gme_ltrim(lua_State *L)
+{
+	struct lstr strx;
+	char *a;
+
+	GET_LUA_STRING(strx, 1);
+
+	a = ltrim(strx.data);
+	lua_pushstring(L, a);
+	free(a);
+	return 1;
+}
+
+int gme_rtrim(lua_State *L)
+{
+	struct lstr strx;
+	char *a;
+
+	GET_LUA_STRING(strx, 1);
+
+	a = rtrim(strx.data);
+	lua_pushstring(L, a);
+	free(a);
+	return 1;
+}
+
 /****f* LuaAPI/debug_msg
 * FUNCTION
 *	This outputs a string to the logging window
@@ -289,6 +367,39 @@ int gme_SaveOptions(lua_State *L)
 	return 0;
 }
 
+/****f* LuaAPI/SetCurrentWorkingDirectory
+* FUNCTION
+*	Change the active window pane to a new directory
+* SYNOPSIS
+error = SetCurrentWorkingDirectory(dir)
+* INPUTS
+*	o dir (string) - Path to change into
+* RESULTS
+*   error (integer) :
+*   o 0 -- No Error
+* 	o -1 -- Could not scroll down anymore
+* EXAMPLE
+error = SetCurrentWorkingDirectory("C:/WinNT/system32")
+* SEE ALSO
+* 	ChangeDirUp, ChangeDirDown, GetCurrentWorkingDirectory
+* AUTHOR
+*	Stu George
+******
+*/
+int gme_SetCurrentWorkingDirectory(lua_State *L)
+{
+	struct lstr cdx;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(cdx, 1);
+
+	lua_pushnumber(L, change_dir(gd, cdx.data));
+
+	return 1;
+}
+
 /****f* LuaAPI/GetCurrentWorkingDirectory
 * FUNCTION
 *	Returns the full path of the current active window
@@ -301,14 +412,17 @@ dir = GetCurrentWorkingDirectory()
 * EXAMPLE
 dir = GetCurrentWorkingDirectory()
 * SEE ALSO
-* 	ChangeDirUp, changeDirDown
+* 	ChangeDirUp, ChangeDirDown, SetCurrentWorkingDirectory
 * AUTHOR
 *	Stu George
 ******
 */
 int gme_GetCurrentWorkingDirectory(lua_State *L)
 {
-	char *x = GetCurrentWorkingDirectory();
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	char *x = GetActDPath(gd);
 	lua_pushstring(L, x);
 	free(x);
 
@@ -906,7 +1020,7 @@ error = ChangeDirUp()
 *	o 0 -- No Error
 *	o -1 -- Could not change down into directory
 * SEE ALSO
-*	ChangeDirDown, GetCurrentWorkingDirectory
+*	ChangeDirDown, GetCurrentWorkingDirectory, SetCurrentWorkingDirectory
 * AUTHOR
 *	Stu George
 ******
@@ -934,7 +1048,7 @@ error = ChangeDirDown()
 *	o 0 -- No Error
 *	o -1 -- Could not change down into directory
 * SEE ALSO
-*	ChangeDirUp, GetCurrentWorkingDirectory
+*	ChangeDirUp, GetCurrentWorkingDirectory, SetCurrentWorkingDirectory
 * AUTHOR
 *	Stu George
 ******
