@@ -32,6 +32,20 @@ local function __Filter(command)
 	SetFilter(cmd)
 end
 
+local function __GlobAdd(command)
+	local cmd
+
+	cmd = trim(command)
+	AddGlob(cmd)
+end
+
+local function __Glob(command)
+	local cmd
+
+	cmd = trim(command)
+	SetGlob(cmd)
+end
+
 local function __MakeInactivePaneSame(command)
 	local npath
 
@@ -84,6 +98,15 @@ local function __Jump(command)
 
 end
 
+local function __ChangeDir(command)
+	local cmd = command
+
+	-- try to deal with spaces
+	if( SetCurrentWorkingDirectory(command) == -1) then
+		SetCurrentWorkingDirectory(trim(command))
+	end
+end
+
 function CLIParse(command)
 	local cmd
 	local cmds
@@ -94,8 +117,11 @@ function CLIParse(command)
 	cmds[":q "] = __QuitApp
 	cmds[":f "] = __Filter
 	cmds[":f+ "] = __FilterAdd
+	cmds[":g "] = __Glob
+	cmds[":g+ "] = __GlobAdd
 	cmds[":s "] = __MakeInactivePaneSame
 	cmds[":j "] = __Jump
+	cmds[":c "] = __ChangeDir
 
 	for k,v in pairs(cmds) do
 		if string.sub(cmd, 1, #k) == k then

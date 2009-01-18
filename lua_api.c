@@ -1037,6 +1037,7 @@ int gme_ChangeDirUp(lua_State *L)
 	return 1;
 }
 
+
 /****f* LuaAPI/ChangeDirDown
 * FUNCTION
 *	Will take the currently highlighted file
@@ -1348,6 +1349,40 @@ int gme_SetHighlightedFile(lua_State *L)
 	return 1;
 }
 
+
+
+static int ClearGlob(DList *lst)
+{
+	DLElement *e;
+	char *x;
+
+	e = dlist_head(lst);
+	while(e != NULL)
+	{
+		dlist_remove(lst, e, (void*)&x);
+		free(x);
+		e = dlist_head(lst);
+	}
+
+	return 0;
+}
+
+static int ClearFilter(DList *lst)
+{
+	DLElement *e;
+	char *x;
+
+	e = dlist_head(lst);
+	while(e != NULL)
+	{
+		dlist_remove(lst, e, (void*)&x);
+		free(x);
+		e = dlist_head(lst);
+	}
+
+	return 0;
+}
+
 /****f* LuaAPI/SetFilter
 * FUNCTION
 *	Removes all existing filters and applies a posix regex filter against the file list.
@@ -1358,7 +1393,7 @@ SetFilter(filter)
 * RESULTS
 *	o None
 * SEE ALSO
-*	AddFilter
+*	AddFilter, SetGlob, AddGlob
 * AUTHOR
 *	Stu George
 ******
@@ -1373,16 +1408,42 @@ int gme_SetFilter(lua_State *L)
 	char *x;
 
 	GET_LUA_STRING(f, 1);
-
-	e = dlist_head(GetActFilter(gd));
-	while(e != NULL)
+	if(strlen(f.data) == 0)
 	{
-		dlist_remove(GetActFilter(gd), e, (void*)&x);
-		free(x);
+		ClearFilter(GetActFilter(gd));
+
+		if(gd->selected_window == WINDOW_RIGHT)
+		{
+			if(gd->lstRight != NULL)
+			{
+				dlist_destroy(gd->lstRight);
+				free(gd->lstRight);
+			}
+			gd->lstRight = ResetFilteredFileList(gd->lstFilterRight, gd->lstFullRight);
+		}
+		else
+		{
+			if(gd->lstLeft != NULL)
+			{
+				dlist_destroy(gd->lstLeft);
+				free(gd->lstLeft);
+			}
+			gd->lstLeft = ResetFilteredFileList(gd->lstFilterLeft, gd->lstFullLeft);
+		}
+	}
+	else
+	{
 		e = dlist_head(GetActFilter(gd));
+		while(e != NULL)
+		{
+			dlist_remove(GetActFilter(gd), e, (void*)&x);
+			free(x);
+			e = dlist_head(GetActFilter(gd));
+		}
+
+		dlist_ins(GetActFilter(gd), strdup(f.data));
 	}
 
-	dlist_ins(GetActFilter(gd), strdup(f.data));
 	UpdateFilterList(gd, GetActFilter(gd), GetActFullList(gd), GetActList(gd));
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
@@ -1401,7 +1462,7 @@ AddFilter(filter)
 * RESULTS
 *	o None
 * SEE ALSO
-*	SetFilter
+*	SetFilter, AddGlob, SetGlob
 * AUTHOR
 *	Stu George
 ******
@@ -1414,9 +1475,162 @@ int gme_AddFilter(lua_State *L)
 	assert(gd != NULL);
 
 	GET_LUA_STRING(f, 1);
+	if(strlen(f.data) == 0)
+	{
+		ClearFilter(GetActFilter(gd));
+		if(gd->selected_window == WINDOW_RIGHT)
+		{
+			if(gd->lstRight != NULL)
+			{
+				dlist_destroy(gd->lstRight);
+				free(gd->lstRight);
+			}
+			gd->lstRight = ResetFilteredFileList(gd->lstFilterRight, gd->lstFullRight);
+		}
+		else
+		{
+			if(gd->lstLeft != NULL)
+			{
+				dlist_destroy(gd->lstLeft);
+				free(gd->lstLeft);
+			}
+			gd->lstLeft = ResetFilteredFileList(gd->lstFilterLeft, gd->lstFullLeft);
+		}
+	}
+	else
+	{
+		dlist_ins(GetActFilter(gd), strdup(f.data));
+	}
 
-	dlist_ins(GetActFilter(gd), strdup(f.data));
 	UpdateFilterList(gd, GetActFilter(gd), GetActFullList(gd), GetActList(gd));
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+	DrawFilter(gd);
+
+	return 0;
+}
+
+/****f* LuaAPI/SetGlob
+* FUNCTION
+*	Removes all existing globs and applies a posix fnmatch glob against the file list.
+* SYNOPSIS
+SetGlob(glob)
+* INPUTS
+*	o glob (string) -- Posix glob
+* RESULTS
+*	o None
+* SEE ALSO
+*	AddGlob, SetFilter, AddFilter
+* AUTHOR
+*	Stu George
+******
+*/
+int gme_SetGlob(lua_State *L)
+{
+	struct lstr f;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	DLElement *e;
+	char *x;
+
+	GET_LUA_STRING(f, 1);
+
+	if(strlen(f.data) == 0)
+	{
+		ClearGlob(GetActGlob(gd));
+		if(gd->selected_window == WINDOW_RIGHT)
+		{
+			if(gd->lstRight != NULL)
+			{
+				dlist_destroy(gd->lstRight);
+				free(gd->lstRight);
+			}
+			gd->lstRight = ResetFilteredFileList(gd->lstFilterRight, gd->lstFullRight);
+		}
+		else
+		{
+			if(gd->lstLeft != NULL)
+			{
+				dlist_destroy(gd->lstLeft);
+				free(gd->lstLeft);
+			}
+			gd->lstLeft = ResetFilteredFileList(gd->lstFilterLeft, gd->lstFullLeft);
+		}
+	}
+	else
+	{
+		e = dlist_head(GetActGlob(gd));
+		while(e != NULL)
+		{
+			dlist_remove(GetActGlob(gd), e, (void*)&x);
+			free(x);
+			e = dlist_head(GetActGlob(gd));
+		}
+
+		dlist_ins(GetActGlob(gd), strdup(f.data));
+	}
+
+	UpdateGlobList(gd, GetActGlob(gd), GetActFullList(gd), GetActList(gd));
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+	DrawFilter(gd);
+
+	return 0;
+}
+
+/****f* LuaAPI/AddGlob
+* FUNCTION
+*	Applies another posix glob against the file list, without removing any from the stack.
+* SYNOPSIS
+AddGlob(glob)
+* INPUTS
+*	o glob (string) -- Posix glob
+* RESULTS
+*	o None
+* SEE ALSO
+*	SetFilter, AddFilter, SetGlob
+* AUTHOR
+*	Stu George
+******
+*/
+int gme_AddGlob(lua_State *L)
+{
+	struct lstr f;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(f, 1);
+
+	if(strlen(f.data) == 0)
+	{
+		ClearGlob(GetActGlob(gd));
+		if(gd->selected_window == WINDOW_RIGHT)
+		{
+			if(gd->lstRight != NULL)
+			{
+				dlist_destroy(gd->lstRight);
+				free(gd->lstRight);
+			}
+			gd->lstRight = ResetFilteredFileList(gd->lstFilterRight, gd->lstFullRight);
+		}
+		else
+		{
+			if(gd->lstLeft != NULL)
+			{
+				dlist_destroy(gd->lstLeft);
+				free(gd->lstLeft);
+			}
+			gd->lstLeft = ResetFilteredFileList(gd->lstFilterLeft, gd->lstFullLeft);
+		}
+	}
+	else
+	{
+		dlist_ins(GetActGlob(gd), strdup(f.data));
+	}
+
+	UpdateGlobList(gd, GetActGlob(gd), GetActFullList(gd), GetActList(gd));
 
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
@@ -1424,4 +1638,5 @@ int gme_AddFilter(lua_State *L)
 
 	return 0;
 }
+
 

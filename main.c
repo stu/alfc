@@ -24,6 +24,11 @@ static void FreeFilter(void *x)
 	free(x);
 }
 
+static void FreeGlob(void *x)
+{
+	free(x);
+}
+
 // checks an index is in the visible page or not
 int IsVisible(uGlobalData *gd, int idx)
 {
@@ -55,6 +60,14 @@ DList* GetActFilter(uGlobalData *gd)
 		return gd->lstFilterRight;
 	else
 		return gd->lstFilterRight;
+}
+
+DList* GetActGlob(uGlobalData *gd)
+{
+	if(gd->selected_window == WINDOW_RIGHT)
+		return gd->lstGlobRight;
+	else
+		return gd->lstGlobLeft;
 }
 
 DList* GetActiveMRU(uGlobalData *gd)
@@ -434,38 +447,40 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 
 			dr = readdir(d);
 			first_file = NULL;
+
 			while(dr != NULL)
 			{
-				de = malloc(sizeof(uDirEntry));
-				memset(de, 0x0, sizeof(uDirEntry));
+				if( ( strcmp(dr->d_name, ".") != 0 && strcmp(dr->d_name, "..") != 0))
+				{
+					de = malloc(sizeof(uDirEntry));
+					memset(de, 0x0, sizeof(uDirEntry));
 
-				de->name = strdup(dr->d_name);
+					de->name = strdup(dr->d_name);
 #ifdef __MINGW_H
-				stat(de->name, &de->stat_buff);
+					stat(de->name, &de->stat_buff);
 #else
-				lstat(de->name, &de->stat_buff);
+					lstat(de->name, &de->stat_buff);
 #endif
 
-				de->size = de->stat_buff.st_size;
-				de->attrs = de->stat_buff.st_mode;
+					de->size = de->stat_buff.st_size;
+					de->attrs = de->stat_buff.st_mode;
 
-				memset(&de->stat_buff, 0x0, sizeof(struct stat));
+					memset(&de->stat_buff, 0x0, sizeof(struct stat));
 
-				if(dirsfirst == 1 && S_ISDIR(de->attrs) != 0 )
-				{
-					if(first_file == NULL)
-						dlist_ins(lstF, de);
+					if(dirsfirst == 1 && S_ISDIR(de->attrs) != 0 )
+					{
+						if(first_file == NULL)
+							dlist_ins(lstF, de);
+						else
+							dlist_ins_prev(lstF, first_file, de);
+					}
 					else
-						dlist_ins_prev(lstF, first_file, de);
+					{
+						dlist_ins(lstF, de);
+						if(first_file == NULL)
+							first_file = dlist_tail(lstF);
+					}
 				}
-				else
-				{
-					dlist_ins(lstF, de);
-					if(first_file == NULL)
-						first_file = dlist_tail(lstF);
-				}
-
-
 				dr = readdir(d);
 			}
 
@@ -949,12 +964,14 @@ void SwitchPanes(uGlobalData *gd)
 
 	DrawActive(gd);
 	DrawStatusInfoLine(gd);
+	DrawFilter(gd);
 }
 
 void SetActivePane(uGlobalData *gd, int p)
 {
 	gd->selected_window = p;
 	DrawActive(gd);
+	DrawFilter(gd);
 }
 
 /****f* Core/exec_internal_command
@@ -1033,6 +1050,26 @@ void DrawFilter(uGlobalData *gd)
 		e = dlist_next(e);
 	}
 
+	e = dlist_head(GetActGlob(gd));
+	while(e != NULL)
+	{
+		char *q;
+
+		q = dlist_data(e);
+		if(p > (x+8))
+		{
+			*p++ = ',';
+			*p++ = ' ';
+		}
+
+		memmove(p, q, strlen(q));
+		p += strlen(q);
+
+		e = dlist_next(e);
+	}
+
+
+
 	x[gd->screen->get_screen_width()] = 0;
 
 	gd->screen->set_style(STYLE_TITLE);
@@ -1097,13 +1134,18 @@ int scroll_up(uGlobalData *gd)
 	w = GetActWindow(gd);
 
 	if(w->highlight_line == 0 && w->top_line == 0)
+	{
+		LogInfo("foo\n");
 		return -1;
+	}
 
 	scroll_depth = get_scroll_depth(w);
 	max_sizelen = CalcMaxSizeLen(w);
 	max_namelen = CalcMaxNameLen(w, max_sizelen);
 
-	if( (w->top_line == 0) || (w->highlight_line > 4 && w->top_line > 0))
+	LogInfo("depth=%i, size=%i, name=%i, tl=%i, hl=%i\n", scroll_depth, max_sizelen, max_namelen, w->highlight_line, w->top_line);
+
+	if( (w->top_line == 0 && w->highlight_line > 0) || (w->highlight_line > 4 && w->top_line > 0))
 	{
 		uDirEntry *de;
 
@@ -1216,6 +1258,8 @@ int SetHighlightedFile(uGlobalData *gd, int idx)
 		int size;
 
 		size = dlist_size(GetActList(gd));
+		if(depth > size)
+			depth = size;
 
 		if(idx > depth/2)
 		{
@@ -1234,6 +1278,9 @@ int SetHighlightedFile(uGlobalData *gd, int idx)
 			new_hl = idx;
 		}
 
+		assert(new_top >=0);
+		assert(new_hl >= 0);
+
 		GetActWindow(gd)->highlight_line = new_hl;
 		GetActWindow(gd)->top_line = new_top;
 	}
@@ -1241,7 +1288,8 @@ int SetHighlightedFile(uGlobalData *gd, int idx)
 	return idx;
 }
 
-static DList* ResetFilterList(DList *lstF, DList *lstA)
+
+DList* ResetFilteredFileList(DList *lstF, DList *lstA)
 {
 	DList *lstB;
 	DLElement *e;
@@ -1268,10 +1316,9 @@ static DList* ResetFilterList(DList *lstF, DList *lstA)
 		e = dlist_head(lstF);
 	}
 
-	dlist_ins(lstF, "*");
-
 	return lstB;
 }
+
 
 static void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 {
@@ -1284,9 +1331,19 @@ static void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		free(gd->lstFullLeft);
 		gd->lstFullLeft = GetFiles(gd, gd->left_dir);
 
-		dlist_destroy(gd->lstLeft);
-		free(gd->lstLeft);
-		gd->lstLeft = ResetFilterList(gd->lstFilterLeft, gd->lstFullLeft);
+		if(gd->lstLeft != NULL)
+		{
+			dlist_destroy(gd->lstLeft);
+			free(gd->lstLeft);
+		}
+		gd->lstLeft = ResetFilteredFileList(gd->lstFilterLeft, gd->lstFullLeft);
+
+		assert(gd->lstFilterLeft != NULL);
+		assert(gd->lstFullLeft != NULL);
+		assert(gd->lstLeft != NULL);
+		assert(gd->lstGlobLeft != NULL);
+		UpdateFilterList(gd, gd->lstFilterLeft, gd->lstFullLeft, gd->lstLeft);
+		UpdateGlobList(gd, gd->lstGlobLeft, gd->lstFullLeft, gd->lstLeft);
 	}
 	else
 	{
@@ -1297,9 +1354,19 @@ static void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		free(gd->lstFullRight);
 		gd->lstFullRight = GetFiles(gd, gd->right_dir);
 
-		dlist_destroy(gd->lstRight);
-		free(gd->lstRight);
-		gd->lstRight = ResetFilterList(gd->lstFilterRight, gd->lstFullRight);
+		if(gd->lstRight != NULL)
+		{
+			dlist_destroy(gd->lstRight);
+			free(gd->lstRight);
+		}
+		gd->lstRight = ResetFilteredFileList(gd->lstFilterRight, gd->lstFullRight);
+
+		assert(gd->lstFilterRight != NULL);
+		assert(gd->lstFullRight != NULL);
+		assert(gd->lstRight != NULL);
+		assert(gd->lstGlobRight != NULL);
+		UpdateFilterList(gd, gd->lstFilterRight, gd->lstFullRight, gd->lstRight);
+		UpdateGlobList(gd, gd->lstGlobRight, gd->lstFullRight, gd->lstRight);
 	}
 
 	GetActWindow(gd)->top_line = 0;
@@ -1364,10 +1431,44 @@ int updir(uGlobalData *gd)
 	}
 
 	UpdateDir(gd, scan);
+	LogInfo("going up, tl=%i, hl=%i\n", GetActWindow(gd)->top_line, GetActWindow(gd)->highlight_line );
+
 	free(cpath);
 
 	return 0;
 }
+
+
+int godir(uGlobalData *gd, char *dir)
+{
+	char *cpath;
+
+	cpath = ConvertDirectoryName( GetActDPath(gd) );
+
+	if( chdir(cpath) != 0)
+	{
+		LogInfo("Could not change to directory %s\n", cpath);
+		free(cpath);
+		return -1;
+	}
+
+	free(cpath);
+
+	cpath = ConvertDirectoryName(dir);
+
+	if( chdir(cpath) != 0)
+	{
+		free(cpath);
+		LogInfo("Could not change to directory\n");
+		return -1;
+	}
+
+	UpdateDir(gd, NULL);
+	free(cpath);
+
+	return 0;
+}
+
 
 int downdir(uGlobalData *gd)
 {
@@ -1579,6 +1680,9 @@ void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstFull, DList *
 	DList *lstNew;
 	DList *lstOld;
 
+	if(dlist_size(lstFilter) == 0)
+		return;
+
 	dlist_empty(lstF);
 
 	lstNew = lstFull;
@@ -1647,6 +1751,80 @@ void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstFull, DList *
 		free(lstNew);
 	}
 }
+
+
+void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF)
+{
+	DLElement *e, *e2;
+	uDirEntry *de;
+	int status;
+
+	DList *lstNew;
+	DList *lstOld;
+
+	if(dlist_size(lstGlob) == 0)
+		return;
+
+	dlist_empty(lstF);
+
+	lstNew = lstFull;
+	lstOld = malloc(sizeof(DList));
+	dlist_init(lstOld, NULL);
+
+	e = dlist_head(lstGlob);
+	while(e != NULL)
+	{
+		char *pattern;
+
+		pattern = dlist_data(e);
+
+		e2 = dlist_head(lstNew);
+
+		while(e2 != NULL)
+		{
+			de = dlist_data(e2);
+
+			if( S_ISDIR(de->attrs) == 0)
+			{
+				status = fnmatch(pattern, de->name, 0);
+				if(status == 0)
+					dlist_ins(lstF, de);
+				else
+					dlist_ins(lstOld, de);
+			}
+			else
+				dlist_ins(lstF, de);
+
+			e2 = dlist_next(e2);
+		}
+
+		if(lstNew != lstFull)
+		{
+			dlist_destroy(lstNew);
+			free(lstNew);
+		}
+
+		lstNew = lstOld;
+
+		lstOld = malloc(sizeof(DList));
+		dlist_init(lstOld, NULL);
+
+		e = dlist_next(e);
+	}
+
+	if(lstOld != lstFull)
+	{
+		dlist_destroy(lstOld);
+		free(lstOld);
+	}
+
+	if(lstNew != lstFull)
+	{
+		dlist_destroy(lstNew);
+		free(lstNew);
+	}
+}
+
 
 void DrawAll(uGlobalData *gd)
 {
@@ -1735,8 +1913,28 @@ int main(int argc, char *argv[])
 			gdata->lstFilterRight = malloc(sizeof(DList));
 			dlist_init(gdata->lstFilterRight, FreeFilter);
 
-			gdata->lstLeft = ResetFilterList(gdata->lstFilterLeft, gdata->lstFullLeft);
-			gdata->lstRight = ResetFilterList(gdata->lstFilterRight, gdata->lstFullRight);
+			gdata->lstGlobLeft = malloc(sizeof(DList));
+			dlist_init(gdata->lstGlobLeft, FreeGlob);
+			gdata->lstGlobRight = malloc(sizeof(DList));
+			dlist_init(gdata->lstGlobRight, FreeGlob);
+
+			gdata->selected_window = WINDOW_LEFT;
+			UpdateDir(gdata, NULL);
+
+			gdata->selected_window = WINDOW_RIGHT;
+			UpdateDir(gdata, NULL);
+
+			/*
+			gdata->selected_window = WINDOW_LEFT;
+			UpdateFilterList(gdata, GetActFilter(gdata), GetActFullList(gdata), GetActList(gdata));
+			UpdateGlobList(gdata, GetActGlob(gdata), GetActFullList(gdata), GetActList(gdata));
+
+			gdata->selected_window = WINDOW_RIGHT;
+			UpdateFilterList(gdata, GetActFilter(gdata), GetActFullList(gdata), GetActList(gdata));
+			UpdateGlobList(gdata, GetActGlob(gdata), GetActFullList(gdata), GetActList(gdata));
+			*/
+
+			gdata->selected_window = WINDOW_LEFT;
 
 
 			gdata->screen->set_style( STYLE_TITLE);
@@ -1950,6 +2148,19 @@ int main(int argc, char *argv[])
 			dlist_destroy(gdata->lstFilterRight);
 			free(gdata->lstFilterRight);
 		}
+
+		if(gdata->lstGlobLeft != NULL)
+		{
+			dlist_destroy(gdata->lstGlobLeft);
+			free(gdata->lstGlobLeft);
+		}
+
+		if(gdata->lstGlobRight != NULL)
+		{
+			dlist_destroy(gdata->lstGlobRight);
+			free(gdata->lstGlobRight);
+		}
+
 
 
 		if(gdata->win_left != NULL)
