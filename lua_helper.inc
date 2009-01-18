@@ -308,6 +308,41 @@ void RegisterGameFuncs(uGlobalData *gb, lua_State *l)
 	lua_pushnumber(l, WINDOW_LEFT); lua_setglobal(l, "WINDOW_LEFT");
 	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
 
+	lua_pushnumber(l, ALFC_KEY_DOWN); lua_setglobal(l, "ALFC_KEY_DOWN");
+	lua_pushnumber(l, ALFC_KEY_UP); lua_setglobal(l, "ALFC_KEY_UP");
+	lua_pushnumber(l, ALFC_KEY_LEFT); lua_setglobal(l, "ALFC_KEY_LEFT");
+	lua_pushnumber(l, ALFC_KEY_RIGHT); lua_setglobal(l, "ALFC_KEY_RIGHT");
+	lua_pushnumber(l, ALFC_KEY_INS); lua_setglobal(l, "ALFC_KEY_INS");
+	lua_pushnumber(l, ALFC_KEY_DEL); lua_setglobal(l, "ALFC_KEY_DEL");
+	lua_pushnumber(l, ALFC_KEY_BACKSPACE); lua_setglobal(l, "ALFC_KEY_BACKSPACE");
+	lua_pushnumber(l, ALFC_KEY_HOME); lua_setglobal(l, "ALFC_KEY_HOME");
+	lua_pushnumber(l, ALFC_KEY_END); lua_setglobal(l, "ALFC_KEY_END");
+	lua_pushnumber(l, ALFC_KEY_PAGE_UP); lua_setglobal(l, "ALFC_KEY_PAGE_UP");
+	lua_pushnumber(l, ALFC_KEY_PAGE_DOWN); lua_setglobal(l, "ALFC_KEY_PAGE_DOWN");
+	lua_pushnumber(l, ALFC_KEY_ENTER); lua_setglobal(l, "ALFC_KEY_ENTER");
+	lua_pushnumber(l, ALFC_KEY_TAB); lua_setglobal(l, "ALFC_KEY_TAB");
+	lua_pushnumber(l, ALFC_KEY_SPACE); lua_setglobal(l, "ALFC_KEY_SPACE");
+	lua_pushnumber(l, ALFC_KEY_F00); lua_setglobal(l, "ALFC_KEY_F00");
+	lua_pushnumber(l, ALFC_KEY_F01); lua_setglobal(l, "ALFC_KEY_F01");
+	lua_pushnumber(l, ALFC_KEY_F02); lua_setglobal(l, "ALFC_KEY_F02");
+	lua_pushnumber(l, ALFC_KEY_F03); lua_setglobal(l, "ALFC_KEY_F03");
+	lua_pushnumber(l, ALFC_KEY_F04); lua_setglobal(l, "ALFC_KEY_F04");
+	lua_pushnumber(l, ALFC_KEY_F05); lua_setglobal(l, "ALFC_KEY_F05");
+	lua_pushnumber(l, ALFC_KEY_F06); lua_setglobal(l, "ALFC_KEY_F06");
+	lua_pushnumber(l, ALFC_KEY_F07); lua_setglobal(l, "ALFC_KEY_F07");
+	lua_pushnumber(l, ALFC_KEY_F08); lua_setglobal(l, "ALFC_KEY_F08");
+	lua_pushnumber(l, ALFC_KEY_F09); lua_setglobal(l, "ALFC_KEY_F09");
+	lua_pushnumber(l, ALFC_KEY_F10); lua_setglobal(l, "ALFC_KEY_F10");
+	lua_pushnumber(l, ALFC_KEY_F11); lua_setglobal(l, "ALFC_KEY_F11");
+	lua_pushnumber(l, ALFC_KEY_F12); lua_setglobal(l, "ALFC_KEY_F12");
+	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
+	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
+	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
+	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
+	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
+	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
+
+
 	lua_settop(l, 0);
 }
 
