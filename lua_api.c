@@ -1710,9 +1710,99 @@ int gme_BindKey(lua_State *L)
 	kb->key = key;
 	kb->sCommand = strdup(kstring.data);
 	kb->sTitle = strdup(ktitle.data);
-	LogInfo("key binding %s\n", kb->sCommand);
+
 	dlist_ins(gd->lstHotKeys, kb);
 
 	lua_pushnumber(L, 0);
 	return 1;
 }
+
+
+/****f* LuaAPI/ClearSortList
+* FUNCTION
+*	Clears the current 'sort' file list. If yo dont Add files to this you will have a blank window...
+* SYNOPSIS
+ClearSortList()
+* INPUTS
+*	o None
+* RESULTS
+*	o None
+* SEE ALSO
+* 	AddToSortList
+* AUTHOR
+*	Stu George
+******
+*/
+int gme_ClearSortList(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	DList *lstX;
+
+	lstX = GetActList(gd);
+	dlist_empty(lstX);
+
+	return 0;
+}
+
+/****f* LuaAPI/AddToSortList
+* FUNCTION
+*	Adds a file to the sort list.
+* SYNOPSIS
+ClearSortList()
+* INPUTS
+*	o None
+* RESULTS
+*	o None
+* SEE ALSO
+* 	ClearSortList
+* AUTHOR
+*	Stu George
+******
+*/
+int gme_AddToSortList(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	uDirEntry *de;
+	struct lstr kname;
+
+	GET_LUA_STRING(kname, 1);
+
+
+	de = GetFileByName(GetActFullList(gd), kname.data);
+	if(de != NULL)
+	{
+		dlist_ins(GetActList(gd), de);
+	}
+
+	return 0;
+}
+
+
+/****f* LuaAPI/RedrawWindow
+* FUNCTION
+*	Triggers a re-draw of the currently active window pane
+* SYNOPSIS
+RedrawWindow()
+* INPUTS
+*	o None
+* RESULTS
+*	o None
+* AUTHOR
+*	Stu George
+******
+*/
+int gme_RedrawWindow(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+
+	return 0;
+}
+

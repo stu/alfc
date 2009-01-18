@@ -244,7 +244,7 @@ extern uDirEntry* GetHighlightedFile(DList *lstFiles, int idx, int tr);
 
 extern int GetFileIndex(DList *lstFiles, char *name);
 extern int SetHighlightedFile(uGlobalData *gd, int idx);
-
+extern uDirEntry* GetFileByName(DList *lstFiles, char *name);
 extern void SetQuitAppFlag(int flag);
 extern void SwitchPanes(uGlobalData *gd);
 extern void SetActivePane(uGlobalData *gd, int p);
@@ -252,7 +252,6 @@ extern void SetActivePane(uGlobalData *gd, int p);
 extern char* GetCurrentWorkingDirectory(void);
 extern char* ConvertDirectoryName(const char *x);
 extern void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstGlob, DList *lstFull, DList *lstF);
-//extern void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF);
 extern DList* ResetFilteredFileList(DList *lstF, DList *lstA);
 
 extern void DrawStatusInfoLine(uGlobalData *gd);

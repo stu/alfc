@@ -18,8 +18,16 @@
 #include "headers.h"
 
 static void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF);
+static void FreeListEntry(void *x);
 
 int intFlag = 0;
+
+
+static void SortList(uGlobalData *gd, DList *lstFiles)
+{
+	CallGlobalFunc(gd, "SortFileList", "");
+}
+
 
 static void FreeFilter(void *x)
 {
@@ -204,14 +212,6 @@ static void GetUserInfo(uGlobalData *gd)
 
 	free(x);
 #endif
-	/*
-	LogInfo("The Real User Name is [%s]\n", gd->strRealName);
-	LogInfo("The Login Name is %s\n", gd->strLoginName);
-	LogInfo("The Home Directory is %s\n", gd->strHomeDirectory);
-	LogInfo("The Login Shell is %s\n", gd->strShell);
-	LogInfo("The uid is %lu\n", gd->uid);
-	LogInfo("The gid is %lu\n\n", gd->gid);
-	*/
 }
 
 static uGlobalData* NewGlobalData(void)
@@ -1369,6 +1369,26 @@ int GetFileIndex(DList *lstFiles, char *name)
 	return -1;
 }
 
+uDirEntry* GetFileByName(DList *lstFiles, char *name)
+{
+	DLElement *d;
+	uDirEntry *de;
+
+	d = dlist_head(lstFiles);
+	while(d != NULL)
+	{
+		de = dlist_data(d);
+
+		if( strcmp(de->name, name) == 0)
+			return de;
+
+		d = dlist_next(d);
+	}
+
+	return NULL;
+}
+
+
 int SetHighlightedFile(uGlobalData *gd, int idx)
 {
 	int depth = GetActWindow(gd)->height - 2;
@@ -1468,7 +1488,6 @@ static void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		assert(gd->lstLeft != NULL);
 		assert(gd->lstGlobLeft != NULL);
 		UpdateFilterList(gd, gd->lstFilterLeft, gd->lstGlobLeft, gd->lstFullLeft, gd->lstLeft);
-		//UpdateGlobList(gd, gd->lstGlobLeft, gd->lstLeft, gd->lstLeft);
 	}
 	else
 	{
@@ -1494,7 +1513,6 @@ static void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		assert(gd->lstRight != NULL);
 		assert(gd->lstGlobRight != NULL);
 		UpdateFilterList(gd, gd->lstFilterRight, gd->lstGlobRight, gd->lstFullRight, gd->lstRight);
-		//UpdateGlobList(gd, gd->lstGlobRight, gd->lstRight, gd->lstRight);
 	}
 
 	GetActWindow(gd)->top_line = 0;
@@ -1559,7 +1577,6 @@ int updir(uGlobalData *gd)
 	}
 
 	UpdateDir(gd, scan);
-
 	free(cpath);
 
 	return 0;
@@ -1780,9 +1797,6 @@ void scroll_page_up(uGlobalData *gd)
 	else
 	{
 		// scroll actual page
-
-		//LogInfo("c is %i, depth is %i, tl is %i, hl is %i, fc is %i\n", c, depth, tl, hl, fc);
-
 		if(tl > depth)
 		{
 			GetActWindow(gd)->top_line -= depth - 1;
@@ -1807,49 +1821,68 @@ void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstGlob, DList *
 	DList *lstNew;
 	DList *lstOld;
 
-	if(dlist_size(lstFilter) == 0)
-		return;
-
-	dlist_empty(lstF);
-
-	lstNew = lstFull;
-	lstOld = malloc(sizeof(DList));
-	dlist_init(lstOld, NULL);
-
-	e = dlist_head(lstFilter);
-	while(e != NULL)
+	if(dlist_size(lstFilter) > 0)
 	{
-		char *pattern;
-		int rc;
+		dlist_empty(lstF);
 
-		pattern = dlist_data(e);
-		rc = regcomp(&preg, pattern, REG_EXTENDED|REG_NOSUB);
-		if( rc == 0)
+		lstNew = lstFull;
+		lstOld = malloc(sizeof(DList));
+		dlist_init(lstOld, NULL);
+
+		e = dlist_head(lstFilter);
+		while(e != NULL)
 		{
-			e2 = dlist_head(lstNew);
+			char *pattern;
+			int rc;
 
-			while(e2 != NULL)
+			pattern = dlist_data(e);
+			rc = regcomp(&preg, pattern, REG_EXTENDED|REG_NOSUB);
+			if( rc == 0)
 			{
-				de = dlist_data(e2);
+				e2 = dlist_head(lstNew);
 
-				status = regexec(&preg, de->name, 0, NULL, 0);
-				if(status == 0)
+				while(e2 != NULL)
 				{
-					dlist_ins(lstF, de);
-				}
-				else
-					dlist_ins(lstOld, de);
+					de = dlist_data(e2);
 
-				e2 = dlist_next(e2);
+					status = regexec(&preg, de->name, 0, NULL, 0);
+					if(status == 0)
+					{
+						dlist_ins(lstF, de);
+					}
+					else
+						dlist_ins(lstOld, de);
+
+					e2 = dlist_next(e2);
+				}
+
+				regfree(&preg);
+			}
+			else
+			{
+				char buff[128];
+				regerror(rc, &preg, buff, 128);
+				LogInfo("regex pattern failed to compile\nError : %s\n", buff);
 			}
 
-			regfree(&preg);
+			if(lstNew != lstFull)
+			{
+				dlist_destroy(lstNew);
+				free(lstNew);
+			}
+
+			lstNew = lstOld;
+
+			lstOld = malloc(sizeof(DList));
+			dlist_init(lstOld, NULL);
+
+			e = dlist_next(e);
 		}
-		else
+
+		if(lstOld != lstFull)
 		{
-			char buff[128];
-			regerror(rc, &preg, buff, 128);
-			LogInfo("regex pattern failed to compile\nError : %s\n", buff);
+			dlist_destroy(lstOld);
+			free(lstOld);
 		}
 
 		if(lstNew != lstFull)
@@ -1857,28 +1890,11 @@ void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstGlob, DList *
 			dlist_destroy(lstNew);
 			free(lstNew);
 		}
-
-		lstNew = lstOld;
-
-		lstOld = malloc(sizeof(DList));
-		dlist_init(lstOld, NULL);
-
-		e = dlist_next(e);
-	}
-
-	if(lstOld != lstFull)
-	{
-		dlist_destroy(lstOld);
-		free(lstOld);
-	}
-
-	if(lstNew != lstFull)
-	{
-		dlist_destroy(lstNew);
-		free(lstNew);
 	}
 
 	UpdateGlobList(gd, lstGlob, lstFull, lstF);
+
+	SortList(gd, lstF);
 }
 
 static void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF)
@@ -2054,19 +2070,15 @@ int main(int argc, char *argv[])
 			dlist_init(gdata->lstFilterLeft, FreeFilter);
 			gdata->lstGlobLeft = malloc(sizeof(DList));
 			dlist_init(gdata->lstGlobLeft, FreeGlob);
-
 			free(gdata->left_dir);
 			gdata->left_dir = GetOptionDir(gdata, "startup_left", gdata->lstMRULeft);
 			godir(gdata, gdata->left_dir);
-			//UpdateDir(gdata, NULL);
 
 			gdata->selected_window = WINDOW_RIGHT;
 			gdata->lstFilterRight = malloc(sizeof(DList));
 			dlist_init(gdata->lstFilterRight, FreeFilter);
 			gdata->lstGlobRight = malloc(sizeof(DList));
 			dlist_init(gdata->lstGlobRight, FreeGlob);
-			//godir(gdata, GetOptionDir(gdata, "startup_right", gdata->lstMRURight));
-
 			free(gdata->right_dir);
 			gdata->right_dir = GetOptionDir(gdata, "startup_right", gdata->lstMRURight);
 			godir(gdata, gdata->right_dir);

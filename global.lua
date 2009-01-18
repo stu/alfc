@@ -6,6 +6,20 @@
 
 if _G["BOOTSTRAP"] ~= 1 then
 
+-- merge two tables together
+local function merge(t, u)
+	local r = {}
+	local k, v
+	for k, v in ipairs(t) do
+		r[1+#r] = v
+	end
+	for k, v in ipairs(u) do
+		r[1+#r] = v
+	end
+	return r
+end
+
+
 -- This is an internal function that parses the internal
 -- command line
 -- eg: it turns ":q" into QuitApp etc..
@@ -102,6 +116,22 @@ local function __ChangeDir(command)
 	end
 end
 
+local function __SortOrder(command)
+	if trim(command) == "na" then
+		SetOption("options", "sort_order", "name_asc")
+	elseif trim(command) == "nd" then
+		SetOption("options", "sort_order", "name_desc")
+	elseif trim(command) == "sa" then
+		SetOption("options", "sort_order", "size_asc")
+	elseif trim(command) == "sd" then
+		SetOption("options", "sort_order", "size_desc")
+	end
+
+	-- re-sort..
+	SortFileList()
+	RedrawWindow()
+end
+
 function CLIParse(command)
 	local cmd
 	local cmds
@@ -117,6 +147,7 @@ function CLIParse(command)
 	cmds[":s "] = __MakeInactivePaneSame
 	cmds[":j "] = __Jump
 	cmds[":c "] = __ChangeDir
+	cmds[":so "] = __SortOrder
 
 	for k,v in pairs(cmds) do
 		if string.sub(cmd, 1, #k) == k then
@@ -136,9 +167,62 @@ function SortFileList()
 
 	local opt_dirs_first;
 	local opt_sort_order;
+	local sortfunc
 
-	opt_dirs_fist = GetOption("options", "directories_first")
+	opt_dirs_first = GetOption("options", "directories_first")
 	opt_sort_order = GetOption("options", "sort_order")
+
+	lstF = GetFileList()
+
+	for k,v in ipairs(lstF) do
+		if opt_dirs_first == "true" then
+			if v.directory == 1 then
+				lstSD[1 + #lstSD] = {}
+				lstSD[#lstSD].key = k
+				lstSD[#lstSD].data = v
+			else
+				lstSF[1 + #lstSF] = {}
+				lstSF[#lstSF].key = k
+				lstSF[#lstSF].data = v
+			end
+		else
+			lstSF[1 + #lstSF] = {}
+			lstSF[#lstSF].key = k
+			lstSF[#lstSF].data = v
+		end
+	end
+
+
+	if opt_sort_order == "name_desc" then
+		sortfunc = function(a,b) return a.data.name>b.data.name end
+	elseif opt_sort_order == "name_asc" then
+		sortfunc = function(a,b) return a.data.name<b.data.name end
+	elseif opt_sort_order == "size_desc" then
+		sortfunc = function(a,b) return a.data.size>b.data.size end
+	elseif opt_sort_order == "size_asc" then
+		sortfunc = function(a,b) return a.data.size<b.data.size end
+	else
+		-- default use name ascending...
+		sortfunc = function(a,b) return a.data.name<b.data.name end
+	end
+
+	if opt_dirs_first == "true" then
+		-- sort by name
+		table.sort(lstSD, sortfunc)
+		table.sort(lstSF, sortfunc)
+
+		lstSF = merge(lstSD, lstSF)
+		lstSD = nil
+	else
+		-- sort by name
+		table.sort(lstSF, sortfunc)
+	end
+
+	ClearSortList()
+	for k,v in ipairs(lstSF) do
+		--debug_msg(v.data.name)
+		AddToSortList(v.data.name)
+	end
 
 end
 
