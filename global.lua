@@ -18,8 +18,18 @@ local function __QuitApp()
 	SetQuitAppFlag(1)
 end
 
+local function __FilterAdd(command)
+	local cmd
+
+	cmd = trim(command)
+	AddFilter(cmd)
+end
+
 local function __Filter(command)
-	debug_msg("filter " .. command)
+	local cmd
+
+	cmd = trim(command)
+	SetFilter(cmd)
 end
 
 local function __MakeInactivePaneSame(command)
@@ -83,6 +93,7 @@ function CLIParse(command)
 	cmds = {}
 	cmds[":q "] = __QuitApp
 	cmds[":f "] = __Filter
+	cmds[":f+ "] = __FilterAdd
 	cmds[":s "] = __MakeInactivePaneSame
 	cmds[":j "] = __Jump
 

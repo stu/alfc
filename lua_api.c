@@ -1348,4 +1348,80 @@ int gme_SetHighlightedFile(lua_State *L)
 	return 1;
 }
 
+/****f* LuaAPI/SetFilter
+* FUNCTION
+*	Removes all existing filters and applies a posix regex filter against the file list.
+* SYNOPSIS
+SetFilter(filter)
+* INPUTS
+*	o filter (string) -- Posix regular expression
+* RESULTS
+*	o None
+* SEE ALSO
+*	AddFilter
+* AUTHOR
+*	Stu George
+******
+*/
+int gme_SetFilter(lua_State *L)
+{
+	struct lstr f;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	DLElement *e;
+	char *x;
+
+	GET_LUA_STRING(f, 1);
+
+	e = dlist_head(GetActFilter(gd));
+	while(e != NULL)
+	{
+		dlist_remove(GetActFilter(gd), e, (void*)&x);
+		free(x);
+		e = dlist_head(GetActFilter(gd));
+	}
+
+	dlist_ins(GetActFilter(gd), strdup(f.data));
+	UpdateFilterList(gd, GetActFilter(gd), GetActFullList(gd), GetActList(gd));
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+	DrawFilter(gd);
+
+	return 0;
+}
+
+/****f* LuaAPI/AddFilter
+* FUNCTION
+*	Applies another posix regex filter against the file list, without removing any from the stack.
+* SYNOPSIS
+AddFilter(filter)
+* INPUTS
+*	o filter (string) -- Posix regular expression
+* RESULTS
+*	o None
+* SEE ALSO
+*	SetFilter
+* AUTHOR
+*	Stu George
+******
+*/
+int gme_AddFilter(lua_State *L)
+{
+	struct lstr f;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(f, 1);
+
+	dlist_ins(GetActFilter(gd), strdup(f.data));
+	UpdateFilterList(gd, GetActFilter(gd), GetActFullList(gd), GetActList(gd));
+
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+	DrawFilter(gd);
+
+	return 0;
+}
 

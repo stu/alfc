@@ -144,6 +144,12 @@ struct udtGlobals
 	DList	*lstLeft;
 	DList	*lstRight;
 
+	DList	*lstFullLeft;
+	DList	*lstFullRight;
+
+	DList	*lstFilterLeft;
+	DList	*lstFilterRight;
+
 	int		compress_filesize;
 	int		selected_window;
 
@@ -211,6 +217,8 @@ extern int updir(uGlobalData *gd);
 extern int downdir(uGlobalData *gd);
 extern int change_dir(uGlobalData *gd, char *dir);
 
+extern DList* GetActFullList(uGlobalData *gd);
+extern DList* GetActFilter(uGlobalData *gd);
 extern DList* GetActiveMRU(uGlobalData *gd);
 extern char* GetActDPath(uGlobalData *gd);
 extern DList* GetActList(uGlobalData *gd);
@@ -229,10 +237,12 @@ extern void SetActivePane(uGlobalData *gd, int p);
 
 extern char* GetCurrentWorkingDirectory(void);
 extern char* ConvertDirectoryName(const char *x);
+extern void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstFull, DList *lstF);
 
 extern void DrawStatusInfoLine(uGlobalData *gd);
 extern void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath);
 extern void DrawActive(uGlobalData *gd);
+extern void DrawFilter(uGlobalData *gd);
 
 #ifdef __cplusplus
 }

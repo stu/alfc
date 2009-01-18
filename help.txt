@@ -41,6 +41,10 @@ Directories
 	- Delete Directory
 	- Rename Directory
 
+Portability
+Notes on the MinGW port.
+- MinGW seems to only have a 32bit st_size in the stat buffer for filesizes...
+
 ChangeLog
 20090111 - Started...
 

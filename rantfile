@@ -166,9 +166,9 @@ end
 
 desc "Cleanup..."
 task :clean do
-	x = Dir["*.{bak,o,obj}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["lua_helper.c"] + Dir["doc/*"]
+	x = Dir["*.{bak,o,obj}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["lua_helper.c"] + Dir["doc"]
 	if x.length > 0
-		sys.rm_f x
+		sys.rm_rf x
 	end
 end
 
