@@ -1466,7 +1466,7 @@ int gme_SetFilter(lua_State *L)
 		dlist_ins(GetActFilter(gd), strdup(f.data));
 	}
 
-	UpdateFilterList(gd, GetActFilter(gd), GetActFullList(gd), GetActList(gd));
+	UpdateFilterList(gd, GetActFilter(gd), GetActGlob(gd), GetActFullList(gd), GetActList(gd));
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
 	DrawFilter(gd);
@@ -1524,7 +1524,7 @@ int gme_AddFilter(lua_State *L)
 		dlist_ins(GetActFilter(gd), strdup(f.data));
 	}
 
-	UpdateFilterList(gd, GetActFilter(gd), GetActFullList(gd), GetActList(gd));
+	UpdateFilterList(gd, GetActFilter(gd), GetActGlob(gd), GetActFullList(gd), GetActList(gd));
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
 	DrawFilter(gd);
@@ -1593,7 +1593,8 @@ int gme_SetGlob(lua_State *L)
 		dlist_ins(GetActGlob(gd), strdup(f.data));
 	}
 
-	UpdateGlobList(gd, GetActGlob(gd), GetActFullList(gd), GetActList(gd));
+	//UpdateGlobList(gd, GetActGlob(gd), GetActFullList(gd), GetActList(gd));
+	UpdateFilterList(gd, GetActFilter(gd), GetActGlob(gd), GetActFullList(gd), GetActList(gd));
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
 	DrawFilter(gd);
@@ -1652,8 +1653,8 @@ int gme_AddGlob(lua_State *L)
 		dlist_ins(GetActGlob(gd), strdup(f.data));
 	}
 
-	UpdateGlobList(gd, GetActGlob(gd), GetActFullList(gd), GetActList(gd));
-
+	//UpdateGlobList(gd, GetActGlob(gd), GetActFullList(gd), GetActList(gd));
+	UpdateFilterList(gd, GetActFilter(gd), GetActGlob(gd), GetActFullList(gd), GetActList(gd));
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
 	DrawFilter(gd);
@@ -1709,7 +1710,7 @@ int gme_BindKey(lua_State *L)
 	kb->key = key;
 	kb->sCommand = strdup(kstring.data);
 	kb->sTitle = strdup(ktitle.data);
-
+	LogInfo("key binding %s\n", kb->sCommand);
 	dlist_ins(gd->lstHotKeys, kb);
 
 	lua_pushnumber(L, 0);

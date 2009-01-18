@@ -10,7 +10,6 @@ if _G["BOOTSTRAP"] ~= 1 then
 -- command line
 -- eg: it turns ":q" into QuitApp etc..
 local function __QuitApp()
-	debug_msg("quit out")
 	SetQuitAppFlag(1)
 end
 
@@ -149,6 +148,10 @@ function GlobalLuaFuncs()
 	BindKey(ALFC_KEY_F02, "Same", ":s")
 	BindKey(ALFC_KEY_F10, "Quit", ":q")
 	BindKey(ALFC_KEY_F12, "Tag", "TagHighlightedFile()")
+
+	-- Sometimes I want a quick view for code files
+	--BindKey(ALFC_KEY_F11, "CodeOnly", "AddGlob(\"*.c\"); AddGlob(\"*.h\");")
+	BindKey(ALFC_KEY_F11, "CodeOnly", "SetFilter(\"\\\\.[ch]$\"); SetGlob(\"*.lua\")")
 end
 
 	-- initialise bootstrap and protect code from being called more than once

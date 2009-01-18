@@ -251,8 +251,8 @@ extern void SetActivePane(uGlobalData *gd, int p);
 
 extern char* GetCurrentWorkingDirectory(void);
 extern char* ConvertDirectoryName(const char *x);
-extern void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstFull, DList *lstF);
-extern void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF);
+extern void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstGlob, DList *lstFull, DList *lstF);
+//extern void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF);
 extern DList* ResetFilteredFileList(DList *lstF, DList *lstA);
 
 extern void DrawStatusInfoLine(uGlobalData *gd);

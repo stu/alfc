@@ -17,6 +17,8 @@
 
 #include "headers.h"
 
+static void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF);
+
 int intFlag = 0;
 
 static void FreeFilter(void *x)
@@ -379,6 +381,7 @@ static char* GetOptionDir(uGlobalData *gdata, char *startup, DList *lstMRU)
 {
 	char *r;
 	DLElement *e;
+	char *x;
 
 	r = INI_get(gdata->optfile,"options", "remember_dirs");
 	if( IsTrue(r) == 0)
@@ -387,20 +390,63 @@ static char* GetOptionDir(uGlobalData *gdata, char *startup, DList *lstMRU)
 		e = dlist_head(lstMRU);
 		r = dlist_data(e);
 		if(r != NULL)
-			return strdup(r);
+		{
+			x = ConvertDirectoryName(r);
+			if( chdir(x) == 0)
+			{
+				free(x);
+				return strdup(r);
+			}
+			LogInfo("Invalid startup directory %s (%s) does not exist\n", startup, r);
+			return GetCurrentWorkingDirectory();
+		}
 		else
-			return strdup("$HOME");
+		{
+			x = ConvertDirectoryName("$HOME");
+			if( chdir(x) == 0)
+			{
+				free(x);
+				return strdup(r);
+			}
+			LogInfo("Invalid home directory (%s) does not exist\n", x);
+			return GetCurrentWorkingDirectory();
+		}
 	}
 	else
 	{
 		r = INI_get(gdata->optfile, "options", startup);
 		if(r != NULL)
-			return strdup(r);
+		{
+			x = ConvertDirectoryName(r);
+			if( chdir(x) == 0)
+			{
+				free(x);
+				return strdup(r);
+			}
+			LogInfo("Invalid startup directory %s (%s) does not exist\n", startup, r);
+			return GetCurrentWorkingDirectory();
+		}
 		else
-			return strdup("$HOME");
+		{
+			x = ConvertDirectoryName("$HOME");
+			if( chdir(x) == 0)
+			{
+				free(x);
+				return strdup(r);
+			}
+			LogInfo("Invalid home directory (%s) does not exist\n", x);
+			return GetCurrentWorkingDirectory();
+		}
 	}
 
-	return strdup("$HOME");
+	x = ConvertDirectoryName("$HOME");
+	if( chdir(x) == 0)
+	{
+		free(x);
+		return strdup("$HOME");
+	}
+	LogInfo("Invalid home directory (%s) does not exist\n", x);
+	return GetCurrentWorkingDirectory();
 }
 
 char* GetCurrentWorkingDirectory(void)
@@ -1403,8 +1449,11 @@ static void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		free(gd->left_dir);
 		gd->left_dir = GetCurrentWorkingDirectory();
 		AddMRU(gd, gd->lstMRULeft, gd->left_dir);
-		dlist_destroy(gd->lstFullLeft);
-		free(gd->lstFullLeft);
+		if(gd->lstFullLeft != NULL)
+		{
+			dlist_destroy(gd->lstFullLeft);
+			free(gd->lstFullLeft);
+		}
 		gd->lstFullLeft = GetFiles(gd, gd->left_dir);
 
 		if(gd->lstLeft != NULL)
@@ -1418,16 +1467,19 @@ static void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		assert(gd->lstFullLeft != NULL);
 		assert(gd->lstLeft != NULL);
 		assert(gd->lstGlobLeft != NULL);
-		UpdateFilterList(gd, gd->lstFilterLeft, gd->lstFullLeft, gd->lstLeft);
-		UpdateGlobList(gd, gd->lstGlobLeft, gd->lstFullLeft, gd->lstLeft);
+		UpdateFilterList(gd, gd->lstFilterLeft, gd->lstGlobLeft, gd->lstFullLeft, gd->lstLeft);
+		//UpdateGlobList(gd, gd->lstGlobLeft, gd->lstLeft, gd->lstLeft);
 	}
 	else
 	{
 		free(gd->right_dir);
 		gd->right_dir = GetCurrentWorkingDirectory();
 		AddMRU(gd, gd->lstMRURight, gd->right_dir);
-		dlist_destroy(gd->lstFullRight);
-		free(gd->lstFullRight);
+		if(gd->lstFullRight != NULL)
+		{
+			dlist_destroy(gd->lstFullRight);
+			free(gd->lstFullRight);
+		}
 		gd->lstFullRight = GetFiles(gd, gd->right_dir);
 
 		if(gd->lstRight != NULL)
@@ -1441,8 +1493,8 @@ static void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		assert(gd->lstFullRight != NULL);
 		assert(gd->lstRight != NULL);
 		assert(gd->lstGlobRight != NULL);
-		UpdateFilterList(gd, gd->lstFilterRight, gd->lstFullRight, gd->lstRight);
-		UpdateGlobList(gd, gd->lstGlobRight, gd->lstFullRight, gd->lstRight);
+		UpdateFilterList(gd, gd->lstFilterRight, gd->lstGlobRight, gd->lstFullRight, gd->lstRight);
+		//UpdateGlobList(gd, gd->lstGlobRight, gd->lstRight, gd->lstRight);
 	}
 
 	GetActWindow(gd)->top_line = 0;
@@ -1745,7 +1797,7 @@ void scroll_page_up(uGlobalData *gd)
 	}
 }
 
-void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstFull, DList *lstF)
+void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstGlob, DList *lstFull, DList *lstF)
 {
 	DLElement *e, *e2;
 	regex_t preg;
@@ -1825,10 +1877,11 @@ void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstFull, DList *
 		dlist_destroy(lstNew);
 		free(lstNew);
 	}
+
+	UpdateGlobList(gd, lstGlob, lstFull, lstF);
 }
 
-
-void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF)
+static void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF)
 {
 	DLElement *e, *e2;
 	uDirEntry *de;
@@ -1840,7 +1893,7 @@ void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF
 	if(dlist_size(lstGlob) == 0)
 		return;
 
-	dlist_empty(lstF);
+	//dlist_empty(lstF);
 
 	lstNew = lstFull;
 	lstOld = malloc(sizeof(DList));
@@ -1899,6 +1952,7 @@ void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF
 		free(lstNew);
 	}
 }
+
 
 uKeyBinding* ScanKey(uGlobalData *gd, int key)
 {
@@ -1994,38 +2048,33 @@ int main(int argc, char *argv[])
 			GetUserInfo(gdata);
 
 			BuildWindowLayout(gdata);
-			gdata->selected_window = WINDOW_LEFT;
 
-			ExecStartupScript(gdata);
+			gdata->selected_window = WINDOW_LEFT;
+			gdata->lstFilterLeft = malloc(sizeof(DList));
+			dlist_init(gdata->lstFilterLeft, FreeFilter);
+			gdata->lstGlobLeft = malloc(sizeof(DList));
+			dlist_init(gdata->lstGlobLeft, FreeGlob);
 
 			free(gdata->left_dir);
 			gdata->left_dir = GetOptionDir(gdata, "startup_left", gdata->lstMRULeft);
-
-			free(gdata->right_dir);
-			gdata->right_dir = GetOptionDir(gdata, "startup_right",  gdata->lstMRURight);
-
-			gdata->lstFullLeft = GetFiles(gdata, gdata->left_dir);
-			gdata->lstFullRight = GetFiles(gdata, gdata->right_dir);
-
-			gdata->lstFilterLeft = malloc(sizeof(DList));
-			dlist_init(gdata->lstFilterLeft, FreeFilter);
-			gdata->lstFilterRight = malloc(sizeof(DList));
-			dlist_init(gdata->lstFilterRight, FreeFilter);
-
-			gdata->lstGlobLeft = malloc(sizeof(DList));
-			dlist_init(gdata->lstGlobLeft, FreeGlob);
-			gdata->lstGlobRight = malloc(sizeof(DList));
-			dlist_init(gdata->lstGlobRight, FreeGlob);
-
-			gdata->selected_window = WINDOW_LEFT;
-			UpdateDir(gdata, NULL);
+			godir(gdata, gdata->left_dir);
+			//UpdateDir(gdata, NULL);
 
 			gdata->selected_window = WINDOW_RIGHT;
-			UpdateDir(gdata, NULL);
+			gdata->lstFilterRight = malloc(sizeof(DList));
+			dlist_init(gdata->lstFilterRight, FreeFilter);
+			gdata->lstGlobRight = malloc(sizeof(DList));
+			dlist_init(gdata->lstGlobRight, FreeGlob);
+			//godir(gdata, GetOptionDir(gdata, "startup_right", gdata->lstMRURight));
+
+			free(gdata->right_dir);
+			gdata->right_dir = GetOptionDir(gdata, "startup_right", gdata->lstMRURight);
+			godir(gdata, gdata->right_dir);
 
 			gdata->selected_window = WINDOW_LEFT;
-
 			DrawAll(gdata);
+
+			ExecStartupScript(gdata);
 
 			while(intFlag == 0)
 			{
