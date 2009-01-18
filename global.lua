@@ -8,7 +8,7 @@ if _G["BOOTSTRAP"] ~= 1 then
 
 -- This is called when this script is booted
 function GlobalLuaFuncs()
-	debug_msg("Global Lua Functions bootstrapped")
+	--debug_msg("Global Lua Functions bootstrapped")
 end
 
 -- This is an internal function that parses the internal

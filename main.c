@@ -1014,7 +1014,7 @@ static void DrawCLI(uGlobalData *gd)
 
 	gd->screen->set_style(STYLE_NORMAL);
 	gd->screen->erase_eol();
-	gd->screen->set_cursor(gd->screen->get_screen_height()-1, 5);
+	gd->screen->set_cursor(gd->screen->get_screen_height()-1, 4);
 
 	gd->screen->print(gd->command);
 }
@@ -1135,15 +1135,12 @@ int scroll_up(uGlobalData *gd)
 
 	if(w->highlight_line == 0 && w->top_line == 0)
 	{
-		LogInfo("foo\n");
 		return -1;
 	}
 
 	scroll_depth = get_scroll_depth(w);
 	max_sizelen = CalcMaxSizeLen(w);
 	max_namelen = CalcMaxNameLen(w, max_sizelen);
-
-	LogInfo("depth=%i, size=%i, name=%i, tl=%i, hl=%i\n", scroll_depth, max_sizelen, max_namelen, w->highlight_line, w->top_line);
 
 	if( (w->top_line == 0 && w->highlight_line > 0) || (w->highlight_line > 4 && w->top_line > 0))
 	{
@@ -1871,6 +1868,11 @@ int main(int argc, char *argv[])
 		gdata->screen->gd = gdata;
 		gdata->screen->init(gdata->screen);
 
+		gdata->screen->set_style( STYLE_TITLE);
+		gdata->screen->set_cursor(1, ((gdata->screen->get_screen_width() - (strlen(" Welcome to {A}nother {L}inux {F}ile{M}anager ") - 8))/2));
+		gdata->screen->print(" Welcome to {A}nother {L}inux {F}ile{M}anager ");
+
+
 		LogWrite_SetFlags( LogWrite_GetFlags() & ~LOG_STDERR);
 
 		if( LoadGlobalScript(gdata, INI_get(gdata->optfile, "scripts", "global_funcs")) == 0)
@@ -1901,10 +1903,6 @@ int main(int argc, char *argv[])
 			free(gdata->right_dir);
 			gdata->right_dir = GetOptionDir(gdata, "startup_right",  gdata->lstMRURight);
 
-			LogInfo("Start in left : %s\n", gdata->left_dir);
-			LogInfo("Start in right : %s\n", gdata->right_dir);
-
-
 			gdata->lstFullLeft = GetFiles(gdata, gdata->left_dir);
 			gdata->lstFullRight = GetFiles(gdata, gdata->right_dir);
 
@@ -1924,22 +1922,7 @@ int main(int argc, char *argv[])
 			gdata->selected_window = WINDOW_RIGHT;
 			UpdateDir(gdata, NULL);
 
-			/*
 			gdata->selected_window = WINDOW_LEFT;
-			UpdateFilterList(gdata, GetActFilter(gdata), GetActFullList(gdata), GetActList(gdata));
-			UpdateGlobList(gdata, GetActGlob(gdata), GetActFullList(gdata), GetActList(gdata));
-
-			gdata->selected_window = WINDOW_RIGHT;
-			UpdateFilterList(gdata, GetActFilter(gdata), GetActFullList(gdata), GetActList(gdata));
-			UpdateGlobList(gdata, GetActGlob(gdata), GetActFullList(gdata), GetActList(gdata));
-			*/
-
-			gdata->selected_window = WINDOW_LEFT;
-
-
-			gdata->screen->set_style( STYLE_TITLE);
-			gdata->screen->set_cursor(1, ((gdata->screen->get_screen_width() - (strlen(" Welcome to {A}nother {L}inux {F}ile{M}anager ") - 8))/2));
-			gdata->screen->print(" Welcome to {A}nother {L}inux {F}ile{M}anager ");
 
 			DrawAll(gdata);
 
@@ -1947,7 +1930,7 @@ int main(int argc, char *argv[])
 			{
 				uint32_t key;
 
-				gdata->screen->set_cursor(gdata->screen->get_screen_height()-1, 5 + strlen(gdata->command));
+				gdata->screen->set_cursor(gdata->screen->get_screen_height()-1, 4 + strlen(gdata->command));
 				key = gdata->screen->get_keypress();
 
 				switch(key)
