@@ -6,15 +6,11 @@
 
 if _G["BOOTSTRAP"] ~= 1 then
 
--- This is called when this script is booted
-function GlobalLuaFuncs()
-	--debug_msg("Global Lua Functions bootstrapped")
-end
-
 -- This is an internal function that parses the internal
 -- command line
 -- eg: it turns ":q" into QuitApp etc..
 local function __QuitApp()
+	debug_msg("quit out")
 	SetQuitAppFlag(1)
 end
 
@@ -145,6 +141,14 @@ function SortFileList()
 	opt_dirs_fist = GetOption("options", "directories_first")
 	opt_sort_order = GetOption("options", "sort_order")
 
+end
+
+-- This is called when this script is booted
+function GlobalLuaFuncs()
+	--debug_msg("Global Lua Functions bootstrapped")
+	BindKey(ALFC_KEY_F02, "Same", ":s")
+	BindKey(ALFC_KEY_F10, "Quit", ":q")
+	BindKey(ALFC_KEY_F12, "Tag", "TagHighlightedFile()")
 end
 
 	-- initialise bootstrap and protect code from being called more than once

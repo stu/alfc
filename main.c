@@ -29,6 +29,15 @@ static void FreeGlob(void *x)
 	free(x);
 }
 
+static void FreeKey(void *x)
+{
+	uKeyBinding *key = x;
+
+	free(key->sTitle);
+	free(key->sCommand);
+	free(key);
+}
+
 // checks an index is in the visible page or not
 int IsVisible(uGlobalData *gd, int idx)
 {
@@ -908,24 +917,94 @@ static void BuildWindowLayout(uGlobalData *gd)
 	gd->win_right->highlight_line = 0;
 }
 
+static char* ConvertKeyToName(int key)
+{
+	struct udtKeyNames
+	{
+		int key;
+		char *name;
+	} keys[] =
+	{
+		{ ALFC_KEY_DOWN, "Down" },
+		{ ALFC_KEY_UP, "Up" },
+		{ ALFC_KEY_LEFT, "Left" },
+		{ ALFC_KEY_RIGHT, "Right" },
+		{ ALFC_KEY_INS, "Insert" },
+		{ ALFC_KEY_DEL, "Delete" },
+		{ ALFC_KEY_BACKSPACE, "Backspace" },
+		{ ALFC_KEY_HOME, "Home" },
+		{ ALFC_KEY_END, "End" },
+		{ ALFC_KEY_PAGE_UP, "Page Up" },
+		{ ALFC_KEY_PAGE_DOWN, "Page Down" },
+		{ ALFC_KEY_ENTER, "Enter" },
+		{ ALFC_KEY_TAB, "Tab" },
+		{ ALFC_KEY_SPACE, "Space" },
+		{ ALFC_KEY_F00, "F00" },
+		{ ALFC_KEY_F01, "F01" },
+		{ ALFC_KEY_F02, "F02" },
+		{ ALFC_KEY_F03, "F03" },
+		{ ALFC_KEY_F04, "F04" },
+		{ ALFC_KEY_F05, "F05" },
+		{ ALFC_KEY_F06, "F06" },
+		{ ALFC_KEY_F07, "F07" },
+		{ ALFC_KEY_F08, "F08" },
+		{ ALFC_KEY_F09, "F09" },
+		{ ALFC_KEY_F10, "F10" },
+		{ ALFC_KEY_F11, "F11" },
+		{ ALFC_KEY_F12, "F12" },
+		{ -1, NULL }
+	};
+
+	int j;
+
+	for(j=0; keys[j].key != -1; j++)
+	{
+		if(keys[j].key == key)
+			return keys[j].name;
+	}
+
+
+	return "(UNKNOWN KEY)";
+}
+
 static void DrawMenuLine(uGlobalData *gd)
 {
 	char *buff;
 	int m;
-	char *p;
+	char *q;
+
+	DLElement *e;
 
 	m = gd->screen->get_screen_width();
-
 	buff = malloc(m + 4);
-
 	memset(buff, ' ', m);
 
-	sprintf(buff, "F10 - Quit");
+	e = dlist_head(gd->lstHotKeys);
+	q = buff;
 
-	p = strchr(buff, 0x0);
-	*p = ' ';
+	while(e != NULL)
+	{
+		uKeyBinding *kb;
+		char *keyname;
+
+		kb = dlist_data(e);
+
+
+		if(e != dlist_head(gd->lstHotKeys))
+			q+= 2;
+
+		keyname = ConvertKeyToName(kb->key);
+		sprintf(q, "%s - %s", keyname, kb->sTitle);
+		q = strchr(buff, 0x0);
+		*q = ' ';
+
+		q++;
+
+		e = dlist_next(e);
+	}
+
+
 	buff[m] = 0;
-
 	gd->screen->set_style(STYLE_TITLE);
 	gd->screen->set_cursor(gd->screen->get_screen_height(), 1);
 	gd->screen->print(buff);
@@ -1428,7 +1507,6 @@ int updir(uGlobalData *gd)
 	}
 
 	UpdateDir(gd, scan);
-	LogInfo("going up, tl=%i, hl=%i\n", GetActWindow(gd)->top_line, GetActWindow(gd)->highlight_line );
 
 	free(cpath);
 
@@ -1822,6 +1900,26 @@ void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF
 	}
 }
 
+uKeyBinding* ScanKey(uGlobalData *gd, int key)
+{
+	DLElement *e;
+	uKeyBinding *kb;
+
+	e = dlist_head(gd->lstHotKeys);
+	while(e != NULL)
+	{
+		kb = dlist_data(e);
+
+		if(kb->key == key)
+		{
+			return kb;
+		}
+
+		e = dlist_next(e);
+	}
+
+	return NULL;
+}
 
 void DrawAll(uGlobalData *gd)
 {
@@ -1859,6 +1957,9 @@ int main(int argc, char *argv[])
 
 	if(gdata != NULL)
 	{
+		gdata->lstHotKeys = malloc(sizeof(DList));
+		dlist_init(gdata->lstHotKeys, FreeKey);
+
 		SetupStartDirectories(gdata);
 		LoadOptions(gdata);
 
@@ -1929,115 +2030,126 @@ int main(int argc, char *argv[])
 			while(intFlag == 0)
 			{
 				uint32_t key;
+				uKeyBinding *kb;
 
 				gdata->screen->set_cursor(gdata->screen->get_screen_height()-1, 4 + strlen(gdata->command));
 				key = gdata->screen->get_keypress();
 
-				switch(key)
+				kb = ScanKey(gdata, key);
+				if(kb != NULL)
 				{
+					// exec string via lua...
+					if(kb->sCommand[0] == ':')
+						exec_internal_command(gdata, kb->sCommand);
+					else if(kb->sCommand[0] == '@')
+					{
+						char *fn = ConvertDirectoryName(kb->sCommand+1);
+						ExecuteScript(gdata, fn);
+						free(fn);
+					}
+					else
+					{
+						ExecuteString(gdata, kb->sCommand);
+					}
+				}
+				else
+				{
+					switch(key)
+					{
 
-					case 0x21B: // ESC-ESC
-						intFlag = 1;
-						break;
+						case 0x21B: // ESC-ESC
+							intFlag = 1;
+							break;
 
-					// F10
-					case ALFC_KEY_F10:
-						intFlag = 1;
-						break;
+						case ALFC_KEY_TAB:	// TAB
+							SwitchPanes(gdata);
+							break;
 
-					case ALFC_KEY_TAB:	// TAB
-						SwitchPanes(gdata);
-						break;
-
-					case ALFC_KEY_ENTER:
-						if(gdata->command_length > 0)
-						{
-							AddHistory(gdata, gdata->command);
-
-							// exec string via lua...
-							if(gdata->command[0] == ':')
-								exec_internal_command(gdata, gdata->command);
-							else if(gdata->command[0] == '@')
+						case ALFC_KEY_ENTER:
+							if(gdata->command_length > 0)
 							{
-								char *fn = ConvertDirectoryName(gdata->command+1);
-								ExecuteScript(gdata, fn);
-								free(fn);
+								AddHistory(gdata, gdata->command);
+
+								// exec string via lua...
+								if(gdata->command[0] == ':')
+									exec_internal_command(gdata, gdata->command);
+								else if(gdata->command[0] == '@')
+								{
+									char *fn = ConvertDirectoryName(gdata->command+1);
+									ExecuteScript(gdata, fn);
+									free(fn);
+								}
+								else
+								{
+									ExecuteString(gdata, gdata->command);
+								}
+
+								gdata->command_length = 0;
+								gdata->command[gdata->command_length] = 0;
+
+								DrawCLI(gdata);
+							}
+							break;
+
+						case ALFC_KEY_LEFT:
+							updir(gdata);
+							break;
+
+						case ALFC_KEY_RIGHT:
+							downdir(gdata);
+							break;
+
+						case ALFC_KEY_UP:
+							scroll_up(gdata);
+							break;
+
+						case ALFC_KEY_DOWN:
+							scroll_down(gdata);
+							break;
+
+						case ALFC_KEY_HOME:
+							scroll_home(gdata);
+							break;
+
+						case ALFC_KEY_END:
+							scroll_end(gdata);
+							break;
+
+						case ALFC_KEY_PAGE_DOWN:
+							scroll_page_down(gdata);
+							break;
+
+						case ALFC_KEY_PAGE_UP:
+							scroll_page_up(gdata);
+							break;
+
+						default:
+							// terminal could send ^H (0x08) or ASCII DEL (0x7F)
+							if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
+							{
+								if(key == ALFC_KEY_DEL)
+								{
+									if(gdata->command_length > 0)
+									{
+										gdata->command_length -= 1;
+										gdata->command[gdata->command_length] = 0;
+									}
+								}
+								else
+								{
+									if(gdata->command_length < gdata->screen->get_screen_width() - 10)
+									{
+										gdata->command[gdata->command_length++] = key;
+										gdata->command[gdata->command_length] = 0;
+									}
+								}
+
+								DrawCLI(gdata);
 							}
 							else
-							{
-								ExecuteString(gdata, gdata->command);
-							}
-
-							gdata->command_length = 0;
-							gdata->command[gdata->command_length] = 0;
-
-							DrawCLI(gdata);
-						}
-						break;
-
-					case ALFC_KEY_F12:
-						tag(gdata);
-						DrawStatusInfoLine(gdata);
-						break;
-
-					case ALFC_KEY_LEFT:
-						updir(gdata);
-						break;
-
-					case ALFC_KEY_RIGHT:
-						downdir(gdata);
-						break;
-
-					case ALFC_KEY_UP:
-						scroll_up(gdata);
-						break;
-
-					case ALFC_KEY_DOWN:
-						scroll_down(gdata);
-						break;
-
-					case ALFC_KEY_HOME:
-						scroll_home(gdata);
-						break;
-
-					case ALFC_KEY_END:
-						scroll_end(gdata);
-						break;
-
-					case ALFC_KEY_PAGE_DOWN:
-						scroll_page_down(gdata);
-						break;
-
-					case ALFC_KEY_PAGE_UP:
-						scroll_page_up(gdata);
-						break;
-
-					default:
-						// terminal could send ^H (0x08) or ASCII DEL (0x7F)
-						if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
-						{
-							if(key == ALFC_KEY_DEL)
-							{
-								if(gdata->command_length > 0)
-								{
-									gdata->command_length -= 1;
-									gdata->command[gdata->command_length] = 0;
-								}
-							}
-							else
-							{
-								if(gdata->command_length < gdata->screen->get_screen_width() - 10)
-								{
-									gdata->command[gdata->command_length++] = key;
-									gdata->command[gdata->command_length] = 0;
-								}
-							}
-
-							DrawCLI(gdata);
-						}
-						else
-							LogInfo("Unknown key 0x%04x\n", key);
-						break;
+								LogInfo("Unknown key 0x%04x\n", key);
+							break;
+					}
 				}
 			}
 
@@ -2055,6 +2167,12 @@ int main(int argc, char *argv[])
 			// cleanup...
 			SaveHistory(gdata);
 			SaveOptions(gdata);
+		}
+
+		if(gdata->lstHotKeys != NULL)
+		{
+			dlist_destroy(gdata->lstHotKeys);
+			free(gdata->lstHotKeys);
 		}
 
 		if(gdata->_GL != NULL)

@@ -120,7 +120,8 @@ gen Action do
 	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s
 end
 
-task :all => ["fixversion", "app", "docs"] do
+desc "Build the app"
+task :app => ["fixversion", "appx"] do
 end
 
 
@@ -134,14 +135,14 @@ task "fixversion" do
 	sys "#{var[:lua]}", "lua_helper.lua"
 end
 
-desc "Build alfc program."
-task :app => alfc do |t|
+task :appx => alfc do |t|
 	sys "#{CC} -o #{var[:exec]}  #{t.prerequisites.join(' ')} stucore/libstucore.a #{var[:libs]}"
 
 	cBV.IncrementBuild
 	cBV.WriteVersion
 end
 
+desc "Build documentation"
 task "docs" do
 	print "Updating Lua API documentation (html mutli) :: "
 	sys "robodoc --rc robodoc_lua_multi_html.rc"

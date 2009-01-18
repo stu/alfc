@@ -69,6 +69,13 @@ enum
 typedef struct udtGlobals uGlobalData;
 typedef struct udtScreenDriver uScreenDriver;
 
+typedef struct udtKeyBinding
+{
+	uint32_t	key;
+	char		*sCommand;
+	char		*sTitle;
+} uKeyBinding;
+
 typedef struct udtDirEntry
 {
 	uint8_t	tagged;
@@ -191,6 +198,8 @@ struct udtGlobals
 	// global lua funcs
 	char 		*gcode;
 	lua_State	*_GL;
+
+	DList		*lstHotKeys;
 };
 
 enum
@@ -250,6 +259,8 @@ extern void DrawStatusInfoLine(uGlobalData *gd);
 extern void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath);
 extern void DrawActive(uGlobalData *gd);
 extern void DrawFilter(uGlobalData *gd);
+
+extern uKeyBinding* ScanKey(uGlobalData *gd, int key);
 
 #ifdef __cplusplus
 }

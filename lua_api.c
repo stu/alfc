@@ -28,6 +28,29 @@ int RegisterGlobalData(uGlobalData *gb, lua_State *l)
 	return 1;
 }
 
+// map function, take from PIL.
+int gme_map(lua_State *L)
+{
+	int i, n;
+
+	/* 1st argument must be a table (t) */
+	luaL_checktype(L, 1, LUA_TTABLE);
+
+	/* 2nd argument must be a function (f) */
+	luaL_checktype(L, 2, LUA_TFUNCTION);
+
+	n = luaL_getn(L, 1);  /* get size of table */
+
+	for (i=1; i<=n; i++) {
+	lua_pushvalue(L, 2);   /* push f */
+	lua_rawgeti(L, 1, i);  /* push t[i] */
+	lua_call(L, 1, 1);     /* call f(t[i]) */
+	lua_rawseti(L, 1, i);  /* t[i] = result */
+	}
+
+	return 0;  /* no results */
+}
+
 static char* rtrim(const char *s)
 {
 	char *p;
@@ -424,7 +447,6 @@ int gme_GetCurrentWorkingDirectory(lua_State *L)
 	assert(gd != NULL);
 	char *x = GetActDPath(gd);
 	lua_pushstring(L, x);
-	free(x);
 
 	return 1;
 }
@@ -1006,6 +1028,7 @@ int gme_TagHighlightedFile(lua_State *L)
 	assert(gd != NULL);
 
 	tag(gd);
+	DrawStatusInfoLine(gd);
 
 	return 0;
 }
@@ -1326,7 +1349,6 @@ int gme_SetHighlightedFile(lua_State *L)
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
 
-
 	if(lua_isnumber(L, 1) == 1)
 	{
 		idx = luaL_checknumber(L, 1);
@@ -1640,3 +1662,56 @@ int gme_AddGlob(lua_State *L)
 }
 
 
+/****f* LuaAPI/BindKey
+* FUNCTION
+*	Binds a key to a command string which is passed intnernally just as if you had typed
+* 	it on the cli bar (eg: ":q")
+* SYNOPSIS
+error = BindKey(key, title, command)
+* INPUTS
+*	o key (constant) -- (need to insert key listing)
+*	o title (string) -- what shows up on the command bar
+*	o command (string) -- command string the key invokes
+* RESULTS
+*	error (integer):
+*	o 0 -- OK
+*	o -1 -- Key already bound
+* SEE ALSO
+*	SetFilter, AddFilter, SetGlob
+* AUTHOR
+*	Stu George
+******
+*/
+int gme_BindKey(lua_State *L)
+{
+	struct lstr kstring;
+	struct lstr ktitle;
+	uint32_t key;
+	uGlobalData *gd;
+	uKeyBinding *kb;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	key = luaL_checknumber(L, 1);
+	GET_LUA_STRING(ktitle, 2);
+	GET_LUA_STRING(kstring, 3);
+
+	kb = ScanKey(gd, key);
+	if(kb != NULL)
+	{
+		lua_pushnumber(L, -1);
+		return 1;
+	}
+
+	kb = malloc(sizeof(uKeyBinding));
+
+	kb->key = key;
+	kb->sCommand = strdup(kstring.data);
+	kb->sTitle = strdup(ktitle.data);
+
+	dlist_ins(gd->lstHotKeys, kb);
+
+	lua_pushnumber(L, 0);
+	return 1;
+}
