@@ -36,6 +36,14 @@ Current speed keyed commands
 	:so sd - size descending
 
 
+Config
+- document date format allowed
+- document time format allowed...
+
+document whole dang options file....
+
+
+
 Credits
 Stu George - Right now, everything
 

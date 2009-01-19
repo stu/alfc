@@ -352,6 +352,26 @@ void LoadOptions(uGlobalData *gdata)
 	else
 		gdata->time_fmt = strdup("hh:mm.ss AMPM");
 
+	if(strcmp(gdata->date_fmt, "dd/mm/yyyy") != 0
+	 && strcmp(gdata->date_fmt, "mm/dd/yyyy") != 0
+	 && strcmp(gdata->date_fmt, "yyyymmdd") != 0
+	 && strcmp(gdata->date_fmt, "mm-dd-yyyy") != 0
+	 && strcmp(gdata->date_fmt, "dd-mm-yyyy") != 0)
+	{
+		LogInfo("Invalid date format");
+		free(gdata->date_fmt);
+		gdata->date_fmt = strdup("dd/mm/yyyy");
+	}
+
+	if(strcmp(gdata->time_fmt, "HH:mm.ss AMPM") != 0
+	 && strcmp(gdata->time_fmt, "HH:mm.ss") != 0
+	 && strcmp(gdata->time_fmt, "hh:mm.ss") != 0)
+	{
+		LogInfo("Invalid time format");
+		free(gdata->time_fmt);
+		gdata->time_fmt = strdup("HH:mm.ss AMPM");
+	}
+
 	LoadHistory(gdata);
 }
 
