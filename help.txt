@@ -14,11 +14,27 @@ Moving Around ALFC
 Current speed keyed commands
 
 :q - Quit app
-:s - Make inactive window pane the same
+:s - Make inactive window pane the same path as the active pane.
+:c - cd
+	:c ~/foo/bar
 :j - Jump
+	:j PinkShirt - Finds the closest match to PinkShirt in the list.... which might
+	match Pink or even just P....
+:f - Filter window (clear all existing filters)
+	:f flv$ - show all files that end in flv
+:f+ - Add to filter (posix regex)
+	:f+ \.[ch] - Show all c header and source files
+:g - Glob window (clear all existing globs)
+	:g *.mp3 - show mp3 files
+:g+ - Add another glob
+	:g+ *.ogg - add ogg to the list
 
-(todo)
-:f - Filter window
+:so - Sort Order
+	:so na - name ascending
+	:so nd - name descending
+	:so sa - size ascending
+	:so sd - size descending
+
 
 Credits
 Stu George - Right now, everything
@@ -26,8 +42,6 @@ Stu George - Right now, everything
 ToDo list for next release
 
 Core
-	- sorting
-	- filtering
 	- Viewer / Editor (both for hex)
 
 Files

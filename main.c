@@ -521,11 +521,12 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 #ifdef __MINGW_H
 					stat(de->name, &de->stat_buff);
 #else
-					lstat(de->name, &de->stat_buff);
+					stat(de->name, &de->stat_buff);
 #endif
 
 					de->size = de->stat_buff.st_size;
 					de->attrs = de->stat_buff.st_mode;
+					de->time = de->stat_buff.st_mtime;
 
 					memset(&de->stat_buff, 0x0, sizeof(struct stat));
 
@@ -582,7 +583,7 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 	return z;
 }
 
-static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, int max_sizelen)
+static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, int size_off, int date_off)
 {
 	char buff[1024];
 	char *p;
@@ -596,7 +597,6 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 
 	if(de == NULL)
 		return;
-
 
 	if(de->tagged == 1)
 		buff[0]='+';
@@ -613,9 +613,9 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 	{
 		if(win->gd->compress_filesize == 0)
 #if __WORDSIZE == 64
-			sprintf(buff + max_namelen + 2, "%10lu", de->size);
+			sprintf(buff + size_off, "%10lu", de->size);
 #else
-			sprintf(buff + max_namelen + 2, "%10llu", de->size);
+			sprintf(buff + size_off, "%10llu", de->size);
 #endif
 		else
 		{
@@ -623,46 +623,60 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 
 			if(xx < 1024)
 			{
-				sprintf(buff + max_namelen + 2, "%5ub ", (uint32_t)xx);
+				sprintf(buff + size_off, "%5ub ", (uint32_t)xx);
 			}
 			else
 			{
 				xx /= 1024;
 				if(xx < 1024)
 				{
-					sprintf(buff + max_namelen + 2, "%5ukb", (uint32_t)xx);
+					sprintf(buff + size_off, "%5ukb", (uint32_t)xx);
 				}
 				else
 				{
 					xx /= 1024;
 					if(xx < 1024)
 					{
-						sprintf(buff + max_namelen + 2, "%5umb", (uint32_t)xx);
+						sprintf(buff + size_off, "%5umb", (uint32_t)xx);
 					}
 					else
 					{
 						xx /= 1024;
 						if(xx < 1024)
-							sprintf(buff + max_namelen + 2, "%5ugb", (uint32_t)xx);
+							sprintf(buff + size_off, "%5ugb", (uint32_t)xx);
 						else
 						{
-							sprintf(buff + max_namelen + 2, "%5utb", (uint32_t)(xx/(1024*1024)));
+							sprintf(buff + size_off, "%5utb", (uint32_t)(xx/(1024*1024)));
 						}
 					}
 				}
 			}
 		}
 
-		p = strchr(buff + max_namelen + 2, 0x0);
+		p = strchr(buff + size_off, 0x0);
 		*p = ' ';
 	}
 	else
 	{
-		sprintf(buff + max_namelen + 2, "<DIR>");
-		p = strchr(buff + max_namelen + 2, 0x0);
+		sprintf(buff + size_off, " <DIR>");
+		p = strchr(buff + size_off, 0x0);
 		*p = ' ';
 	}
 
+	{
+		struct tm *tt;
+
+		tt = localtime(&de->time);
+
+		p = buff + date_off;
+		sprintf(p, "%02i:%02i.%02i", tt->tm_hour, tt->tm_min, tt->tm_sec);
+		p = strchr(p, 0x0);
+		*p++=' ';
+		sprintf(p, "%04i%02i%02i", 1900 + tt->tm_year, 1+tt->tm_mon, tt->tm_mday);
+
+		p = strchr(p, 0x0);
+		*p++=' ';
+	}
 
 	buff[ win->width - 2] = 0;
 
@@ -672,17 +686,24 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 	win->screen->set_style(STYLE_NORMAL);
 }
 
-static int CalcMaxSizeLen(uWindow *w)
+static int CalcSizeOff(uWindow *w, int end)
 {
 	if(w->gd->compress_filesize == 0)
-		return 10;
+		return end - 10;
 	else
-		return 7;
+		return end - 7;
 }
 
-static int CalcMaxNameLen(uWindow *w, int max_size_len)
+/*
+static int CalcMaxNameLen(uWindow *w, int end)
 {
-	return (w->width - max_size_len - 5);
+	return (end - 5);
+}
+*/
+
+static int CalcDateOff(uWindow *w, int end)
+{
+	return (end - 20);
 }
 
 void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
@@ -693,8 +714,9 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	int i;
 	char *path;
 
-	int max_namelen;
-	int max_sizelen;
+	int name_len;
+	int size_off;
+	int date_off;
 
 	win->screen->draw_border(win);
 
@@ -725,8 +747,10 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	}
 
 	i = 0;
-	max_sizelen = CalcMaxSizeLen(win);
-	max_namelen = CalcMaxNameLen(win, max_sizelen);
+
+	size_off = CalcSizeOff(win, win->width-3);
+	date_off = CalcDateOff(win, size_off);
+	name_len = date_off - 2;
 
 	while(e != NULL && i < depth)
 	{
@@ -734,7 +758,7 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 		de = dlist_data(e);
 		e = dlist_next(e);
 
-		PrintFileLine(de, i, win, max_namelen, max_sizelen);
+		PrintFileLine(de, i, win, name_len, size_off, date_off);
 		i += 1;
 	}
 
@@ -1260,8 +1284,9 @@ int scroll_up(uGlobalData *gd)
 {
 	uWindow *w;
 	int scroll_depth;
-	int max_sizelen;
+	int size_off;
 	int max_namelen;
+	int date_off;
 
 	w = GetActWindow(gd);
 
@@ -1271,8 +1296,9 @@ int scroll_up(uGlobalData *gd)
 	}
 
 	scroll_depth = get_scroll_depth(w);
-	max_sizelen = CalcMaxSizeLen(w);
-	max_namelen = CalcMaxNameLen(w, max_sizelen);
+	size_off = CalcSizeOff(w, w->width-3);
+	date_off = CalcDateOff(w, size_off);
+	max_namelen = date_off - 2;
 
 	if( (w->top_line == 0 && w->highlight_line > 0) || (w->highlight_line > 4 && w->top_line > 0))
 	{
@@ -1281,10 +1307,10 @@ int scroll_up(uGlobalData *gd)
 		w->highlight_line -= 1;
 
 		de = GetHighlightedFile(GetActList(gd), w->highlight_line + 1, w->top_line);
-		PrintFileLine(de, w->highlight_line + 1, w, max_namelen, max_sizelen);
+		PrintFileLine(de, w->highlight_line + 1, w, max_namelen, size_off, date_off);
 
 		de = GetHighlightedFile(GetActList(gd), w->highlight_line, w->top_line);
-		PrintFileLine(de, w->highlight_line, w, max_namelen, max_sizelen);
+		PrintFileLine(de, w->highlight_line, w, max_namelen, size_off, date_off);
 
 		DrawActiveFileInfo(gd);
 	}
@@ -1302,7 +1328,8 @@ int scroll_down(uGlobalData *gd)
 {
 	uWindow *w;
 	int scroll_depth;
-	int max_sizelen;
+	int size_off;
+	int date_off;
 	int max_namelen;
 
 	w = GetActWindow(gd);
@@ -1311,8 +1338,9 @@ int scroll_down(uGlobalData *gd)
 		return -1;
 
 	scroll_depth = get_scroll_depth(w);
-	max_sizelen = CalcMaxSizeLen(w);
-	max_namelen = CalcMaxNameLen(w, max_sizelen);
+	size_off = CalcSizeOff(w, w->width-3);
+	date_off = CalcDateOff(w, size_off);
+	max_namelen = date_off - 2;
 
 	// hl is 0 based
 	if( (w->highlight_line + 1 < scroll_depth) || ( w->top_line + 1 + w->highlight_line >= dlist_size(GetActList(gd)) - 4))
@@ -1322,10 +1350,10 @@ int scroll_down(uGlobalData *gd)
 		w->highlight_line += 1;
 
 		de = GetHighlightedFile(GetActList(gd), w->highlight_line - 1, w->top_line);
-		PrintFileLine(de, w->highlight_line - 1, w, max_namelen, max_sizelen);
+		PrintFileLine(de, w->highlight_line - 1, w, max_namelen, size_off, date_off);
 
 		de = GetHighlightedFile(GetActList(gd), w->highlight_line, w->top_line);
-		PrintFileLine(de, w->highlight_line, w, max_namelen, max_sizelen);
+		PrintFileLine(de, w->highlight_line, w, max_namelen, size_off, date_off);
 
 		DrawActiveFileInfo(gd);
 	}
@@ -1681,11 +1709,13 @@ void scroll_page_down(uGlobalData *gd)
 	int hl;
 
 	uDirEntry *de;
-	int max_sizelen;
+	int size_off;
+	int date_off;
 	int max_namelen;
 
-	max_sizelen = CalcMaxSizeLen(GetActWindow(gd));
-	max_namelen = CalcMaxNameLen(GetActWindow(gd), max_sizelen);
+	size_off = CalcSizeOff(GetActWindow(gd), GetActWindow(gd)->width - 3);
+	date_off = CalcDateOff(GetActWindow(gd), size_off);
+	max_namelen = date_off - 2;
 
 	tl = GetActWindow(gd)->top_line;
 	depth = GetActWindow(gd)->height - 2;
@@ -1700,10 +1730,10 @@ void scroll_page_down(uGlobalData *gd)
 		GetActWindow(gd)->highlight_line = depth-1;
 
 		de = GetHighlightedFile(GetActList(gd), hl, GetActWindow(gd)->top_line);
-		PrintFileLine(de, hl, GetActWindow(gd), max_namelen, max_sizelen);
+		PrintFileLine(de, hl, GetActWindow(gd), max_namelen, size_off, date_off);
 
 		de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
-		PrintFileLine(de, GetActWindow(gd)->highlight_line, GetActWindow(gd), max_namelen, max_sizelen);
+		PrintFileLine(de, GetActWindow(gd)->highlight_line, GetActWindow(gd), max_namelen, size_off, date_off);
 
 		DrawActiveFileInfo(gd);
 		return;
@@ -1714,10 +1744,10 @@ void scroll_page_down(uGlobalData *gd)
 		GetActWindow(gd)->highlight_line = depth-5;
 
 		de = GetHighlightedFile(GetActList(gd), hl, GetActWindow(gd)->top_line);
-		PrintFileLine(de, hl, GetActWindow(gd), max_namelen, max_sizelen);
+		PrintFileLine(de, hl, GetActWindow(gd), max_namelen, size_off, date_off);
 
 		de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
-		PrintFileLine(de, GetActWindow(gd)->highlight_line, GetActWindow(gd), max_namelen, max_sizelen);
+		PrintFileLine(de, GetActWindow(gd)->highlight_line, GetActWindow(gd), max_namelen, size_off, date_off);
 
 		DrawActiveFileInfo(gd);
 
@@ -1755,12 +1785,14 @@ void scroll_page_up(uGlobalData *gd)
 	int hl;
 
 	uDirEntry *de;
-	int max_sizelen;
+	int size_off;
+	int date_off;
 	int max_namelen;
 
 
-	max_sizelen = CalcMaxSizeLen(GetActWindow(gd));
-	max_namelen = CalcMaxNameLen(GetActWindow(gd), max_sizelen);
+	size_off = CalcSizeOff(GetActWindow(gd), GetActWindow(gd)->width - 3);
+	date_off = CalcDateOff(GetActWindow(gd), size_off);
+	max_namelen = date_off - 2;
 
 	tl = GetActWindow(gd)->top_line;
 	depth = GetActWindow(gd)->height - 2;
@@ -1778,10 +1810,10 @@ void scroll_page_up(uGlobalData *gd)
 		GetActWindow(gd)->highlight_line = 0;
 
 		de = GetHighlightedFile(GetActList(gd), hl, GetActWindow(gd)->top_line);
-		PrintFileLine(de, hl, GetActWindow(gd), max_namelen, max_sizelen);
+		PrintFileLine(de, hl, GetActWindow(gd), max_namelen, size_off, date_off);
 
 		de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
-		PrintFileLine(de, GetActWindow(gd)->highlight_line, GetActWindow(gd), max_namelen, max_sizelen);
+		PrintFileLine(de, GetActWindow(gd)->highlight_line, GetActWindow(gd), max_namelen, size_off, date_off);
 
 		DrawActiveFileInfo(gd);
 		return;
@@ -1792,10 +1824,10 @@ void scroll_page_up(uGlobalData *gd)
 		GetActWindow(gd)->highlight_line = 5;
 
 		de = GetHighlightedFile(GetActList(gd), hl, GetActWindow(gd)->top_line);
-		PrintFileLine(de, hl, GetActWindow(gd), max_namelen, max_sizelen);
+		PrintFileLine(de, hl, GetActWindow(gd), max_namelen, size_off, date_off);
 
 		de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
-		PrintFileLine(de, GetActWindow(gd)->highlight_line, GetActWindow(gd), max_namelen, max_sizelen);
+		PrintFileLine(de, GetActWindow(gd)->highlight_line, GetActWindow(gd), max_namelen, size_off, date_off);
 
 		DrawActiveFileInfo(gd);
 
@@ -2236,6 +2268,11 @@ int main(int argc, char *argv[])
 			SaveHistory(gdata);
 			SaveOptions(gdata);
 		}
+
+		if(gdata->time_fmt != NULL)
+			free(gdata->time_fmt);
+		if(gdata->date_fmt != NULL)
+			free(gdata->date_fmt);
 
 		if(gdata->lstHotKeys != NULL)
 		{

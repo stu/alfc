@@ -62,35 +62,14 @@ static void CreateBaselineINIFile(uGlobalData *gdata)
 	assert(gdata->optfile != NULL);
 
 	INI_UpdateItem(gdata->optfile, "options", "remember_dirs", "true");
-
-	INI_UpdateItem(gdata->optfile, "columns", "count", "3");
-	INI_UpdateItem(gdata->optfile, "columns", "col0", "name");
-	INI_UpdateItem(gdata->optfile, "columns", "col1", "date");
-	INI_UpdateItem(gdata->optfile, "columns", "col2", "permissions");
+	INI_UpdateItem(gdata->optfile, "options", "dates", "dd/mm/yyyy");
+	INI_UpdateItem(gdata->optfile, "options", "times", "hh:mm.ss AMPM");
+	INI_UpdateItem(gdata->optfile, "options", "columns", " name,date,size");
 
 	INI_UpdateItem(gdata->optfile, "mru_left", "count", "1");
 	INI_UpdateItem(gdata->optfile, "mru_left", "mru0", "$HOME");
 	INI_UpdateItem(gdata->optfile, "mru_right", "count", "1");
 	INI_UpdateItem(gdata->optfile, "mru_right", "mru0", "$HOME");
-
-	INI_UpdateItem(gdata->optfile, "keydef_modifiers", "modifiers", "4");
-	INI_UpdateItem(gdata->optfile, "keydef_modifiers", "modifier0", "ESC");
-	INI_UpdateItem(gdata->optfile, "keydef_modifiers", "modifier1", "CTRL");
-	INI_UpdateItem(gdata->optfile, "keydef_modifiers", "modifier2", "ALT");
-	INI_UpdateItem(gdata->optfile, "keydef_modifiers", "modifier4", "WINDOWS");
-
-	INI_UpdateItem(gdata->optfile, "keydefs", "quit", "q");
-	INI_UpdateItem(gdata->optfile, "keydefs", "edit", "e");
-	INI_UpdateItem(gdata->optfile, "keydefs", "delete", "d");
-	INI_UpdateItem(gdata->optfile, "keydefs", "copy", "c");
-	INI_UpdateItem(gdata->optfile, "keydefs", "move", "m");
-	INI_UpdateItem(gdata->optfile, "keydefs", "rename", "n");
-	INI_UpdateItem(gdata->optfile, "keydefs", "mkdir", "M");
-	INI_UpdateItem(gdata->optfile, "keydefs", "rmdir", "R");
-	INI_UpdateItem(gdata->optfile, "keydefs", "switch", "TAB");
-	INI_UpdateItem(gdata->optfile, "keydefs", "open", "ENTER");
-	INI_UpdateItem(gdata->optfile, "keydefs", "toggle_tag", "SPACE");
-	INI_UpdateItem(gdata->optfile, "keydefs", "homedir", "H");
 
 	INI_UpdateItem(gdata->optfile, "scripts", "startup_file", "$HOME/.alfc/startup.lua");
 	INI_UpdateItem(gdata->optfile, "scripts", "shutdown_file", "$HOME/.alfc/shutdown.lua");
@@ -103,6 +82,7 @@ static void CreateBaselineINIFile(uGlobalData *gdata)
 
 	INI_UpdateItem(gdata->optfile, "colours", "hi_fg", "white");
 	INI_UpdateItem(gdata->optfile, "colours", "hi_bg", "blue");
+
 }
 
 int decode_colour(char *s, int def)
@@ -319,6 +299,58 @@ void LoadOptions(uGlobalData *gdata)
 
 	LoadMRU(gdata, gdata->lstMRULeft, "mru_left");
 	LoadMRU(gdata, gdata->lstMRURight, "mru_right");
+
+	memset(gdata->columns, 0x0, 16);
+	x = INI_get(gdata->optfile, "options", "columns");
+	if(x != NULL)
+	{
+		int c = 0;
+
+		while(*x != 0)
+		{
+			if(strncmp(x, "name", 4) == 0 && (x[4] == 0 || x[4]==' ' || x[4]==','))
+			{
+				gdata->columns[c++] = 'n';
+				x += 4;
+				while(*x == ' ' || *x == ',')
+					x++;
+			}
+			else if(strncmp(x, "date", 4) == 0 && (x[4] == 0 || x[4]==' ' || x[4]==','))
+			{
+				gdata->columns[c++] = 'd';
+				x += 4;
+				while(*x == ' ' || *x == ',')
+					x++;
+			}
+			else if(strncmp(x, "size", 4) == 0 && (x[4] == 0 || x[4]==' ' || x[4]==','))
+			{
+				gdata->columns[c++] = 's';
+				x += 4;
+				while(*x == ' ' || *x == ',')
+					x++;
+			}
+			else
+			{
+				LogInfo("Unknown column at %s\n", x);
+				strcpy(gdata->columns, "nds");
+				break;
+			}
+		}
+	}
+	else
+		strcpy(gdata->columns, "nds");
+
+	x = INI_get(gdata->optfile, "options", "dates");
+	if(x != NULL)
+		gdata->date_fmt = strdup(x);
+	else
+		gdata->date_fmt = strdup("dd/mm/yyyy");
+
+	x = INI_get(gdata->optfile, "options", "times");
+	if(x != NULL)
+		gdata->time_fmt = strdup(x);
+	else
+		gdata->time_fmt = strdup("hh:mm.ss AMPM");
 
 	LoadHistory(gdata);
 }

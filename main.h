@@ -83,6 +83,7 @@ typedef struct udtDirEntry
 	char 		*name;
 	uint64_t	size;
 	uint32_t	attrs;
+	time_t		time;
 
 
 	struct stat stat_buff;
@@ -200,6 +201,11 @@ struct udtGlobals
 	lua_State	*_GL;
 
 	DList		*lstHotKeys;
+
+	char		*date_fmt;
+	char		*time_fmt;
+
+	char		columns[16];
 };
 
 enum
