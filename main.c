@@ -102,6 +102,13 @@ static void AddMRU(uGlobalData *gd, DList *lstMRU, char *p)
 	char *v;
 	int c;
 
+	if(dlist_size(lstMRU) > 0)
+	{
+		v = dlist_data(dlist_head(lstMRU));
+		if(strcmp(v, p) == 0)
+			return;
+	}
+
 	dlist_ins_prev(lstMRU, dlist_head(lstMRU), strdup(p));
 
 	v = INI_get(gd->optfile, "options", "mru_count");
