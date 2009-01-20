@@ -11,6 +11,88 @@ static void FreeListEntry(void *x);
 
 int intFlag = 0;
 
+static char* GetDateTimeString(char *fmt, time_t t)
+{
+	char *x;
+	char *q;
+	char *z;
+	struct tm *tt;
+
+	char *mns[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+	char *mnl[] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+
+	tt = localtime(&t);
+
+	x = calloc(1, 64);
+	z = x;
+
+	q = fmt;
+	while(*q != 0 && q - fmt < 16 && z - x < 64)
+	{
+		switch(*q)
+		{
+			case et_Year4:
+				sprintf(z, "%04i", tt->tm_year + 1900);
+				break;
+
+			case et_Year2:
+				sprintf(z, "%02i", tt->tm_year % 100 );
+				break;
+
+			case et_Month:
+				sprintf(z, "%02i", 1+tt->tm_mon);
+				break;
+
+			case et_Day:
+				sprintf(z, "%02i", tt->tm_mday);
+				break;
+
+			case et_Hour12:
+				sprintf(z, "%02i", (tt->tm_hour % 12) == 0 ? 12 : tt->tm_hour % 12);
+				break;
+
+			case et_Hour24:
+				sprintf(z, "%02i", tt->tm_hour);
+				break;
+
+			case et_Min:
+				sprintf(z, "%02i", tt->tm_min);
+				break;
+
+			case et_Sec:
+				sprintf(z, "%02i", tt->tm_sec);
+				break;
+
+			case et_AMPM:
+				if(tt->tm_hour < 12)
+					sprintf(z, "AM");
+				else
+					sprintf(z, "PM");
+				break;
+
+			case et_MonthNameFull:
+				sprintf(z, "%s", mnl[tt->tm_mon]);
+				break;
+
+			case et_MonthNameShort:
+				sprintf(z, "%s", mns[tt->tm_mon]);
+				break;
+
+			default:
+				*z++ = *q;
+				break;
+		}
+
+		q++;
+		z = strchr(x, 0);
+	}
+
+	if(x[0]=='0' && fmt[0] != et_Year2 )
+		x[0] = ' ';
+
+	return realloc(x, strlen(x)+1);
+}
+
 static void SortList(uGlobalData *gd, DList *lstFiles)
 {
 	CallGlobalFunc(gd, "SortFileList", "");
@@ -568,18 +650,23 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 	}
 
 	{
-		struct tm *tt;
+		char *dst;
+		char *dsd;
 
-		tt = localtime(&de->time);
+
+		dst = GetDateTimeString(win->gd->time_fmt, de->time);
+		dsd = GetDateTimeString(win->gd->date_fmt, de->time);
 
 		p = buff + date_off;
-		sprintf(p, "%02i:%02i.%02i", tt->tm_hour, tt->tm_min, tt->tm_sec);
-		p = strchr(p, 0x0);
-		*p++=' ';
-		sprintf(p, "%04i%02i%02i", 1900 + tt->tm_year, 1+tt->tm_mon, tt->tm_mday);
+		memmove(p, dst, strlen(dst));
 
-		p = strchr(p, 0x0);
-		*p++=' ';
+		p += strlen(dst) + 1;
+		memmove(p, dsd, strlen(dsd));
+
+		p += strlen(dsd);
+
+		free(dsd);
+		free(dst);
 	}
 
 	buff[ win->width - 2] = 0;
@@ -607,7 +694,7 @@ static int CalcMaxNameLen(uWindow *w, int end)
 
 static int CalcDateOff(uWindow *w, int end)
 {
-	return (end - 20);
+	return (end - (w->gd->date_fmt_len + w->gd->time_fmt_len + 2));
 }
 
 void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
@@ -2233,11 +2320,6 @@ int main(int argc, char *argv[])
 			SaveHistory(gdata);
 			SaveOptions(gdata);
 		}
-
-		if(gdata->time_fmt != NULL)
-			free(gdata->time_fmt);
-		if(gdata->date_fmt != NULL)
-			free(gdata->date_fmt);
 
 		if(gdata->lstHotKeys != NULL)
 		{

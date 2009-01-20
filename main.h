@@ -202,8 +202,11 @@ struct udtGlobals
 
 	DList		*lstHotKeys;
 
-	char		*date_fmt;
-	char		*time_fmt;
+	int			date_fmt_len;
+	char		date_fmt[16];
+
+	int			time_fmt_len;
+	char		time_fmt[16];
 
 	char		columns[16];
 };
@@ -261,7 +264,21 @@ struct udtFileOperation
 };
 
 
+enum eTimeSigils
+{
+	et_Hour12 = 1,
+	et_Hour24,
+	et_Min,
+	et_Sec,
+	et_AMPM,
 
+	et_Year4,
+	et_Year2,
+	et_Month,
+	et_Day,
+	et_MonthNameFull,
+	et_MonthNameShort,
+};
 
 extern void AddHistory(uGlobalData *gd, char *str, ...);
 

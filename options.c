@@ -11,6 +11,102 @@
 
 #include "defaults.h"
 
+static int ParseTimeFormat(uGlobalData *gd, char *tf)
+{
+	struct udtTimeF
+	{
+		char *f;
+		char sigs[16];
+	} tfx[]=
+	{
+		{ "HH:mm.ss", 			{ 8, et_Hour24, ':', et_Min, '.', et_Sec, 0 }},
+		{ "hh:mm.ss AMPM", 		{ 11, et_Hour12, ':', et_Min, '.', et_Sec, ' ', et_AMPM, 0 }},
+		{ "hh:mm.ssAMPM", 		{ 11, et_Hour12, ':', et_Min, '.', et_Sec, et_AMPM, 0 }},
+		{ "hh:mm.ss", 			{ 8, et_Hour12, ':', et_Min, '.', et_Sec, 0 }},
+		{ "HH:mm",	 			{ 5, et_Hour24, ':', et_Min, 0 }},
+		{ "hh:mm",	 			{ 5, et_Hour12, ':', et_Min, 0 }},
+		{ "hh:mm AMPM",	 		{ 8, et_Hour12, ':', et_Min, ' ', et_AMPM, 0 }},
+		{ "hh:mmAMPM",	 		{ 8, et_Hour12, ':', et_Min, et_AMPM, 0 }},
+		{ NULL, {0}}
+	};
+
+	int i;
+
+	LogInfo("Time Format : %s\n", tf);
+
+	for(i=0; tfx[i].f != NULL; i++)
+	{
+		if( strcmp(tfx[i].f, tf) == 0)
+		{
+			memmove(gd->time_fmt, tfx[i].sigs + 1, 16);
+			gd->time_fmt_len = tfx[i].sigs[0];
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+static int ParseDateFormat(uGlobalData *gd, char *tf)
+{
+	struct udtDateF
+	{
+		char *f;
+		char sigs[16];
+	} tfx[]=
+	{
+		{ "dd/mm/yyyy", 	{ 10, et_Day, '/', et_Month, '/', et_Year4, 0 }},
+		{ "dd/mm/yy", 		{ 8, et_Day, '/', et_Month, '/', et_Year2, 0 }},
+		{ "mm/dd/yyyy", 	{ 10, et_Month, '/', et_Day, '/', et_Year4, 0 }},
+		{ "mm/dd/yy", 		{ 8, et_Month, '/', et_Day, '/', et_Year2, 0 }},
+		{ "mm-dd-yyyy", 	{ 10, et_Month, '-', et_Day, '-', et_Year4, 0 }},
+		{ "mm-dd-yy", 		{ 8, et_Month, '-', et_Day, '-', et_Year2, 0 }},
+		{ "dd-mm-yyyy", 	{ 10, et_Day, '-', et_Month, '-', et_Year4, 0 }},
+		{ "dd-mm-yy", 		{ 8, et_Day, '-', et_Month, '-', et_Year2, 0 }},
+
+		{ "dd/mmm/yyyy", 	{ 11, et_Day, '/', et_MonthNameShort, '/', et_Year4, 0 }},
+		{ "dd/mmm/yy", 		{ 9, et_Day, '/', et_MonthNameShort, '/', et_Year2, 0 }},
+		{ "mmm/dd/yyyy", 	{ 11, et_MonthNameShort, '/', et_Day, '/', et_Year4, 0 }},
+		{ "mmm/dd/yy", 		{ 9, et_MonthNameShort, '/', et_Day, '/', et_Year2, 0 }},
+		{ "mmm-dd-yyyy", 	{ 11, et_MonthNameShort, '-', et_Day, '-', et_Year4, 0 }},
+		{ "mmm-dd-yy", 		{ 9, et_MonthNameShort, '-', et_Day, '-', et_Year2, 0 }},
+		{ "dd-mmm-yyyy", 	{ 11, et_Day, '-', et_MonthNameShort, '-', et_Year4, 0 }},
+		{ "dd-mmm-yy", 		{ 9, et_Day, '-', et_MonthNameShort, '-', et_Year2, 0 }},
+
+		{ "dd/mmmm/yyyy", 	{ 16, et_Day, '/', et_MonthNameFull, '/', et_Year4, 0 }},
+		{ "dd/mmmm/yy", 	{ 14, et_Day, '/', et_MonthNameFull, '/', et_Year2, 0 }},
+		{ "mmmm/dd/yyyy", 	{ 16, et_MonthNameFull, '/', et_Day, '/', et_Year4, 0 }},
+		{ "mmmm/dd/yy", 	{ 14, et_MonthNameFull, '/', et_Day, '/', et_Year2, 0 }},
+		{ "mmmm-dd-yyyy", 	{ 16, et_MonthNameFull, '-', et_Day, '-', et_Year4, 0 }},
+		{ "mmmm-dd-yy", 	{ 14, et_MonthNameFull, '-', et_Day, '-', et_Year2, 0 }},
+		{ "dd-mmmm-yyyy", 	{ 16, et_Day, '-', et_MonthNameFull, '-', et_Year4, 0 }},
+		{ "dd-mmmm-yy", 	{ 14, et_Day, '-', et_MonthNameFull, '-', et_Year2, 0 }},
+
+
+		{ "yymmdd", 		{ 6, et_Year2, et_Month, et_Day, 0 }},
+		{ "yyyymmdd", 		{ 8, et_Year4, et_Month, et_Day, 0 }},
+		{ "ddmmyyyy", 		{ 8, et_Day, et_Month, et_Year4, 0 }},
+		{ "ddmmmyyyy", 		{ 8, et_Day, et_MonthNameShort, et_Year4, 0 }},
+
+		{ NULL, {0}}
+	};
+
+	int i;
+
+	LogInfo("Date Format : %s\n", tf);
+	for(i=0; tfx[i].f != NULL; i++)
+	{
+		if( strcmp(tfx[i].f, tf) == 0)
+		{
+			memmove(gd->date_fmt, tfx[i].sigs + 1, 16);
+			gd->date_fmt_len = tfx[i].sigs[0];
+			return i;
+		}
+	}
+
+	return -1;
+}
+
 int IsTrue(const char *s)
 {
 	char *p;
@@ -286,6 +382,7 @@ static void CreateIfNotExist(char *fn, uint8_t *data, int len)
 void LoadOptions(uGlobalData *gdata)
 {
 	char *x;
+	char *fmt;
 
 	gdata->optfilename = ConvertDirectoryName("$HOME/.alfc/options.ini");
 
@@ -386,35 +483,22 @@ void LoadOptions(uGlobalData *gdata)
 
 	x = INI_get(gdata->optfile, "options", "dates");
 	if(x != NULL)
-		gdata->date_fmt = strdup(x);
+		fmt = x;
 	else
-		gdata->date_fmt = strdup("dd/mm/yyyy");
+		fmt = "dd/mm/yyyy";
+
+	if( ParseDateFormat(gdata, fmt) == -1  )
+		ParseDateFormat(gdata, "dd/mm/yyyy");
+
 
 	x = INI_get(gdata->optfile, "options", "times");
 	if(x != NULL)
-		gdata->time_fmt = strdup(x);
+		fmt = x;
 	else
-		gdata->time_fmt = strdup("hh:mm.ss AMPM");
+		fmt = "hh:mm.ss AMPM";
 
-	if(strcmp(gdata->date_fmt, "dd/mm/yyyy") != 0
-	 && strcmp(gdata->date_fmt, "mm/dd/yyyy") != 0
-	 && strcmp(gdata->date_fmt, "yyyymmdd") != 0
-	 && strcmp(gdata->date_fmt, "mm-dd-yyyy") != 0
-	 && strcmp(gdata->date_fmt, "dd-mm-yyyy") != 0)
-	{
-		LogInfo("&& Invalid date format\n");
-		free(gdata->date_fmt);
-		gdata->date_fmt = strdup("dd/mm/yyyy");
-	}
-
-	if(strcmp(gdata->time_fmt, "HH:mm.ss") != 0
-	 && strcmp(gdata->time_fmt, "hh:mm.ss AMPM") != 0
-	 && strcmp(gdata->time_fmt, "hh:mm.ss") != 0)
-	{
-		LogInfo("** Invalid time format\n");
-		free(gdata->time_fmt);
-		gdata->time_fmt = strdup("HH:mm.ss AMPM");
-	}
+	if(ParseTimeFormat(gdata, fmt) == -1)
+		ParseTimeFormat(gdata, "hh:mm.ss AMPM");
 
 	LoadHistory(gdata);
 }
