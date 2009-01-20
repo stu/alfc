@@ -4,17 +4,6 @@
  *****
  */
 
-// triggers mingw include
-#include <stdlib.h>
-
-#ifdef __MINGW_H
-#include <windows.h>
-#endif
-
-#ifndef __MINGW_H
-#include <pwd.h>
-#endif
-
 #include "headers.h"
 
 static void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF);
@@ -22,12 +11,10 @@ static void FreeListEntry(void *x);
 
 int intFlag = 0;
 
-
 static void SortList(uGlobalData *gd, DList *lstFiles)
 {
 	CallGlobalFunc(gd, "SortFileList", "");
 }
-
 
 static void FreeFilter(void *x)
 {
@@ -177,75 +164,9 @@ void SetQuitAppFlag(int flag)
 	intFlag = flag;
 }
 
-static void GetUserInfo(uGlobalData *gd)
-{
-#ifdef __MINGW_H
-	char UserName[100];
-	DWORD UserSize = 100;
-
-	GetUserName(UserName,&UserSize);
-
-	gd->strRealName = strdup(UserName);
-	gd->strLoginName = strdup(UserName);
-	gd->strHomeDirectory = strdup(getenv("USERPROFILE"));
-	gd->strShell = strdup("cmd.exe");
-	gd->uid = INT_MAX;
-	gd->gid = INT_MAX;
-#else
-	struct passwd *passwd;
-	char *x;
-	char *p;
-
-	passwd = getpwuid(getuid());
-
-	x = strdup(passwd->pw_gecos);
-	p = strchr(x, 0x0);
-	p--;
-
-	while(p>x)
-	{
-		if(*p == ',' && *(p+1)==0) *p = 0x0;
-		if(*p == ' ' && *(p+1)==0) *p = 0x0;
-
-		p--;
-	}
-
-	gd->strRealName = strdup(x);
-	gd->strLoginName = strdup(passwd->pw_name);
-	gd->strHomeDirectory = strdup(passwd->pw_dir);
-	gd->strShell = strdup(passwd->pw_shell);
-	gd->uid = getpwuid(getuid())->pw_uid;
-	gd->gid = getpwuid(getuid())->pw_gid;
-
-	free(x);
-#endif
-}
-
 static uGlobalData* NewGlobalData(void)
 {
 	return calloc(1, sizeof(uGlobalData));
-}
-
-static char* x_getenv(const char *s)
-{
-#ifdef __MINGW_H
-	if(strcmp(s, "HOME") == 0)
-	{
-		char *p;
-
-		p = getenv("HOME");
-		if(p != NULL)
-			return p;
-
-		p = getenv("USERPROFILE");
-		if(p != NULL)
-			return p;
-
-		return NULL;
-	}
-	else
-#endif
-		return getenv(s);
 }
 
 /* Convert environment variables to actual strings */
@@ -306,7 +227,7 @@ char* ConvertDirectoryName(const char *x)
 			if(p[0] != 0 && p[strlen(p)-1] != '/')
 				strcat(p, "/");
 
-			env = x_getenv(q);
+			env = ALFC_getenv(q);
 			*z = c;
 
 			if(env != NULL)
@@ -489,6 +410,10 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 	char *cpath;
 	int dirsfirst;
 	DLElement *first_file;
+	struct dirent *dr;
+	uDirEntry *de;
+	struct stat buff;
+
 
 	dirsfirst = 0;
 	if(IsTrue(INI_get(gdata->optfile, "options", "directories_first"))==0)
@@ -504,9 +429,6 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 		d = opendir(cpath);
 		if(d != NULL)
 		{
-			struct dirent *dr;
-			uDirEntry *de;
-
 			dr = readdir(d);
 			first_file = NULL;
 
@@ -519,16 +441,13 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 
 					de->name = strdup(dr->d_name);
 #ifdef __MINGW_H
-					stat(de->name, &de->stat_buff);
+					stat(de->name, &buff);
 #else
-					stat(de->name, &de->stat_buff);
+					lstat(de->name, &buff);
 #endif
-
-					de->size = de->stat_buff.st_size;
-					de->attrs = de->stat_buff.st_mode;
-					de->time = de->stat_buff.st_mtime;
-
-					memset(&de->stat_buff, 0x0, sizeof(struct stat));
+					de->size = ALFC_GetFileSize(de, &buff);
+					de->attrs = ALFC_GetFileAttrs(de, &buff);
+					de->time = ALFC_GetFileTime(de, &buff);
 
 					if(dirsfirst == 1 && S_ISDIR(de->attrs) != 0 )
 					{
@@ -562,25 +481,6 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 	free(cpath);
 
 	return lstF;
-}
-
- uint64_t convert_down(uint64_t a, int count)
-{
-	off_t x;
-	uint64_t z;
-
-	x = a;
-#ifdef __MING_H
-	if(a > INT_MAX)
-		a = INT_MAX;
-#endif
-
-	for( ; count > 0; count--)
-		x = x / 1024;
-
-	z = x;
-
-	return z;
 }
 
 static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, int size_off, int date_off)
@@ -619,34 +519,38 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 #endif
 		else
 		{
+			int round;
 			uint64_t xx = de->size;
 
 			if(xx < 1024)
 			{
-				sprintf(buff + size_off, "%5ub ", (uint32_t)xx);
+				sprintf(buff + size_off, "%6uby", (uint32_t)xx);
 			}
 			else
 			{
+				round = ((xx*10)/1024)%10;
 				xx /= 1024;
 				if(xx < 1024)
 				{
-					sprintf(buff + size_off, "%5ukb", (uint32_t)xx);
+					sprintf(buff + size_off, "%4u.%ikb", (uint32_t)xx, round);
 				}
 				else
 				{
+					round = ((xx*10)/1024)%10;
 					xx /= 1024;
 					if(xx < 1024)
 					{
-						sprintf(buff + size_off, "%5umb", (uint32_t)xx);
+						sprintf(buff + size_off, "%4u.%imb", (uint32_t)xx, round);
 					}
 					else
 					{
+						round = ((xx*10)/1024)%10;
 						xx /= 1024;
 						if(xx < 1024)
-							sprintf(buff + size_off, "%5ugb", (uint32_t)xx);
+							sprintf(buff + size_off, "%4u.%igb", (uint32_t)xx, round);
 						else
 						{
-							sprintf(buff + size_off, "%5utb", (uint32_t)(xx/(1024*1024)));
+							sprintf(buff + size_off, "%4u.%itb", (uint32_t)(xx/(1024*1024)), round);
 						}
 					}
 				}
@@ -691,7 +595,7 @@ static int CalcSizeOff(uWindow *w, int end)
 	if(w->gd->compress_filesize == 0)
 		return end - 10;
 	else
-		return end - 7;
+		return end - 8;
 }
 
 /*
@@ -787,7 +691,11 @@ static char* PrintNumber(uint64_t num)
 #if __WORDSIZE == 64
 	sprintf(x, "%lu", num);
 #else
+#ifdef __MINGW_H
+	sprintf(x, "%I64u", num);
+#else
 	sprintf(x, "%llu", num);
+#endif
 #endif
 
 	memset(y, ' ', 32);
@@ -1017,15 +925,15 @@ static char* ConvertKeyToName(int key)
 		{ ALFC_KEY_TAB, "Tab" },
 		{ ALFC_KEY_SPACE, "Space" },
 		{ ALFC_KEY_F00, "F00" },
-		{ ALFC_KEY_F01, "F01" },
-		{ ALFC_KEY_F02, "F02" },
-		{ ALFC_KEY_F03, "F03" },
-		{ ALFC_KEY_F04, "F04" },
-		{ ALFC_KEY_F05, "F05" },
-		{ ALFC_KEY_F06, "F06" },
-		{ ALFC_KEY_F07, "F07" },
-		{ ALFC_KEY_F08, "F08" },
-		{ ALFC_KEY_F09, "F09" },
+		{ ALFC_KEY_F01, "F1" },
+		{ ALFC_KEY_F02, "F2" },
+		{ ALFC_KEY_F03, "F3" },
+		{ ALFC_KEY_F04, "F4" },
+		{ ALFC_KEY_F05, "F5" },
+		{ ALFC_KEY_F06, "F6" },
+		{ ALFC_KEY_F07, "F7" },
+		{ ALFC_KEY_F08, "F8" },
+		{ ALFC_KEY_F09, "F9" },
 		{ ALFC_KEY_F10, "F10" },
 		{ ALFC_KEY_F11, "F11" },
 		{ ALFC_KEY_F12, "F12" },
@@ -1930,6 +1838,13 @@ void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstGlob, DList *
 			free(lstNew);
 		}
 	}
+	else
+	{
+		if(dlist_size(lstGlob) > 0)
+		{
+			dlist_empty(lstF);
+		}
+	}
 
 	UpdateGlobList(gd, lstGlob, lstFull, lstF);
 
@@ -1948,7 +1863,6 @@ static void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DLis
 	if(dlist_size(lstGlob) == 0)
 		return;
 
-	//dlist_empty(lstF);
 
 	lstNew = lstFull;
 	lstOld = malloc(sizeof(DList));
@@ -2056,6 +1970,42 @@ int main(int argc, char *argv[])
 {
 	uGlobalData *gdata;
 
+	char *start_left = NULL;
+	char *start_right = NULL;
+	int i;
+
+	fprintf(stderr, "ALFC v%i.%02i/%04i\n\n", VersionMajor(), VersionMinor(), VersionBuild());
+
+	for(i=1; i<argc; i++)
+	{
+		if(argv[i][0] == '-')
+		{
+			if(1+i < argc && strcmp("-l", argv[i]) == 0)
+			{
+				start_left = argv[i+1];
+			}
+			if(1+i < argc && strcmp("-r", argv[i]) == 0)
+			{
+				start_right = argv[i+1];
+			}
+			else if(strcmp("-?", argv[i]) == 0 || strcmp("--help", argv[i]) == 0)
+			{
+				fprintf(stderr, "-v\tVersion\n"
+								"-?\tHelp\n"
+								"-l DIR\tStart left side in directory DIR\n"
+								"-r DIR\tStart right side in directory DIR\n"
+								);
+				exit(0);
+			}
+			else if(strcmp("-v", argv[i]) == 0 || strcmp("--version", argv[i]) == 0)
+			{
+				//fprintf(stderr, "ALFC v%i.%02i/%04i\n", VersionMajor(), VersionMinor(), VersionBuild());
+				exit(0);
+			}
+		}
+	}
+
+
 #ifdef MEMWATCH
 	remove("memwatch.log");
 #endif
@@ -2066,6 +2016,8 @@ int main(int argc, char *argv[])
 
 	if(gdata != NULL)
 	{
+		int rc;
+
 		gdata->lstHotKeys = malloc(sizeof(DList));
 		dlist_init(gdata->lstHotKeys, FreeKey);
 
@@ -2085,7 +2037,12 @@ int main(int argc, char *argv[])
 
 		LogWrite_SetFlags( LogWrite_GetFlags() & ~LOG_STDERR);
 
-		if( LoadGlobalScript(gdata, INI_get(gdata->optfile, "scripts", "global_funcs")) == 0)
+		// load it, if it fails, try looking in home as a fallback
+		rc = LoadGlobalScript(gdata, INI_get(gdata->optfile, "scripts", "global_funcs"));
+		if(rc != 0)
+			rc = LoadGlobalScript(gdata, "$HOME/.alfc/global.lua");
+
+		if(rc == 0)
 		{
 			LogInfo("" LUA_RELEASE "; " LUA_COPYRIGHT "\n" LUA_AUTHORS "\n\n");
 
@@ -2100,7 +2057,7 @@ int main(int argc, char *argv[])
 				exit(1);
 			}
 
-			GetUserInfo(gdata);
+			ALFC_GetUserInfo(gdata);
 
 			BuildWindowLayout(gdata);
 
@@ -2110,7 +2067,10 @@ int main(int argc, char *argv[])
 			gdata->lstGlobLeft = malloc(sizeof(DList));
 			dlist_init(gdata->lstGlobLeft, FreeGlob);
 			free(gdata->left_dir);
-			gdata->left_dir = GetOptionDir(gdata, "startup_left", gdata->lstMRULeft);
+			if(start_left != NULL)
+				gdata->left_dir = strdup(start_left);
+			else
+				gdata->left_dir = GetOptionDir(gdata, "startup_left", gdata->lstMRULeft);
 			godir(gdata, gdata->left_dir);
 
 			gdata->selected_window = WINDOW_RIGHT;
@@ -2119,7 +2079,10 @@ int main(int argc, char *argv[])
 			gdata->lstGlobRight = malloc(sizeof(DList));
 			dlist_init(gdata->lstGlobRight, FreeGlob);
 			free(gdata->right_dir);
-			gdata->right_dir = GetOptionDir(gdata, "startup_right", gdata->lstMRURight);
+			if(start_right != NULL)
+				gdata->right_dir = strdup(start_right);
+			else
+				gdata->right_dir = GetOptionDir(gdata, "startup_right", gdata->lstMRURight);
 			godir(gdata, gdata->right_dir);
 
 			gdata->selected_window = WINDOW_LEFT;
@@ -2138,6 +2101,8 @@ int main(int argc, char *argv[])
 				kb = ScanKey(gdata, key);
 				if(kb != NULL)
 				{
+					AddHistory(gdata, kb->sCommand);
+
 					// exec string via lua...
 					if(kb->sCommand[0] == ':')
 						exec_internal_command(gdata, kb->sCommand);

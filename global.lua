@@ -207,14 +207,16 @@ function SortFileList()
 	end
 
 	if opt_dirs_first == "true" then
-		-- sort by name
-		table.sort(lstSD, sortfunc)
+		-- sort by name for dirs always
+		table.sort(lstSD, function(a,b) return a.data.name<b.data.name end)
+
+		-- now sort files
 		table.sort(lstSF, sortfunc)
 
 		lstSF = merge(lstSD, lstSF)
 		lstSD = nil
 	else
-		-- sort by name
+		-- sort by request
 		table.sort(lstSF, sortfunc)
 	end
 
@@ -229,13 +231,12 @@ end
 -- This is called when this script is booted
 function GlobalLuaFuncs()
 	--debug_msg("Global Lua Functions bootstrapped")
-	BindKey(ALFC_KEY_F02, "Same", ":s")
-	BindKey(ALFC_KEY_F10, "Quit", ":q")
-	BindKey(ALFC_KEY_F12, "Tag", "TagHighlightedFile()")
+	BindKey(ALFC_KEY_F02, "Same", [[:s]])
+	BindKey(ALFC_KEY_F10, "Quit", [[:q]])
+	BindKey(ALFC_KEY_F12, "Tag", [[TagHighlightedFile()]])
 
 	-- Sometimes I want a quick view for code files
-	--BindKey(ALFC_KEY_F11, "CodeOnly", "AddGlob(\"*.c\"); AddGlob(\"*.h\");")
-	BindKey(ALFC_KEY_F11, "CodeOnly", "SetFilter(\"\\\\.[ch]$\"); SetGlob(\"*.lua\")")
+	BindKey(ALFC_KEY_F11, "CodeOnly", [[SetFilter("\\.[ch]$"); SetGlob("*.lua")]])
 end
 
 	-- initialise bootstrap and protect code from being called more than once

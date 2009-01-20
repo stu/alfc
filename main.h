@@ -22,6 +22,9 @@ enum
 	ALFC_KEY_TAB,
 	ALFC_KEY_SPACE,
 
+	ALFC_KEY_SLEFT,
+	ALFC_KEY_SRIGHT,
+
 	ALFC_KEY_F00,
 	ALFC_KEY_F01,
 	ALFC_KEY_F02,
@@ -84,9 +87,6 @@ typedef struct udtDirEntry
 	uint64_t	size;
 	uint32_t	attrs;
 	time_t		time;
-
-
-	struct stat stat_buff;
 } uDirEntry;
 
 typedef struct udtWindow
@@ -219,6 +219,49 @@ enum
 	e_title_foreground,
 	e_title_background
 };
+
+
+enum eFileOpType
+{
+	eOp_Delete = 1,
+	eOp_Copy,
+	eOp_Move
+};
+
+struct udtFileOperation
+{
+	int type;
+
+	union
+	{
+		struct
+		{
+			char	*filename;
+			char	*path;
+		} udtDelete;
+
+		struct
+		{
+			char *source_filename;
+			char *source_path;
+
+			char *dest_filename;
+			char *dest_path;
+		} udtMove;
+
+		struct
+		{
+			char *source_filename;
+			char *source_path;
+
+			char *dest_filename;
+			char *dest_path;
+		} udtCopy;
+	} op;
+};
+
+
+
 
 extern void AddHistory(uGlobalData *gd, char *str, ...);
 

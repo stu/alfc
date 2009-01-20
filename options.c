@@ -9,6 +9,8 @@
 #include "headers.h"
 #include "stucore/stucore_config.h"
 
+#include "defaults.h"
+
 int IsTrue(const char *s)
 {
 	char *p;
@@ -260,6 +262,27 @@ static void LoadMRU(uGlobalData *gd, DList *lst, char *opt)
 	}
 }
 
+static void CreateIfNotExist(char *fn, uint8_t *data, int len)
+{
+	char *x;
+	FILE *fp;
+
+	x = ConvertDirectoryName(fn);
+	fp = fopen(x, "r");
+	if(fp == NULL)
+	{
+		fp = fopen(x, "wt");
+		if(fp != NULL)
+		{
+			LogInfo("** Creating : %s\n", x);
+			fwrite(data, 1, len, fp);
+			fclose(fp);
+		}
+	}
+
+	fclose(fp);
+}
+
 void LoadOptions(uGlobalData *gdata)
 {
 	char *x;
@@ -267,6 +290,27 @@ void LoadOptions(uGlobalData *gdata)
 	gdata->optfilename = ConvertDirectoryName("$HOME/.alfc/options.ini");
 
 	gdata->optfile = INI_load(gdata->optfilename);
+	if(gdata->optfile == NULL)
+	{
+		FILE *fp;
+
+		fp = fopen(gdata->optfilename, "wt");
+		if(fp == NULL)
+		{
+			gdata->optfile = INI_EmptyINF();
+			CreateBaselineINIFile(gdata);
+		}
+		else
+		{
+			fwrite(include_options_ini, 1, include_options_ini_SIZE, fp);
+			fclose(fp);
+		}
+
+		CreateIfNotExist("$HOME/.alfc/global.lua", include_global_lua, include_global_lua_SIZE);
+		CreateIfNotExist("$HOME/.alfc/startup.lua", include_startup_lua, include_startup_lua_SIZE);
+		CreateIfNotExist("$HOME/.alfc/shutdown.lua", include_shutdown_lua, include_shutdown_lua_SIZE);
+	}
+
 	if(gdata->optfile == NULL)
 	{
 		gdata->optfile = INI_EmptyINF();
@@ -358,16 +402,16 @@ void LoadOptions(uGlobalData *gdata)
 	 && strcmp(gdata->date_fmt, "mm-dd-yyyy") != 0
 	 && strcmp(gdata->date_fmt, "dd-mm-yyyy") != 0)
 	{
-		LogInfo("Invalid date format");
+		LogInfo("&& Invalid date format\n");
 		free(gdata->date_fmt);
 		gdata->date_fmt = strdup("dd/mm/yyyy");
 	}
 
-	if(strcmp(gdata->time_fmt, "HH:mm.ss AMPM") != 0
-	 && strcmp(gdata->time_fmt, "HH:mm.ss") != 0
+	if(strcmp(gdata->time_fmt, "HH:mm.ss") != 0
+	 && strcmp(gdata->time_fmt, "hh:mm.ss AMPM") != 0
 	 && strcmp(gdata->time_fmt, "hh:mm.ss") != 0)
 	{
-		LogInfo("Invalid time format");
+		LogInfo("** Invalid time format\n");
 		free(gdata->time_fmt);
 		gdata->time_fmt = strdup("HH:mm.ss AMPM");
 	}

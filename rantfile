@@ -12,19 +12,27 @@ case y.to_s
 		var[:exec] = "alfc.exe"
 		var[:lua] = "lua.exe"
 		var[:luac] = "luac.exe"
-		var[:libs] = "-lpdcurses -llua"
+		var[:libs] = "-lpdcurses -llua -lregex -liberty -lkernel32"
+		PORTABILITY_OBJS = %w( portability_win32.o )
+		# mingw has bugs with 64bit stuff (mostly in sprintf etc dropping upper 32bits).
+		# this allows us to use %I64u format...
+		PORT_CFLAGS = "-Wno-format"
 	when "cygwin"
 		@strPlatform = "ALFC_UNIXLIKE"
 		var[:exec] = "alfc.exe"
 		var[:lua] = "lua.exe"
 		var[:luac] = "luac.exe"
 		var[:libs] = "-lpdcurses -llua"
+		PORTABILITY_OBJS = %w( portability_unix.o )
+		PORT_CFLAGS = ""
 	else
 		@strPlatform = "ALFC_UNIXLIKE"
 		var[:exec] = "alfc"
 		var[:lua] = "lua"
 		var[:luac] = "luac"
 		var[:libs] = "-lncurses -llua5.1"
+		PORTABILITY_OBJS = %w( portability_unix.o )
+		PORT_CFLAGS=""
 end
 
 
@@ -111,17 +119,17 @@ end
 cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
 
 CC = "gcc"
-CFLAGSX = "-O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH "
+CFLAGSX = "-O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH " + PORT_CFLAGS
 LIBS = ""
 
-alfc = %w( version.o main.o memwatch.o lua_helper.o lua_api.o options.o ncurses_interface.o )
+alfc = %w( version.o main.o memwatch.o lua_helper.o lua_api.o options.o ncurses_interface.o ) + PORTABILITY_OBJS
 
 gen Action do
 	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s
 end
 
 desc "Build the app"
-task :app => ["fixversion", "appx"] do
+task :app => ["fixversion", "tools", "appx"] do
 end
 
 
@@ -133,6 +141,15 @@ task "fixversion" do
 
 	# now build lua helper files
 	sys "#{var[:lua]}", "lua_helper.lua"
+end
+
+
+task :tools => %w(bin2c.o) do |t|
+	sys "#{CC} -o bin2c  #{t.prerequisites.join(' ')} "
+	sys "bin2c global.lua include_global_lua > defaults.h"
+	sys "bin2c global.lua include_startup_lua >> defaults.h"
+	sys "bin2c global.lua include_shutdown_lua >> defaults.h"
+	sys "bin2c global.lua include_options_ini >> defaults.h"
 end
 
 task :appx => alfc do |t|

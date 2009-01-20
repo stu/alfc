@@ -5,9 +5,6 @@
 #include <curses.h>
 #include <ctype.h>
 
-#define CVT_CTRL_KEY(x) ((x) - 'A' +1)
-
-
 static int intCurCol;
 static int intCurRow;
 static int intMaxHeight;
@@ -15,15 +12,6 @@ static int intMaxWidth;
 
 static int intMaxColourPairs;
 static int intStyle;
-
-#define FRM_UL	0
-#define FRM_U	1
-#define FRM_UR	2
-#define FRM_L	3
-#define FRM_R	4
-#define FRM_LL	5
-#define FRM_B	6
-#define FRM_LR	7
 
 #ifndef __MINGW_H
 static void terminate_signal(int a);
@@ -175,7 +163,7 @@ static uint32_t nc_get_keypress(void)
 	uint32_t key = 0;
 	int16_t ch;
 
-	ch = getch();
+	ch = wgetch(stdscr);
 	if (ch == ERR)
 	{
 		key = 0;
@@ -184,10 +172,21 @@ static uint32_t nc_get_keypress(void)
 	{
 		key = ch;
 	}
+#ifdef __MINGW_H
+	// mingw uses wgetch for getch.....
+	else if ((ch >= ALT_0) && (ch <= ALT_Z)) // for mingw this is ALT-A to ALT-Z
+	{
+		if(ch >= ALT_0 && ch <= ALT_9)
+			key = ALFC_KEY_ALT + (ch - ALT_0) + '0';
+		else
+			key = ALFC_KEY_ALT + (ch - ALT_A) + 'A';
+	}
+#else
 	else if ((ch >= 0x80) && (ch <= 0xFF))
 	{
 		key = ALFC_KEY_ALT + (ch - 0x80);
 	}
+#endif
 	else if ((ch >= KEY_F0) && (ch <= KEY_F0 + 12))
 	{
 		key = ALFC_KEY_F00 + (ch - KEY_F0);
@@ -206,7 +205,7 @@ static uint32_t nc_get_keypress(void)
 		if ((ch < 256) && isalpha(ch))
 		{
 			ch = toupper(ch);
-			key = ALFC_KEY_CTRL + CVT_CTRL_KEY(ch);
+			key = ALFC_KEY_CTRL + ((ch - 'A') + 1);
 		}
 		else
 			key = 0;
@@ -226,6 +225,8 @@ static uint32_t nc_get_keypress(void)
 			case KEY_HOME:			key = ALFC_KEY_HOME;		break;
 			case KEY_END:			key = ALFC_KEY_END;			break;
 			case KEY_DC:			key = ALFC_KEY_DEL;			break;
+			case KEY_SLEFT:			key = ALFC_KEY_SLEFT;		break;
+			case KEY_SRIGHT:		key = ALFC_KEY_SRIGHT;		break;
 			case 127:				key = ALFC_KEY_DEL;			break;
 #if KEY_DC != 8
 			case 0x08:				key = ALFC_KEY_DEL;			break;

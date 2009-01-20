@@ -63,9 +63,19 @@ Directories
 	- Delete Directory
 	- Rename Directory
 
+Birth and Rebirth
+
+
 Portability
 Notes on the MinGW port.
 - MinGW seems to only have a 32bit st_size in the stat buffer for filesizes...
+- MinGW requires the 'regex' package (both bin + dev) to be installed for building.
+for distribution you need the regex dll from the bin package
+(Put the DLL in your windows/system32 directory or somewhere like that)
+- You also need a copy of the fnmatch.h header filer
+http://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob;f=lib/fnmatch.in.h;hb=HEAD
+just save that as /mingw/include/fnmatch.h
+
 
 ChangeLog
 20090111 - Started...
