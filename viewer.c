@@ -1,4 +1,21 @@
 #include "headers.h"
+/*
+
+* comments
+* keywords
+* literals
+* colors
+
+
+ */
+
+enum eLineFeed
+{
+	eLine_Unix = 1,		// LF - 0x0A
+	eLine_DOS = 2,			// CRLF - 0x0D, 0x0A
+	eLine_MAC = 4,			// CR - 0x0D
+	eLine_Mixed = 8
+};
 
 enum eViewMode
 {
@@ -24,8 +41,12 @@ typedef struct udtViewFile
 	int		intViewMode;
 	int		intTLine;
 	int		intHLine;
-
+	int		intColOffset;
+	int		intMaxCol;
+	int		tabsize;
 	int		nwidth;
+
+	int		crlf_type;
 } uViewFile;
 
 
@@ -91,12 +112,32 @@ static DList* LoadLines(uViewFile *v)
 			{
 				if( v->data[off] == 0x0D && v->data[off + 1] == 0x0A)
 				{
+					if(v->crlf_type == eLine_DOS || v->crlf_type == 0)
+						v->crlf_type |= eLine_DOS;
+					else
+						v->crlf_type |= eLine_Mixed;
+
 					off += 2;
 					count += 2;
 					break;
 				}
 				else if( v->data[off] == 0x0D || v->data[off] == 0x0A)
 				{
+					if(v->data[off] == 0x0D)
+					{
+						if(v->crlf_type == eLine_MAC || v->crlf_type == 0)
+							v->crlf_type |= eLine_MAC;
+						else
+							v->crlf_type |= eLine_Mixed;
+					}
+					else
+					{
+						if(v->crlf_type == eLine_Unix || v->crlf_type == 0)
+							v->crlf_type |= eLine_Unix;
+						else
+							v->crlf_type |= eLine_Mixed;
+					}
+
 					off += 1;
 					count += 1;
 					break;
@@ -109,6 +150,8 @@ static DList* LoadLines(uViewFile *v)
 			}
 
 			l[c].length = count;
+			if(v->intMaxCol < count)
+				v->intMaxCol = count;
 
 			c += 1;
 
@@ -144,7 +187,7 @@ static void PrintLine(uViewFile *v, int ln, int i)
 	char buff[4096];
 	int q;
 	int j;
-	int tabs = 4;
+	int tabs = v->tabsize;
 
 	// Feeling lazy
 	switch(v->nwidth)
@@ -190,12 +233,43 @@ static void PrintLine(uViewFile *v, int ln, int i)
 	memset(buff, ' ', 4096);
 	if(ln < v->intLineCount)
 	{
+		int xoff;
+
 		p = buff;
 		j=0;
+		xoff = 0;
 
-		while(j < v->lines[ln].length && j < 4000)
+		while(xoff < v->intColOffset && j < v->lines[ln].length)
 		{
-			char c;
+			switch(v->lines[ln].off[j])
+			{
+				case 0x0A:
+				case 0x0D:
+					break;
+
+				case 0x09:
+					{
+						int t;
+
+						t = xoff % tabs;
+						for(q = t; q<tabs && xoff < v->intColOffset; q++)
+							xoff += 1;
+					}
+					break;
+
+				default:
+					if(v->lines[ln].off[j] >= ' ')
+						xoff += 1;
+					break;
+			}
+
+			j += 1;
+		}
+
+		//j = v->intColOffset;
+		while(j < v->lines[ln].length && (p-buff) < 4000)
+		{
+			uint8_t c;
 			c = v->lines[ln].off[j];
 			switch(c)
 			{
@@ -204,12 +278,24 @@ static void PrintLine(uViewFile *v, int ln, int i)
 					break;
 
 				case 0x09:
-					for(q=0; q<tabs; q++)
-						*p++ = ' ';
+					{
+						int t;
+
+						t = xoff % tabs;
+						for(q = t; q<tabs; q++)
+						{
+							*p++ = ' ';
+							xoff += 1;
+						}
+					}
 					break;
 
 				default:
-					*p++ = c;
+					if(c >= ' ')
+					{
+						*p++ = c;
+						xoff += 1;
+					}
 					break;
 			}
 
@@ -218,7 +304,7 @@ static void PrintLine(uViewFile *v, int ln, int i)
 	}
 	else if(ln == v->intLineCount)
 	{
-		sprintf(buff, "*** END OF FILE ***");
+		memmove(buff, "*** END OF FILE ***", 19);
 	}
 	else if(ln == v->intLineCount + 1)
 	{
@@ -238,6 +324,57 @@ static void PrintLine(uViewFile *v, int ln, int i)
 
 	v->w->screen->print_abs(buff);
 	v->w->screen->set_style(STYLE_NORMAL);
+}
+
+static int DisplayStatus(uViewFile *v)
+{
+	char buff[4096];
+	char *p;
+
+	memset(buff, ' ', 4096);
+
+	memmove(buff, " Line: ", 7);
+
+	//sprintf(buff + 40, "%i/%i, %i%%", 1 + v->intTLine + v->intHLine, v->intLineCount, (1 + v->intTLine + v->intHLine) * 100 / v->intLineCount );
+	sprintf(buff + 40, "%i/%i, ", 1 + v->intTLine + v->intHLine, v->intLineCount);
+
+	//(v->nwidth * 2) + 4
+	// +3 buffering
+	memmove(buff + 7 + (v->nwidth * 2) + 3 - strlen(buff+40) , buff+40, strlen(buff+40)+1);
+	memset(buff+40, ' ', 40);
+
+	p=strchr(buff, 0);
+	*p = ' ';
+
+	sprintf(p, "+%-3i", v->intColOffset);
+
+	p=strchr(buff, 0);
+	*p++ = ' ';
+
+	sprintf(p, "%3i%%",  (1 + v->intTLine + v->intHLine) * 100 / v->intLineCount );
+	p=strchr(buff, 0);
+	*p++ = ' ';
+
+	if(v->crlf_type == eLine_DOS)
+		sprintf(p," DOS CRLF ");
+	else if(v->crlf_type == eLine_MAC)
+		sprintf(p, " OLD MAC ");
+	else if(v->crlf_type == eLine_Unix)
+		sprintf(p, " UNIX ");
+	else
+		sprintf(p, " MIXED CR/LF ");
+
+	//p = strchr(buff, 0x0);
+	//*p++ = ' ';
+
+	v->w->screen->set_cursor(v->w->offset_row + v->w->height, 1 + v->w->offset_col + v->nwidth + 4);
+	buff[v->w->width - (v->nwidth+2)] = 0;
+
+	v->w->screen->set_style(STYLE_TITLE);
+	v->w->screen->print_abs(buff);
+	v->w->screen->set_style(STYLE_NORMAL);
+
+	return 0;
 }
 
 static int DisplayFile(uViewFile *v)
@@ -273,6 +410,8 @@ static int DisplayFile(uViewFile *v)
 		ln += 1;
 	}
 
+	DisplayStatus(v);
+
 	return 0;
 }
 
@@ -289,6 +428,7 @@ static int vw_scroll_down(uViewFile *v)
 				v->intHLine += 1;
 				PrintLine(v, v->intTLine + v->intHLine - 1, v->intHLine - 1);
 				PrintLine(v, v->intTLine + v->intHLine, v->intHLine);
+				DisplayStatus(v);
 			}
 			else
 			{
@@ -316,6 +456,7 @@ static int vw_scroll_up(uViewFile *v)
 		v->intHLine -= 1;
 		PrintLine(v, v->intTLine + v->intHLine + 1, v->intHLine + 1);
 		PrintLine(v, v->intTLine + v->intHLine, v->intHLine);
+		DisplayStatus(v);
 	}
 	else
 	{
@@ -324,6 +465,7 @@ static int vw_scroll_up(uViewFile *v)
 			v->intHLine -= 1;
 			PrintLine(v, v->intTLine + v->intHLine + 1, v->intHLine + 1);
 			PrintLine(v, v->intTLine + v->intHLine, v->intHLine);
+			DisplayStatus(v);
 		}
 		else
 		{
@@ -352,6 +494,7 @@ static int vw_scroll_page_down(uViewFile *v)
 			v->intHLine = wh - 4;
 			PrintLine(v, v->intTLine + j, j);
 			PrintLine(v, v->intTLine + v->intHLine, v->intHLine);
+			DisplayStatus(v);
 		}
 	}
 	else
@@ -363,7 +506,7 @@ static int vw_scroll_page_down(uViewFile *v)
 		}
 		else
 		{
-			wh -= 1;
+			wh -= 3;
 			v->intTLine = v->intLineCount - wh ;
 			v->intHLine = wh - 1;
 			DisplayFile(v);
@@ -384,6 +527,7 @@ static int vw_scroll_page_up(uViewFile *v)
 		v->intHLine = 4;
 		PrintLine(v, v->intTLine + j, j);
 		PrintLine(v, v->intTLine + v->intHLine, v->intHLine);
+		DisplayStatus(v);
 	}
 	else
 	{
@@ -409,6 +553,7 @@ static int vw_scroll_page_up(uViewFile *v)
 				v->intHLine = 0;
 				PrintLine(v, v->intTLine + j, j);
 				PrintLine(v, v->intTLine + v->intHLine, v->intHLine);
+				DisplayStatus(v);
 			}
 		}
 	}
@@ -416,6 +561,64 @@ static int vw_scroll_page_up(uViewFile *v)
 	return 0;
 }
 
+static int vw_scroll_home(uViewFile *v)
+{
+	if(v->intTLine > 0 || v->intHLine > 0)
+	{
+		v->intTLine = 0;
+		v->intHLine = 0;
+		DisplayFile(v);
+	}
+
+	return 0;
+}
+
+static int vw_scroll_end(uViewFile *v)
+{
+	int wh = v->w->height - 3;
+
+	if(v->intLineCount < wh)
+	{
+		if(v->intHLine < v->intLineCount - 1)
+		{
+			v->intHLine = v->intLineCount - 1;
+			DisplayFile(v);
+		}
+	}
+	else if(!(v->intTLine == v->intLineCount - wh - 1 && v->intHLine == wh-2))
+	{
+		wh -= 3;
+		v->intTLine = v->intLineCount - wh	;
+		v->intHLine = wh - 1;
+		DisplayFile(v);
+	}
+
+	return 0;
+}
+
+static int vw_scroll_right(uViewFile *v)
+{
+	if(v->intColOffset < v->intMaxCol - (v->tabsize *2))//+ v->w->width/2)
+	{
+		v->intColOffset += v->tabsize;
+		DisplayFile(v);
+	}
+
+	return 0;
+}
+
+static int vw_scroll_left(uViewFile *v)
+{
+	if(v->intColOffset > 0)
+	{
+		v->intColOffset -= v->tabsize;
+		if(v->intColOffset < 0)
+			v->intColOffset = 0;
+		DisplayFile(v);
+	}
+
+	return 0;
+}
 
 int ViewFile(uGlobalData *gd, char *fn)
 {
@@ -428,6 +631,7 @@ int ViewFile(uGlobalData *gd, char *fn)
 	v->intViewMode = eView_Text;
 	v->intTLine = 0;
 	v->intHLine = 0;
+	v->tabsize = 8;
 
 	gd->screen->set_style(STYLE_NORMAL);
 	v->w->screen->cls();
@@ -438,7 +642,6 @@ int ViewFile(uGlobalData *gd, char *fn)
 	gd->screen->print(" Welcome to Another Linux File Commander ");
 
 	LoadLines(v);
-
 	DisplayFile(v);
 
 	intFlag = 0;
@@ -468,6 +671,22 @@ int ViewFile(uGlobalData *gd, char *fn)
 
 			case ALFC_KEY_PAGE_UP:
 				vw_scroll_page_up(v);
+				break;
+
+			case ALFC_KEY_END:
+				vw_scroll_end(v);
+				break;
+
+			case ALFC_KEY_HOME:
+				vw_scroll_home(v);
+				break;
+
+			case ALFC_KEY_LEFT:
+				vw_scroll_left(v);
+				break;
+
+			case ALFC_KEY_RIGHT:
+				vw_scroll_right(v);
 				break;
 		}
 	}
