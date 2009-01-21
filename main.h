@@ -51,6 +51,8 @@ enum
 	STYLE_NORMAL,
 	STYLE_HIGHLIGHT,
 
+	STYLE_EDIT_EOL,
+
 	CLR_BLACK,
 	CLR_RED,
 	CLR_GREEN,
@@ -68,6 +70,8 @@ enum
 	CLR_BR_CYAN,
 	CLR_WHITE
 };
+
+#define MAX_STYLES	4
 
 typedef struct udtGlobals uGlobalData;
 typedef struct udtScreenDriver uScreenDriver;
@@ -122,6 +126,7 @@ struct udtScreenDriver
 	uint32_t (*get_keypress)(void);
 
 	void (*print)(const char *s);
+	void (*print_abs)(const char *s);
 
 	void (*set_style)(int style);
 	void (*set_cursor)(int row, int col);
@@ -324,6 +329,7 @@ extern void DrawStatusInfoLine(uGlobalData *gd);
 extern void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath);
 extern void DrawActive(uGlobalData *gd);
 extern void DrawFilter(uGlobalData *gd);
+extern void DrawAll(uGlobalData *gd);
 
 extern uKeyBinding* ScanKey(uGlobalData *gd, int key);
 

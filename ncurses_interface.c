@@ -19,7 +19,7 @@ static void terminate_signal(int a);
 
 static void setcursor(int row, int col);
 
-#define MAX_STYLES	3
+
 struct udtStyles
 {
 	int style;
@@ -30,7 +30,9 @@ struct udtStyles
 	{ 0,0,0},
 	{ STYLE_TITLE, A_NORMAL, A_NORMAL },
 	{ STYLE_NORMAL, A_NORMAL, A_NORMAL },
-	{ STYLE_HIGHLIGHT, A_NORMAL, A_NORMAL }
+	{ STYLE_HIGHLIGHT, A_NORMAL, A_NORMAL },
+	{ STYLE_EDIT_EOL, A_NORMAL, A_NORMAL }
+
 };
 
 // convert internal colours to curses colours
@@ -145,14 +147,31 @@ static void nc_print_string(const char *s)
 
 			default:
 				dr_outchar(*s);
-		 		intCurCol++;
-		 		if(intCurCol>intMaxWidth)
-		 		{
-		 			intCurCol=0;
-		 			intCurRow++;
-		 		}
-		 		break;
+				intCurCol++;
+				if(intCurCol>intMaxWidth)
+				{
+					intCurCol=0;
+					intCurRow++;
+				}
+				break;
 		}
+		s++;
+	}
+	doupdate();
+}
+
+static void nc_print_string_abs(const char *s)
+{
+	while(*s!=0x0)
+	{
+		dr_outchar(*s);
+		intCurCol++;
+		if(intCurCol>intMaxWidth)
+		{
+			intCurCol=0;
+			intCurRow++;
+		}
+
  		s++;
 	}
 	doupdate();
@@ -322,6 +341,8 @@ static int nc_screen_init(uScreenDriver *scr)
 	init_style(STYLE_NORMAL, scr->gd->clr_foreground, scr->gd->clr_background);				// default
 	init_style(STYLE_HIGHLIGHT, scr->gd->clr_hi_foreground, scr->gd->clr_hi_background);	// highlight line
 
+	init_style(STYLE_EDIT_EOL, CLR_BR_GREEN, scr->gd->clr_background);	// highlight line
+
 	scr->set_style(STYLE_NORMAL);
 	scr->cls();
 
@@ -398,18 +419,11 @@ static void nc_set_style(int style)
 	switch(style)
 	{
 		case STYLE_NORMAL:
-			intStyle = STYLE_NORMAL;
-			setcolour(STYLE_NORMAL, styles[style].s_on);
-			break;
-
 		case STYLE_TITLE:
-			intStyle = STYLE_TITLE;
-			setcolour(STYLE_TITLE, styles[style].s_on);
-			break;
-
 		case STYLE_HIGHLIGHT:
-			intStyle = STYLE_TITLE;
-			setcolour(STYLE_HIGHLIGHT, styles[style].s_on);
+		case STYLE_EDIT_EOL:
+			intStyle = style;
+			setcolour(style, styles[style].s_on);
 			break;
 	}
 }
@@ -433,6 +447,7 @@ uScreenDriver screen_ncurses =
 	nc_get_screen_width,
 	nc_get_keypress,
 	nc_print_string,
+	nc_print_string_abs,
 	nc_set_style,
 	setcursor,
 	erase_eol,

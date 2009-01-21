@@ -11,7 +11,7 @@
 
 #include "defaults.h"
 
-static int ParseTimeFormat(uGlobalData *gd, char *tf)
+int ParseTimeFormat(uGlobalData *gd, char *tf)
 {
 	struct udtTimeF
 	{
@@ -32,8 +32,6 @@ static int ParseTimeFormat(uGlobalData *gd, char *tf)
 
 	int i;
 
-	LogInfo("Time Format : %s\n", tf);
-
 	for(i=0; tfx[i].f != NULL; i++)
 	{
 		if( strcmp(tfx[i].f, tf) == 0)
@@ -47,7 +45,7 @@ static int ParseTimeFormat(uGlobalData *gd, char *tf)
 	return -1;
 }
 
-static int ParseDateFormat(uGlobalData *gd, char *tf)
+int ParseDateFormat(uGlobalData *gd, char *tf)
 {
 	struct udtDateF
 	{
@@ -93,7 +91,6 @@ static int ParseDateFormat(uGlobalData *gd, char *tf)
 
 	int i;
 
-	LogInfo("Date Format : %s\n", tf);
 	for(i=0; tfx[i].f != NULL; i++)
 	{
 		if( strcmp(tfx[i].f, tf) == 0)
@@ -385,11 +382,13 @@ void LoadOptions(uGlobalData *gdata)
 	char *fmt;
 
 	gdata->optfilename = ConvertDirectoryName("$HOME/.alfc/options.ini");
-
 	gdata->optfile = INI_load(gdata->optfilename);
+
 	if(gdata->optfile == NULL)
 	{
 		FILE *fp;
+
+		CreateHomeDirectory();
 
 		fp = fopen(gdata->optfilename, "wt");
 		if(fp == NULL)

@@ -231,6 +231,7 @@ end
 -- This is called when this script is booted
 function GlobalLuaFuncs()
 	--debug_msg("Global Lua Functions bootstrapped")
+	BindKey(ALFC_KEY_F01, "View", [[ViewFile(GetHighlightedFilename())]])
 	BindKey(ALFC_KEY_F02, "Same", [[:s]])
 	BindKey(ALFC_KEY_F10, "Quit", [[:q]])
 	BindKey(ALFC_KEY_F12, "Tag", [[TagHighlightedFile()]])

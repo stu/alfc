@@ -7,7 +7,7 @@
 #include "headers.h"
 
 #define GLOBALDATA "uGlobalData"
-static const char *uGlobalData_Key = "uGlobalData";
+static const char *uGlobalData_Key = GLOBALDATA;
 static uGlobalData* GetGlobalData(lua_State *L)
 {
 	uGlobalData *gb;
@@ -992,7 +992,7 @@ int gme_GetHighlightedFilename(lua_State *L)
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
 
-	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line - 1, GetActWindow(gd)->top_line);
+	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
 
 	lua_pushstring(L, de->name);
 	return 1;
@@ -1370,8 +1370,6 @@ int gme_SetHighlightedFile(lua_State *L)
 
 	return 1;
 }
-
-
 
 static int ClearGlob(DList *lst)
 {
@@ -1802,6 +1800,22 @@ int gme_RedrawWindow(lua_State *L)
 	assert(gd != NULL);
 
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+
+	return 0;
+}
+
+
+int gme_ViewFile(lua_State *L)
+{
+	struct lstr name;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(name, 1);
+
+	ViewFile(gd, name.data);
+	DrawAll(gd);
 
 	return 0;
 }

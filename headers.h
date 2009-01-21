@@ -40,6 +40,8 @@
 #include "lua_api.h"
 #include "options.h"
 
+#include "viewer.h"
+
 // screen config
 #include "ncurses_interface.h"
 

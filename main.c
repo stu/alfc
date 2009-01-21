@@ -565,6 +565,50 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 	return lstF;
 }
 
+
+static int HaveColumnDate(uGlobalData *gd)
+{
+	if( strchr(gd->columns, 'd') == NULL)
+		return 0;
+	else
+		return 1;
+}
+
+static int HaveColumnSize(uGlobalData *gd)
+{
+	if( strchr(gd->columns, 's') == NULL)
+		return 0;
+	else
+		return 1;
+}
+
+static int CalcSizeOff(uWindow *w, int end)
+{
+	if(HaveColumnSize(w->gd) == 0)
+		return end;
+
+	if(w->gd->compress_filesize == 0)
+		return end - 10;
+	else
+		return end - 8;
+}
+
+/*
+static int CalcMaxNameLen(uWindow *w, int end)
+{
+	return (end - 5);
+}
+*/
+
+static int CalcDateOff(uWindow *w, int end)
+{
+	if(HaveColumnDate(w->gd) == 0)
+		return end;
+
+	return (end - (w->gd->date_fmt_len + w->gd->time_fmt_len + 2));
+}
+
+
 static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, int size_off, int date_off)
 {
 	char buff[1024];
@@ -591,30 +635,25 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 	else
 		memmove(buff + 1, de->name, strlen(de->name));
 
-	if( S_ISDIR(de->attrs) == 0 )
+	if(HaveColumnSize(win->gd) == 1)
 	{
-		if(win->gd->compress_filesize == 0)
-#if __WORDSIZE == 64
-			sprintf(buff + size_off, "%10lu", de->size);
-#else
-			sprintf(buff + size_off, "%10llu", de->size);
-#endif
-		else
-		{
-			int round;
-			uint64_t xx = de->size;
 
-			if(xx < 1024)
-			{
-				sprintf(buff + size_off, "%6uby", (uint32_t)xx);
-			}
+		if( S_ISDIR(de->attrs) == 0 )
+		{
+			if(win->gd->compress_filesize == 0)
+#if __WORDSIZE == 64
+				sprintf(buff + size_off, "%10lu", de->size);
+#else
+				sprintf(buff + size_off, "%10llu", de->size);
+#endif
 			else
 			{
-				round = ((xx*10)/1024)%10;
-				xx /= 1024;
+				int round;
+				uint64_t xx = de->size;
+
 				if(xx < 1024)
 				{
-					sprintf(buff + size_off, "%4u.%ikb", (uint32_t)xx, round);
+					sprintf(buff + size_off, "%6uby", (uint32_t)xx);
 				}
 				else
 				{
@@ -622,33 +661,43 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 					xx /= 1024;
 					if(xx < 1024)
 					{
-						sprintf(buff + size_off, "%4u.%imb", (uint32_t)xx, round);
+						sprintf(buff + size_off, "%4u.%ikb", (uint32_t)xx, round);
 					}
 					else
 					{
 						round = ((xx*10)/1024)%10;
 						xx /= 1024;
 						if(xx < 1024)
-							sprintf(buff + size_off, "%4u.%igb", (uint32_t)xx, round);
+						{
+							sprintf(buff + size_off, "%4u.%imb", (uint32_t)xx, round);
+						}
 						else
 						{
-							sprintf(buff + size_off, "%4u.%itb", (uint32_t)(xx/(1024*1024)), round);
+							round = ((xx*10)/1024)%10;
+							xx /= 1024;
+							if(xx < 1024)
+								sprintf(buff + size_off, "%4u.%igb", (uint32_t)xx, round);
+							else
+							{
+								sprintf(buff + size_off, "%4u.%itb", (uint32_t)(xx/(1024*1024)), round);
+							}
 						}
 					}
 				}
 			}
+
+			p = strchr(buff + size_off, 0x0);
+			*p = ' ';
 		}
-
-		p = strchr(buff + size_off, 0x0);
-		*p = ' ';
-	}
-	else
-	{
-		sprintf(buff + size_off, " <DIR>");
-		p = strchr(buff + size_off, 0x0);
-		*p = ' ';
+		else
+		{
+			sprintf(buff + size_off, " <DIR>");
+			p = strchr(buff + size_off, 0x0);
+			*p = ' ';
+		}
 	}
 
+	if(HaveColumnDate(win->gd) == 1)
 	{
 		char *dst;
 		char *dsd;
@@ -677,26 +726,6 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 	win->screen->set_style(STYLE_NORMAL);
 }
 
-static int CalcSizeOff(uWindow *w, int end)
-{
-	if(w->gd->compress_filesize == 0)
-		return end - 10;
-	else
-		return end - 8;
-}
-
-/*
-static int CalcMaxNameLen(uWindow *w, int end)
-{
-	return (end - 5);
-}
-*/
-
-static int CalcDateOff(uWindow *w, int end)
-{
-	return (end - (w->gd->date_fmt_len + w->gd->time_fmt_len + 2));
-}
-
 void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 {
 	int depth;
@@ -709,7 +738,9 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	int size_off;
 	int date_off;
 
+	win->screen->set_style(STYLE_TITLE);
 	win->screen->draw_border(win);
+
 
 	win->screen->set_style(STYLE_TITLE);
 
@@ -1116,6 +1147,8 @@ void SwitchPanes(uGlobalData *gd)
 	DrawActive(gd);
 	DrawStatusInfoLine(gd);
 	DrawFilter(gd);
+
+	chdir( GetActDPath(gd));
 }
 
 void SetActivePane(uGlobalData *gd, int p)
@@ -1845,12 +1878,18 @@ void scroll_page_up(uGlobalData *gd)
 	}
 }
 
+
 void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstGlob, DList *lstFull, DList *lstF)
 {
 	DLElement *e, *e2;
 	regex_t preg;
 	uDirEntry *de;
 	int status;
+
+	uDirEntry *deold;
+
+	deold = GetHighlightedFile(lstF, GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
+
 
 	DList *lstNew;
 	DList *lstOld;
@@ -1934,8 +1973,14 @@ void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstGlob, DList *
 	}
 
 	UpdateGlobList(gd, lstGlob, lstFull, lstF);
-
 	SortList(gd, lstF);
+
+	status = GetFileIndex(lstF, deold->name);
+	if( SetHighlightedFile(gd, status) == -1)
+	{
+		GetActWindow(gd)->top_line = 0;
+		GetActWindow(gd)->highlight_line = 0;
+	}
 }
 
 static void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF)
@@ -2117,10 +2162,35 @@ int main(int argc, char *argv[])
 		gdata->screen->gd = gdata;
 		gdata->screen->init(gdata->screen);
 
-		gdata->screen->set_style( STYLE_TITLE);
-		gdata->screen->set_cursor(1, ((gdata->screen->get_screen_width() - (strlen(" Welcome to {A}nother {L}inux {F}ile{M}anager ") - 8))/2));
-		gdata->screen->print(" Welcome to {A}nother {L}inux {F}ile{M}anager ");
+		gdata->screen->set_style(STYLE_NORMAL);
+		gdata->screen->cls();
 
+		gdata->screen->set_style(STYLE_TITLE);
+		gdata->screen->set_cursor(1, ((gdata->screen->get_screen_width() - (strlen(" Welcome to Another Linux File Commander ") - 8))/2));
+		gdata->screen->print(" Welcome to Another Linux File Commander ");
+
+		// screen too small to show nds columns
+		// date coumns waste too much space.
+		// todo - separate the date/time columns??
+		if(gdata->screen->get_screen_width() <= 80)
+		{
+			if(strlen(gdata->columns) > 2)
+			{
+				LogInfo("Screen not wide enough for that many columns\nReducing to just name/size\n");
+				strcpy(gdata->columns, "ns");
+			}
+		}
+		else if(gdata->screen->get_screen_width() > 80 && gdata->screen->get_screen_width() <= 100)
+		{
+			if(strlen(gdata->columns) >= 3)
+			{
+				LogInfo("Reducing date/time format because of screen size\n");
+				strcpy(gdata->columns, "nds");
+
+				ParseTimeFormat(gdata, "HH:mm");
+				ParseDateFormat(gdata, "yymmdd");
+			}
+		}
 
 		LogWrite_SetFlags( LogWrite_GetFlags() & ~LOG_STDERR);
 
@@ -2173,6 +2243,7 @@ int main(int argc, char *argv[])
 			godir(gdata, gdata->right_dir);
 
 			gdata->selected_window = WINDOW_LEFT;
+			chdir( gdata->left_dir );
 			DrawAll(gdata);
 
 			ExecStartupScript(gdata);

@@ -8,7 +8,12 @@ lua_helper.c
 lua_api.h
 alfc
 alfc.exe
+bin2c
+bin2c.exe
 version
 *.log
 defaults.h
+viewer.h
+lua_helper_viewer.c
+alfc.geany
 

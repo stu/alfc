@@ -1,0 +1,15 @@
+#ifndef _VIEWER_H
+#define _VIEWER_H
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+extern int ViewFile(uGlobalData *gd, char *fn);
+
+/* LUA EXT REF */
+/* LUA END EXT REF */
+
+#ifdef __cplusplus
+}
+#endif
+#endif // _VIEWER_H

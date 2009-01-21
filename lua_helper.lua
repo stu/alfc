@@ -60,7 +60,7 @@ function ReadFileIntoTable(sF)
 	return y;
 end
 
-function DeleteExtStuff(sT, idx)
+function DeleteExtStuff(funcs, sT, idx)
 	local k;
 	local v;
 	local skip = 0;
@@ -123,23 +123,32 @@ function ReadFuncs(sFN)
 	return f;
 end
 
+function whip_it_real_good(afile, bfile, cfiles)
+	local funcs = {}
 
-funcs = {};
-files_to_do = { "lua_api"
-				}
+	for k,v in pairs(cfiles) do
+		local fname
 
-for k,v in pairs(files_to_do) do
-	local fname
+		idx = #funcs + 1
 
-	idx = #funcs + 1
+		fname = "./" .. v;
+		funcs[idx] = ReadFuncs(fname .. ".c");
+		print("" .. fname .. "")
+		lgf = DeleteExtStuff(funcs, ReadFileIntoTable(fname .. ".h_inc"), idx);
 
-	fname = "./" .. v;
-	funcs[idx] = ReadFuncs(fname .. ".c");
-	print("" .. fname .. "")
-	lgf = DeleteExtStuff(ReadFileIntoTable(fname .. ".h_inc"), idx);
+		local fd
+		fd = io.output(fname .. ".h");
+		for idx, line in pairs(lgf) do
+			fd:write(line, "\n");
+		end
+		fd:close();
+	end
+
+
+	lgf = DeleteExtStuff(funcs, ReadFileIntoTable(afile), -1);
 
 	local fd
-	fd = io.output(fname .. ".h");
+	fd = io.output(bfile);
 	for idx, line in pairs(lgf) do
 		fd:write(line, "\n");
 	end
@@ -147,12 +156,6 @@ for k,v in pairs(files_to_do) do
 end
 
 
-lgf = DeleteExtStuff(ReadFileIntoTable("./lua_helper.inc"), -1);
-
-local fd
-fd = io.output("./lua_helper.c");
-for idx, line in pairs(lgf) do
-	fd:write(line, "\n");
-end
-fd:close();
+whip_it_real_good("./lua_helper.inc", "./lua_helper.c", {"lua_api"})
+whip_it_real_good("./lua_helper_viewer.inc", "./lua_helper_viewer.c", {"viewer"})
 

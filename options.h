@@ -13,6 +13,9 @@ extern void SaveHistory(uGlobalData *gd);
 extern void RememberDirectories(uGlobalData *gd);
 extern void SaveMRU(uGlobalData *gd, DList *lst, char *opt);
 
+extern int ParseTimeFormat(uGlobalData *gd, char *tf);
+extern int ParseDateFormat(uGlobalData *gd, char *tf);
+
 #ifdef __cplusplus
 }
 #endif
