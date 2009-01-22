@@ -45,8 +45,12 @@ typedef struct udtViewFile
 	int		intMaxCol;
 	int		tabsize;
 	int		nwidth;
+	int		redraw;
 
 	int		crlf_type;
+
+	int		command_length;
+	char	command[128];
 } uViewFile;
 
 
@@ -62,7 +66,7 @@ static uWindow* BuildViewerWindow(uGlobalData *gd)
 	w->offset_row = 0;
 	w->offset_col = 0;
 	w->width = gd->screen->get_screen_width();
-	w->height = gd->screen->get_screen_height();
+	w->height = gd->screen->get_screen_height() - 1;
 
 	return w;
 }
@@ -364,8 +368,10 @@ static int DisplayStatus(uViewFile *v)
 	else
 		sprintf(p, " MIXED CR/LF ");
 
-	//p = strchr(buff, 0x0);
-	//*p++ = ' ';
+	p = strchr(buff, 0x0);
+	//p++ = ' ';
+	sprintf(p, ", tab: %-2i", v->tabsize);
+
 
 	v->w->screen->set_cursor(v->w->offset_row + v->w->height, 1 + v->w->offset_col + v->nwidth + 4);
 	buff[v->w->width - (v->nwidth+2)] = 0;
@@ -373,6 +379,21 @@ static int DisplayStatus(uViewFile *v)
 	v->w->screen->set_style(STYLE_TITLE);
 	v->w->screen->print_abs(buff);
 	v->w->screen->set_style(STYLE_NORMAL);
+
+	return 0;
+}
+
+static int DisplayCLI(uViewFile *v)
+{
+	v->w->screen->set_style(STYLE_TITLE);
+	v->w->screen->set_cursor(v->w->screen->get_screen_height(), 1);
+	v->w->screen->print(" > ");
+
+	v->w->screen->set_style(STYLE_NORMAL);
+	v->w->screen->erase_eol();
+	v->w->screen->set_cursor(v->w->screen->get_screen_height(), 4);
+
+	v->w->screen->print(v->command);
 
 	return 0;
 }
@@ -624,6 +645,7 @@ int ViewFile(uGlobalData *gd, char *fn)
 {
 	uViewFile *v;
 	int intFlag;
+	struct stat stats;
 
 	v = calloc(1, sizeof(uViewFile));
 	v->w = BuildViewerWindow(gd);
@@ -641,53 +663,85 @@ int ViewFile(uGlobalData *gd, char *fn)
 	gd->screen->set_cursor(1, ((gd->screen->get_screen_width() - (strlen(" Welcome to Another Linux File Commander ") - 8))/2));
 	gd->screen->print(" Welcome to Another Linux File Commander ");
 
-	LoadLines(v);
-	DisplayFile(v);
-
-	intFlag = 0;
-	while(intFlag == 0)
+	stat(fn, &stats);
+	if( S_ISDIR(stats.st_mode) == 0)
 	{
-		uint32_t key;
+		LoadLines(v);
+		DisplayFile(v);
 
-		key = gd->screen->get_keypress();
-
-		switch(key)
+		intFlag = 0;
+		while(intFlag == 0)
 		{
-			case ALFC_KEY_F00 + 10:
-				intFlag = 1;
-				break;
+			uint32_t key;
 
-			case ALFC_KEY_DOWN:
-				vw_scroll_down(v);
-				break;
+			DisplayCLI(v);
+			key = gd->screen->get_keypress();
 
-			case ALFC_KEY_UP:
-				vw_scroll_up(v);
-				break;
+			switch(key)
+			{
+				case ALFC_KEY_F00 + 10:
+					intFlag = 1;
+					break;
 
-			case ALFC_KEY_PAGE_DOWN:
-				vw_scroll_page_down(v);
-				break;
+				case ALFC_KEY_DOWN:
+					vw_scroll_down(v);
+					break;
 
-			case ALFC_KEY_PAGE_UP:
-				vw_scroll_page_up(v);
-				break;
+				case ALFC_KEY_UP:
+					vw_scroll_up(v);
+					break;
 
-			case ALFC_KEY_END:
-				vw_scroll_end(v);
-				break;
+				case ALFC_KEY_PAGE_DOWN:
+					vw_scroll_page_down(v);
+					break;
 
-			case ALFC_KEY_HOME:
-				vw_scroll_home(v);
-				break;
+				case ALFC_KEY_PAGE_UP:
+					vw_scroll_page_up(v);
+					break;
 
-			case ALFC_KEY_LEFT:
-				vw_scroll_left(v);
-				break;
+				case ALFC_KEY_END:
+					vw_scroll_end(v);
+					break;
 
-			case ALFC_KEY_RIGHT:
-				vw_scroll_right(v);
-				break;
+				case ALFC_KEY_HOME:
+					vw_scroll_home(v);
+					break;
+
+				case ALFC_KEY_LEFT:
+					vw_scroll_left(v);
+					break;
+
+				case ALFC_KEY_RIGHT:
+					vw_scroll_right(v);
+					break;
+
+				default:
+					// terminal could send ^H (0x08) or ASCII DEL (0x7F)
+					if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
+					{
+						if(key == ALFC_KEY_DEL)
+						{
+							if(v->command_length > 0)
+							{
+								v->command_length -= 1;
+								v->command[v->command_length] = 0;
+							}
+						}
+						else
+						{
+							if(v->command_length < v->w->screen->get_screen_width() - 10)
+							{
+								v->command[v->command_length++] = key;
+								v->command[v->command_length] = 0;
+							}
+						}
+
+						DisplayCLI(v);
+					}
+					else
+						LogInfo("Unknown key 0x%04x\n", key);
+					break;
+			}
 		}
 	}
 
@@ -736,7 +790,25 @@ int gme_SwitchToHexView(lua_State *L)
 	assert(v != NULL);
 
 	v->intViewMode = eView_Hex;
+	v->redraw = 1;
 
 	return 0;
 }
 
+int gme_SetTabSize(lua_State *L)
+{
+	int q;
+	uViewFile *v;
+	v = GetViewerData(L);
+	assert(v != NULL);
+
+	q = luaL_checknumber(L, 1);
+
+	if(q < 2) q = 2;
+	if(q > 16) q = 16;
+
+	v->tabsize = q;
+	v->redraw = 1;
+
+	return 0;
+}
