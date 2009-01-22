@@ -1,3 +1,9 @@
+/****h* ALFC/LuaViewerAPI
+ * FUNCTION
+ *   The C<>Lua interface functions used in the Lua scripts in the viewer window
+ *****
+ */
+
 #include "headers.h"
 /*
 
@@ -23,7 +29,7 @@ static uWindow* BuildViewerWindow(uGlobalData *gd)
 	w->offset_row = 0;
 	w->offset_col = 0;
 	w->width = gd->screen->get_screen_width();
-	w->height = gd->screen->get_screen_height() - 1;
+	w->height = gd->screen->get_screen_height() - 2;
 
 	return w;
 }
@@ -340,17 +346,65 @@ static int DisplayStatus(uViewFile *v)
 	return 0;
 }
 
+
+static void DrawMenuLine(uViewFile *v)
+{
+	char *buff;
+	int m;
+	char *q;
+
+	DLElement *e;
+
+	m = v->w->screen->get_screen_width();
+	buff = malloc(m + 4);
+	memset(buff, ' ', m);
+
+	e = dlist_head(v->lstHotKeys);
+	q = buff;
+
+	while(e != NULL)
+	{
+		uKeyBinding *kb;
+		char *keyname;
+
+		kb = dlist_data(e);
+
+
+		if(e != dlist_head(v->lstHotKeys))
+			q+= 2;
+
+		keyname = ConvertKeyToName(kb->key);
+		sprintf(q, "%s - %s", keyname, kb->sTitle);
+		q = strchr(buff, 0x0);
+		*q = ' ';
+
+		q++;
+
+		e = dlist_next(e);
+	}
+
+
+	buff[m] = 0;
+	v->w->screen->set_style(STYLE_TITLE);
+	v->w->screen->set_cursor(v->w->screen->get_screen_height(), 1);
+	v->w->screen->print(buff);
+
+	free(buff);
+}
+
 static int DisplayCLI(uViewFile *v)
 {
 	v->w->screen->set_style(STYLE_TITLE);
-	v->w->screen->set_cursor(v->w->screen->get_screen_height(), 1);
+	v->w->screen->set_cursor(v->w->screen->get_screen_height()-1, 1);
 	v->w->screen->print(" > ");
 
 	v->w->screen->set_style(STYLE_NORMAL);
 	v->w->screen->erase_eol();
-	v->w->screen->set_cursor(v->w->screen->get_screen_height(), 4);
+	v->w->screen->set_cursor(v->w->screen->get_screen_height()-1, 4);
 
 	v->w->screen->print(v->command);
+
+	DrawMenuLine(v);
 
 	return 0;
 }
@@ -708,7 +762,7 @@ static int ExecuteViewerScript(uViewFile *v, char *sn)
 	return rc;
 }
 
-/****f* Core/exec_internal_command
+/****f* Viewer/exec_internal_command
 * FUNCTION
 *	This is where the command line goes to call its lua function
 * SYNOPSIS
@@ -734,18 +788,78 @@ exec_internal_command(gd, ":q");
 	if(command == NULL)
 		return;
 
+	if(v->_GL == NULL)
+		return;
+
 	CallGlobalFunc(v->_GL, "CLIParse", "s", command);
 }
 /*
 *****
 */
 
+
+static int LoadGlobalViewerScript(uViewFile *v, char *sn)
+{
+	uint32_t maxsize;
+	FILE *fp;
+	int vv;
+	char *cpath;
+
+	if(sn == NULL)
+	{
+		LogError("cant find global viewer script file. Please setup your options.\n");
+		return -1;
+	}
+
+	cpath = ConvertDirectoryName(sn);
+
+	fp = fopen(cpath, "r");
+	if(fp == NULL)
+	{
+		free(cpath);
+		LogError("cant load file : %s\n", cpath);
+		return -1;
+	}
+
+	fseek(fp, 0x0L, SEEK_END);
+	maxsize = ftell(fp);
+	fseek(fp, 0x0L, SEEK_SET);
+
+	v->gcode = malloc(64 + maxsize);
+	if(v->gcode == NULL)
+	{
+		free(cpath);
+		LogError("No memory for script %s\n", cpath);
+		fclose(fp);
+		return -1;
+	}
+
+	fread(v->gcode, 1, maxsize, fp);
+	fclose(fp);
+	free(cpath);
+
+	v->_GL = lua_open();
+	RegisterViewerFuncs(v, v->_GL);
+
+	luaL_loadbuffer(v->_GL, v->gcode, maxsize, "GlobalLuaFuncs");
+
+	// call to register globals
+	vv = lua_pcall(v->_GL, 0, 0, 0);			/* call 'SetGlobals' with 0 arguments and 0 result */
+	if(vv != 0)
+	{
+		LogError("_gl lua error : %s\n", lua_tostring(v->_GL, -1));
+		return -1;
+	}
+
+	return 0;
+}
+
+
 int ViewFile(uGlobalData *gd, char *fn)
 {
 	uViewFile *v;
-	int intFlag;
 	struct stat stats;
-
+	int rc;
 	int old_mode;
 
 	old_mode = gd->mode;
@@ -753,12 +867,20 @@ int ViewFile(uGlobalData *gd, char *fn)
 	gd->mode = eMode_Viewer;
 
 	v = calloc(1, sizeof(uViewFile));
+	v->gd = gd;
 	v->w = BuildViewerWindow(gd);
 	v->fn = ConvertDirectoryName(fn);
 	v->intViewMode = eView_Text;
 	v->intTLine = 0;
 	v->intHLine = 0;
 	v->tabsize = 8;
+
+	v->lstHotKeys = malloc(sizeof(DList));
+	dlist_init(v->lstHotKeys, FreeKey);
+
+	rc = LoadGlobalViewerScript(v, INI_get(v->gd->optfile, "scripts", "viewer_funcs"));
+	if(rc != 0)
+		rc = LoadGlobalViewerScript(v, "$HOME/.alfc/global.lua");
 
 	gd->screen->set_style(STYLE_NORMAL);
 	v->w->screen->cls();
@@ -773,115 +895,149 @@ int ViewFile(uGlobalData *gd, char *fn)
 	{
 		LoadLines(v);
 		DisplayFile(v);
+		DisplayCLI(v);
 
-		intFlag = 0;
-		while(intFlag == 0)
+		v->quit_flag = 0;
+		while(v->quit_flag == 0)
 		{
 			uint32_t key;
 
-			DisplayCLI(v);
 			key = gd->screen->get_keypress();
+			uKeyBinding *kb;
 
-			switch(key)
+			v->w->screen->set_cursor(v->w->screen->get_screen_height()-1, 4 + strlen(v->command));
+
+			kb = ScanKey(v->lstHotKeys, key);
+			if(kb != NULL)
 			{
-				case ALFC_KEY_F00 + 10:
-					intFlag = 1;
-					break;
+				AddHistory(v->gd, kb->sCommand);
 
-				case ALFC_KEY_DOWN:
-					vw_scroll_down(v);
-					break;
+				// exec string via lua...
+				if(kb->sCommand[0] == ':')
+					exec_internal_viewer_command(v, kb->sCommand);
+				else if(kb->sCommand[0] == '@')
+				{
+					char *fn = ConvertDirectoryName(kb->sCommand+1);
+					ExecuteViewerScript(v, fn);
+					free(fn);
+				}
+				else
+				{
+					ExecuteViewerString(v, kb->sCommand);
+				}
+			}
+			else
+			{
+				switch(key)
+				{
+					case ALFC_KEY_DOWN:
+						vw_scroll_down(v);
+						break;
 
-				case ALFC_KEY_UP:
-					vw_scroll_up(v);
-					break;
+					case ALFC_KEY_UP:
+						vw_scroll_up(v);
+						break;
 
-				case ALFC_KEY_PAGE_DOWN:
-					vw_scroll_page_down(v);
-					break;
+					case ALFC_KEY_PAGE_DOWN:
+						vw_scroll_page_down(v);
+						break;
 
-				case ALFC_KEY_PAGE_UP:
-					vw_scroll_page_up(v);
-					break;
+					case ALFC_KEY_PAGE_UP:
+						vw_scroll_page_up(v);
+						break;
 
-				case ALFC_KEY_END:
-					vw_scroll_end(v);
-					break;
+					case ALFC_KEY_END:
+						vw_scroll_end(v);
+						break;
 
-				case ALFC_KEY_HOME:
-					vw_scroll_home(v);
-					break;
+					case ALFC_KEY_HOME:
+						vw_scroll_home(v);
+						break;
 
-				case ALFC_KEY_LEFT:
-					vw_scroll_left(v);
-					break;
+					case ALFC_KEY_LEFT:
+						vw_scroll_left(v);
+						break;
 
-				case ALFC_KEY_RIGHT:
-					vw_scroll_right(v);
-					break;
+					case ALFC_KEY_RIGHT:
+						vw_scroll_right(v);
+						break;
 
-				case ALFC_KEY_ENTER:
-					if(v->command_length > 0)
-					{
-						AddHistory(gd, v->command);
-
-						// exec string via lua...
-						if(v->command[0] == ':')
-							exec_internal_viewer_command(v, v->command);
-						else if(v->command[0] == '@')
+					case ALFC_KEY_ENTER:
+						if(v->command_length > 0)
 						{
-							char *fn = ConvertDirectoryName(v->command+1);
-							ExecuteViewerScript(v, fn);
-							free(fn);
+							AddHistory(gd, v->command);
+
+							// exec string via lua...
+							if(v->command[0] == ':')
+								exec_internal_viewer_command(v, v->command);
+							else if(v->command[0] == '@')
+							{
+								char *fn = ConvertDirectoryName(v->command+1);
+								ExecuteViewerScript(v, fn);
+								free(fn);
+							}
+							else
+							{
+								ExecuteViewerString(v, v->command);
+							}
+
+							v->command_length = 0;
+							v->command[v->command_length] = 0;
+
+							if(v->redraw == 1)
+							{
+								DisplayFile(v);
+							}
+
+							v->redraw = 0;
+							DisplayCLI(v);
+						}
+						break;
+
+					default:
+						// terminal could send ^H (0x08) or ASCII DEL (0x7F)
+						if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
+						{
+							if(key == ALFC_KEY_DEL)
+							{
+								if(v->command_length > 0)
+								{
+									v->command_length -= 1;
+									v->command[v->command_length] = 0;
+								}
+							}
+							else
+							{
+								if(v->command_length < v->w->screen->get_screen_width() - 10)
+								{
+									v->command[v->command_length++] = key;
+									v->command[v->command_length] = 0;
+								}
+							}
+
+							DisplayCLI(v);
 						}
 						else
-						{
-							ExecuteViewerString(v, v->command);
-						}
-
-						v->command_length = 0;
-						v->command[v->command_length] = 0;
-
-						if(v->redraw == 1)
-						{
-							DisplayFile(v);
-						}
-
-						v->redraw = 0;
-						DisplayCLI(v);
-					}
-					break;
-
-				default:
-					// terminal could send ^H (0x08) or ASCII DEL (0x7F)
-					if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
-					{
-						if(key == ALFC_KEY_DEL)
-						{
-							if(v->command_length > 0)
-							{
-								v->command_length -= 1;
-								v->command[v->command_length] = 0;
-							}
-						}
-						else
-						{
-							if(v->command_length < v->w->screen->get_screen_width() - 10)
-							{
-								v->command[v->command_length++] = key;
-								v->command[v->command_length] = 0;
-							}
-						}
-
-						DisplayCLI(v);
-					}
-					else
-						LogInfo("Unknown key 0x%04x\n", key);
-					break;
+							LogInfo("Unknown key 0x%04x\n", key);
+						break;
+				}
 			}
 		}
 	}
 
+	if(v->lstHotKeys != NULL)
+	{
+		dlist_destroy(v->lstHotKeys);
+		free(v->lstHotKeys);
+	}
+
+	if(v->gcode != NULL)
+	{
+		free(v->gcode);
+	}
+
+	if(v->_GL != NULL)
+		lua_close(v->_GL);
 
 	if(v->lines != NULL)
 		free(v->lines);
@@ -922,7 +1078,7 @@ int RegisterViewerData(uViewFile *v, lua_State *l)
 	return 1;
 }
 
-int gme_SwitchToHexView(lua_State *L)
+int gmev_SwitchToHexView(lua_State *L)
 {
 	uViewFile *v;
 	v = GetViewerData(L);
@@ -934,7 +1090,7 @@ int gme_SwitchToHexView(lua_State *L)
 	return 0;
 }
 
-int gme_SetTabSize(lua_State *L)
+int gmev_SetTabSize(lua_State *L)
 {
 	int q;
 	uViewFile *v;
@@ -950,5 +1106,86 @@ int gme_SetTabSize(lua_State *L)
 	v->redraw = 1;
 
 	return 0;
+}
+
+
+/****f* LuaViewerAPI/QuitViewer
+* FUNCTION
+*	Sets the flag to tell the application to quit.
+* SYNOPSIS
+SetQuitAppFlag()
+* INPUTS
+*	o None
+* RESULTS
+*   o None
+* NOTES
+* 	This does not cause the app to quit there and then, it will most likely fiinish whatever
+* 	processing it was doing and once it gets back to the main screen, will quit out.
+* AUTHOR
+*	Stu George
+******
+*/
+int gmev_QuitViewer(lua_State *L)
+{
+	uViewFile *v;
+	v = GetViewerData(L);
+	assert(v != NULL);
+	v->quit_flag = 1;
+
+	return 0;
+}
+
+/****f* LuaViewerAPI/BindKey
+* FUNCTION
+*	Binds a key to a command string which is passed intnernally just as if you had typed
+* 	it on the cli bar (eg: ":q")
+* SYNOPSIS
+error = BindKey(key, title, command)
+* INPUTS
+*	o key (constant) -- (need to insert key listing)
+*	o title (string) -- what shows up on the command bar
+*	o command (string) -- command string the key invokes
+* RESULTS
+*	error (integer):
+*	o 0 -- OK
+*	o -1 -- Key already bound
+* SEE ALSO
+*	SetFilter, AddFilter, SetGlob
+* AUTHOR
+*	Stu George
+******
+*/
+int gmev_BindKey(lua_State *L)
+{
+	struct lstr kstring;
+	struct lstr ktitle;
+	uint32_t key;
+	uViewFile *v;
+	uKeyBinding *kb;
+
+	v = GetViewerData(L);
+	assert(v != NULL);
+
+	key = luaL_checknumber(L, 1);
+	GET_LUA_STRING(ktitle, 2);
+	GET_LUA_STRING(kstring, 3);
+
+	kb = ScanKey(v->lstHotKeys, key);
+	if(kb != NULL)
+	{
+		lua_pushnumber(L, -1);
+		return 1;
+	}
+
+	kb = malloc(sizeof(uKeyBinding));
+
+	kb->key = key;
+	kb->sCommand = strdup(kstring.data);
+	kb->sTitle = strdup(ktitle.data);
+
+	dlist_ins(v->lstHotKeys, kb);
+
+	lua_pushnumber(L, 0);
+	return 1;
 }
 

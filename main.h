@@ -339,7 +339,9 @@ extern void DrawActive(uGlobalData *gd);
 extern void DrawFilter(uGlobalData *gd);
 extern void DrawAll(uGlobalData *gd);
 
-extern uKeyBinding* ScanKey(uGlobalData *gd, int key);
+extern void FreeKey(void *x);
+extern uKeyBinding* ScanKey(DList *lst, int key);
+extern char* ConvertKeyToName(int key);
 
 #ifdef __cplusplus
 }

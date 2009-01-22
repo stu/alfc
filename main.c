@@ -108,7 +108,7 @@ static void FreeGlob(void *x)
 	free(x);
 }
 
-static void FreeKey(void *x)
+void FreeKey(void *x)
 {
 	uKeyBinding *key = x;
 
@@ -1020,7 +1020,7 @@ static void BuildWindowLayout(uGlobalData *gd)
 	gd->win_right->highlight_line = 0;
 }
 
-static char* ConvertKeyToName(int key)
+char* ConvertKeyToName(int key)
 {
 	struct udtKeyNames
 	{
@@ -2055,12 +2055,12 @@ static void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DLis
 }
 
 
-uKeyBinding* ScanKey(uGlobalData *gd, int key)
+uKeyBinding* ScanKey(DList *lst, int key)
 {
 	DLElement *e;
 	uKeyBinding *kb;
 
-	e = dlist_head(gd->lstHotKeys);
+	e = dlist_head(lst);
 	while(e != NULL)
 	{
 		kb = dlist_data(e);
@@ -2258,7 +2258,7 @@ int main(int argc, char *argv[])
 				gdata->screen->set_cursor(gdata->screen->get_screen_height()-1, 4 + strlen(gdata->command));
 				key = gdata->screen->get_keypress();
 
-				kb = ScanKey(gdata, key);
+				kb = ScanKey(gdata->lstHotKeys, key);
 				if(kb != NULL)
 				{
 					AddHistory(gdata, kb->sCommand);

@@ -1,7 +1,7 @@
 -- This func scans game c files (speced in a table) and auto builds
 -- func registrations. it looks for "int gme_" to start a function
 
-function RegFuncs(nT, eF)
+function RegFuncs(nT, eF, msg)
 	local t
 	local idx
 	local line
@@ -12,7 +12,7 @@ function RegFuncs(nT, eF)
 		for idx, line in pairs(tbl) do
 			local q;
 
-			q = "\tlua_register(l, \"" .. line .. "\"," .. string.rep(" ", 30 - #line) .. "gme_" .. line .. ");";
+			q = "\tlua_register(l, \"" .. line .. "\"," .. string.rep(" ", 30 - #line) .. msg .. line .. ");";
 			table.insert(nT, q);
 		end
 
@@ -20,13 +20,14 @@ function RegFuncs(nT, eF)
 
 end
 
-function ExternFuncs(nT, eF, idx)
+function ExternFuncs(nT, eF, msg)
 	local lc = 0
+	local idx, line
 
 	for idx, line in pairs(eF) do
 		local q;
 
-		q = "extern int gme_" .. line .. "(lua_State *L);";
+		q = "extern int " .. msg .. line .. "(lua_State *L);";
 		table.insert(nT, q);
 
 		local ss = line .. string.rep(" ", 40)
@@ -60,38 +61,35 @@ function ReadFileIntoTable(sF)
 	return y;
 end
 
-function DeleteExtStuff(funcs, sT, idx)
+function DeleteExtStuff(funcs, sT, idx, msg)
 	local k;
 	local v;
 	local skip = 0;
 	local nT = {};
 
 	for k,v in pairs(sT) do
-
 		if v == "/* LUA END EXT REF */" then
 			if idx > 0 then
-				ExternFuncs(nT, funcs[idx]);
+				ExternFuncs(nT, funcs[idx], msg);
 			else
-				RegFuncs(nT, funcs);
+				RegFuncs(nT, funcs, msg);
 			end
 			skip = 0;
 		end
 
 		if skip == 0 then
-			--table.remove(sT, k);
 			table.insert(nT, v);
 		end
 
 		if v == "/* LUA EXT REF */" then
 			skip = 1;
 		end
-
 	end
 
 	return nT;
 end
 
-function ReadFuncs(sFN)
+function ReadFuncs(sFN, msg)
 	local line;
 	local idx;
 	local l = {};
@@ -102,7 +100,7 @@ function ReadFuncs(sFN)
 	end
 
 	for idx, line in pairs(l) do
-		local smatch = "int gme_";
+		local smatch = "int " .. msg;
 		local w;
 
 		if string.sub(line, 1, #smatch)  == smatch then
@@ -114,7 +112,7 @@ function ReadFuncs(sFN)
 				table.insert(stab, w);
 			end
 
-			local funcname = string.sub(stab[2], 5);
+			local funcname = string.sub(stab[2], 1+#msg);
 			table.insert(f, funcname);
 
 		end
@@ -123,7 +121,7 @@ function ReadFuncs(sFN)
 	return f;
 end
 
-function whip_it_real_good(afile, bfile, cfiles)
+function whip_it_real_good(afile, bfile, msg, cfiles)
 	local funcs = {}
 
 	for k,v in pairs(cfiles) do
@@ -132,9 +130,10 @@ function whip_it_real_good(afile, bfile, cfiles)
 		idx = #funcs + 1
 
 		fname = "./" .. v;
-		funcs[idx] = ReadFuncs(fname .. ".c");
+		funcs[idx] = ReadFuncs(fname .. ".c", msg);
 		print("" .. fname .. "")
-		lgf = DeleteExtStuff(funcs, ReadFileIntoTable(fname .. ".h_inc"), idx);
+
+		lgf = DeleteExtStuff(funcs, ReadFileIntoTable(fname .. ".h_inc"), idx, msg);
 
 		local fd
 		fd = io.output(fname .. ".h");
@@ -145,7 +144,7 @@ function whip_it_real_good(afile, bfile, cfiles)
 	end
 
 
-	lgf = DeleteExtStuff(funcs, ReadFileIntoTable(afile), -1);
+	lgf = DeleteExtStuff(funcs, ReadFileIntoTable(afile), -1, msg);
 
 	local fd
 	fd = io.output(bfile);
@@ -156,7 +155,7 @@ function whip_it_real_good(afile, bfile, cfiles)
 end
 
 
-whip_it_real_good("./lua_helper.inc", "./lua_helper.c", {"lua_api"})
-whip_it_real_good("./lua_common_api.inc", "./lua_common_api.c", {"lua_common"})
-whip_it_real_good("./lua_helper_viewer.inc", "./lua_helper_viewer.c", {"viewer"})
+whip_it_real_good("./lua_helper.inc", "./lua_helper.c", "gme_", {"lua_api"})
+whip_it_real_good("./lua_common_api.inc", "./lua_common_api.c", "gmec_", {"lua_common"})
+whip_it_real_good("./lua_helper_viewer.inc", "./lua_helper_viewer.c", "gmev_", {"viewer"})
 

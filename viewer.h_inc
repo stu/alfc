@@ -42,11 +42,16 @@ typedef struct udtViewFile
 	int		redraw;
 
 	int		crlf_type;
+	int		quit_flag;
 
 	int		command_length;
 	char	command[128];
 
+	uGlobalData *gd;
+	char 		*gcode;
 	lua_State *_GL;
+
+	DList		*lstHotKeys;
 } uViewFile;
 
 extern int RegisterViewerData(uViewFile *v, lua_State *l);

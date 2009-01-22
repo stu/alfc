@@ -253,7 +253,7 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 -- command line
 -- eg: it turns ":q" into QuitApp etc..
 local function __QuitApp()
-	SetQuitAppFlag(1)
+	QuitViewer()
 end
 
 local function __Tabs(command)
