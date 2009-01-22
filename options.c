@@ -372,8 +372,10 @@ static void CreateIfNotExist(char *fn, uint8_t *data, int len)
 			fclose(fp);
 		}
 	}
+	else
+		fclose(fp);
 
-	fclose(fp);
+	free(x);
 }
 
 void LoadOptions(uGlobalData *gdata)
@@ -386,25 +388,13 @@ void LoadOptions(uGlobalData *gdata)
 
 	if(gdata->optfile == NULL)
 	{
-		FILE *fp;
-
 		CreateHomeDirectory();
-
-		fp = fopen(gdata->optfilename, "wt");
-		if(fp == NULL)
-		{
-			gdata->optfile = INI_EmptyINF();
-			CreateBaselineINIFile(gdata);
-		}
-		else
-		{
-			fwrite(include_options_ini, 1, include_options_ini_SIZE, fp);
-			fclose(fp);
-		}
-
+		CreateIfNotExist("$HOME/.alfc/options.ini", include_options_ini, include_options_ini_SIZE);
 		CreateIfNotExist("$HOME/.alfc/global.lua", include_global_lua, include_global_lua_SIZE);
 		CreateIfNotExist("$HOME/.alfc/startup.lua", include_startup_lua, include_startup_lua_SIZE);
 		CreateIfNotExist("$HOME/.alfc/shutdown.lua", include_shutdown_lua, include_shutdown_lua_SIZE);
+
+		gdata->optfile = INI_load(gdata->optfilename);
 	}
 
 	if(gdata->optfile == NULL)
