@@ -1,13 +1,8 @@
 #include "headers.h"
 
-
 /* register lua funcs */
-void RegisterViewerFuncs(uViewFile *gb, lua_State *l)
+void RegisterCommonFuncs(uGlobalData *gd, lua_State *l)
 {
-	luaL_openlibs(l);
-
-	RegisterViewerData(gb, l);
-
 /* LUA EXT REF */
 /* LUA END EXT REF */
 

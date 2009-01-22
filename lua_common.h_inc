@@ -1,0 +1,13 @@
+#ifndef _LUA_COMMON_H
+#define _LUA_COMMON_H
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+/* LUA EXT REF */
+/* LUA END EXT REF */
+
+#ifdef __cplusplus
+}
+#endif
+#endif // _LUA_COMMON_H

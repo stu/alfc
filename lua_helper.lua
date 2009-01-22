@@ -157,5 +157,6 @@ end
 
 
 whip_it_real_good("./lua_helper.inc", "./lua_helper.c", {"lua_api"})
+whip_it_real_good("./lua_common_api.inc", "./lua_common_api.c", {"lua_common"})
 whip_it_real_good("./lua_helper_viewer.inc", "./lua_helper_viewer.c", {"viewer"})
 

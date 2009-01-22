@@ -95,7 +95,7 @@ static char* GetDateTimeString(char *fmt, time_t t)
 
 static void SortList(uGlobalData *gd, DList *lstFiles)
 {
-	CallGlobalFunc(gd, "SortFileList", "");
+	CallGlobalFunc(gd->_GL, "SortFileList", "");
 }
 
 static void FreeFilter(void *x)
@@ -1184,7 +1184,7 @@ exec_internal_command(gd, ":q");
 	if(command == NULL)
 		return;
 
-	CallGlobalFunc(gd, "CLIParse", "s", command);
+	CallGlobalFunc(gd->_GL, "CLIParse", "s", command);
 }
 /*
 *****
@@ -2149,6 +2149,8 @@ int main(int argc, char *argv[])
 	if(gdata != NULL)
 	{
 		int rc;
+
+		gdata->mode = eMode_Directory;
 
 		gdata->lstHotKeys = malloc(sizeof(DList));
 		dlist_init(gdata->lstHotKeys, FreeKey);

@@ -8,7 +8,7 @@
 
 #define GLOBALDATA "uGlobalData"
 static const char *uGlobalData_Key = GLOBALDATA;
-static uGlobalData* GetGlobalData(lua_State *L)
+uGlobalData* GetGlobalData(lua_State *L)
 {
 	uGlobalData *gb;
 

@@ -29,7 +29,7 @@ int ExecuteString(uGlobalData *gb, char *sn)
 	memmove(outbuff, sn, maxsize + 1);
 
 	l = lua_open();
-	RegisterGameFuncs(gb, l);
+	RegisterLuaFuncs(gb, l);
 
 	v = luaL_loadbuffer(l, (char*)outbuff, maxsize, "BUFFER");
 	if(v != 0)
@@ -58,16 +58,19 @@ int ExecuteScript(uGlobalData *gb, char *sn)
 	char *outbuff;
 	int maxsize;
 	FILE *fp;
+	char *fnx;
 
 	int rc = 0;
 
 	lua_State *l;
 	int v;
 
-	fp = fopen(sn, "r");
+	fnx = ConvertDirectoryName(sn);
+	fp = fopen(fnx, "r");
 	if(fp == NULL)
 	{
 		LogError("cant load file : %s\n", sn);
+		free(fnx);
 		return -1;
 	}
 
@@ -87,7 +90,7 @@ int ExecuteScript(uGlobalData *gb, char *sn)
 	fclose(fp);
 
 	l = lua_open();
-	RegisterGameFuncs(gb, l);
+	RegisterLuaFuncs(gb, l);
 
 	v = luaL_loadbuffer(l, (char*)outbuff, maxsize, sn);
 	if(v != 0)
@@ -108,6 +111,7 @@ int ExecuteScript(uGlobalData *gb, char *sn)
 
 	lua_close(l);
 	free(outbuff);
+	free(fnx);
 
 	return rc;
 }
@@ -154,7 +158,7 @@ int LoadGlobalScript(uGlobalData *gd, char *sn)
 	free(cpath);
 
 	gd->_GL = lua_open();
-	RegisterGameFuncs(gd, gd->_GL);
+	RegisterLuaFuncs(gd, gd->_GL);
 
 	luaL_loadbuffer(gd->_GL, gd->gcode, maxsize, "GlobalLuaFuncs");
 
@@ -175,7 +179,7 @@ int LoadGlobalScript(uGlobalData *gd, char *sn)
 *	This does the acual call, setup must be done via CallGlobalFunc_Setup
 * SYNOPSIS
 */
-int CallGlobalFunc(uGlobalData *gd, char *funcname, char *params, ...)
+int CallGlobalFunc(lua_State *GL, char *funcname, char *params, ...)
 /*
 * INPUTS
 *	o uGlobalData -- standard for all functions
@@ -189,7 +193,7 @@ int CallGlobalFunc(uGlobalData *gd, char *funcname, char *params, ...)
 * AUTHOR
 *	Stu George
 * EXAMPLE
-ret_count = CallGlobalFunc(gd, "MyFunc", "si,s", "StringParam1", 0x1234, &string_result);
+ret_count = CallGlobalFunc(gd->_GL, "MyFunc", "si,s", "StringParam1", 0x1234, &string_result);
 * NOTES
 * 	Strings returned from this function must be free'd.
 * SOURCE
@@ -203,7 +207,7 @@ ret_count = CallGlobalFunc(gd, "MyFunc", "si,s", "StringParam1", 0x1234, &string
 	int flag = 0;
 
 	va_start(args, params);
-	lua_getfield(gd->_GL, LUA_GLOBALSINDEX, funcname);	/* function to be called */
+	lua_getfield(GL, LUA_GLOBALSINDEX, funcname);	/* function to be called */
 
 	p = params;
 	arg_count = 0;
@@ -213,12 +217,12 @@ ret_count = CallGlobalFunc(gd, "MyFunc", "si,s", "StringParam1", 0x1234, &string
 		switch(*p++)
 		{
 			case 's':
-				lua_pushstring(gd->_GL, va_arg(args, char*));
+				lua_pushstring(GL, va_arg(args, char*));
 				arg_count += 1;
 				break;
 
 			case 'i':
-				lua_pushnumber(gd->_GL, va_arg(args, int));
+				lua_pushnumber(GL, va_arg(args, int));
 				arg_count += 1;
 				break;
 
@@ -230,10 +234,10 @@ ret_count = CallGlobalFunc(gd, "MyFunc", "si,s", "StringParam1", 0x1234, &string
 
 	arg_out_count = strlen(p);
 
-	v = lua_pcall(gd->_GL, arg_count, arg_out_count, 0);
+	v = lua_pcall(GL, arg_count, arg_out_count, 0);
 	if(v != 0)
 	{
-		LogError("global lua error : %s", lua_tostring(gd->_GL, -1));
+		LogError("global lua error : %s\n", lua_tostring(GL, -1));
 		va_end(args);
 		return -1;
 	}
@@ -247,19 +251,19 @@ ret_count = CallGlobalFunc(gd, "MyFunc", "si,s", "StringParam1", 0x1234, &string
 		switch(*p++)
 		{
 			case 'i':
-				if(!lua_isnumber(gd->_GL, arg_out_count))
+				if(!lua_isnumber(GL, arg_out_count))
 					LogError("Expected integer.. but was not!");
 				else
-					*va_arg(args, int*) = lua_tointeger(gd->_GL, arg_out_count);
+					*va_arg(args, int*) = lua_tointeger(GL, arg_out_count);
 				break;
 
 			case 's':
-				if(!lua_isstring(gd->_GL, arg_out_count))
+				if(!lua_isstring(GL, arg_out_count))
 					LogError("Expected string.. but was not!");
 				else
 				{
 					const char *x;
-					x = lua_tostring(gd->_GL, arg_out_count);
+					x = lua_tostring(GL, arg_out_count);
 					if(x != NULL)
 						*va_arg(args, char**) = (char*)strdup(x);
 					else
@@ -284,10 +288,11 @@ ret_count = CallGlobalFunc(gd, "MyFunc", "si,s", "StringParam1", 0x1234, &string
 */
 
 /* register lua funcs */
-void RegisterGameFuncs(uGlobalData *gb, lua_State *l)
+void RegisterLuaFuncs(uGlobalData *gb, lua_State *l)
 {
 	luaL_openlibs(l);
 
+	RegisterCommonFuncs(gb, l);
 	RegisterGlobalData(gb, l);
 
 /* LUA EXT REF */
@@ -335,13 +340,9 @@ void RegisterGameFuncs(uGlobalData *gb, lua_State *l)
 	lua_pushnumber(l, ALFC_KEY_F10); lua_setglobal(l, "ALFC_KEY_F10");
 	lua_pushnumber(l, ALFC_KEY_F11); lua_setglobal(l, "ALFC_KEY_F11");
 	lua_pushnumber(l, ALFC_KEY_F12); lua_setglobal(l, "ALFC_KEY_F12");
-	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
-	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
-	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
-	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
-	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
-	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
 
+	lua_pushnumber(l, eMode_Directory); lua_setglobal(l, "eMode_Directory");
+	lua_pushnumber(l, eMode_Viewer); lua_setglobal(l, "eMode_Viewer");
 
 	lua_settop(l, 0);
 }

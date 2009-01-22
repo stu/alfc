@@ -3,7 +3,53 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
+enum eLineFeed
+{
+	eLine_Unix = 1,		// LF - 0x0A
+	eLine_DOS = 2,			// CRLF - 0x0D, 0x0A
+	eLine_MAC = 4,			// CR - 0x0D
+	eLine_Mixed = 8
+};
 
+enum eViewMode
+{
+	eView_Text = 1,
+	eView_Hex
+};
+
+typedef struct udtLine
+{
+	uint32_t	length;
+	uint8_t		*off;
+} uLine;
+
+typedef struct udtViewFile
+{
+	char	*fn;
+	uWindow *w;
+
+	uint8_t	*data;
+	int		intLineCount;
+	uLine	*lines;
+
+	int		intViewMode;
+	int		intTLine;
+	int		intHLine;
+	int		intColOffset;
+	int		intMaxCol;
+	int		tabsize;
+	int		nwidth;
+	int		redraw;
+
+	int		crlf_type;
+
+	int		command_length;
+	char	command[128];
+
+	lua_State *_GL;
+} uViewFile;
+
+extern int RegisterViewerData(uViewFile *v, lua_State *l);
 extern int ViewFile(uGlobalData *gd, char *fn);
 
 /* LUA EXT REF */

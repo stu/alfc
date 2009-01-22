@@ -42,6 +42,8 @@
 
 #include "viewer.h"
 #include "lua_helper_viewer.h"
+#include "lua_common.h"
+#include "lua_common_api.h"
 
 // screen config
 #include "ncurses_interface.h"

@@ -122,7 +122,10 @@ CC = "gcc"
 CFLAGSX = "-O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH " + PORT_CFLAGS
 LIBS = ""
 
-alfc = %w( version.o main.o memwatch.o lua_helper.o lua_api.o options.o ncurses_interface.o viewer.o) + PORTABILITY_OBJS
+alfc = %w( version.o main.o memwatch.o lua_helper.o
+			lua_api.o options.o ncurses_interface.o viewer.o
+			lua_helper_viewer.o lua_common.o lua_common_api.o
+			) + PORTABILITY_OBJS
 
 gen Action do
 	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s
@@ -184,7 +187,16 @@ end
 
 desc "Cleanup..."
 task :clean do
-	x = Dir["*.{bak,o,obj}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["lua_helper.c"] + Dir["doc"]
+	x = Dir["*.{bak,o,obj}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"]
+
+	x += Dir["lua_helper.c"]
+	x += Dir["lua_common_api.c"]
+	x += Dir["lua_helper_viewer.c"]
+
+	x += Dir["lua_common.h"]
+	x += Dir["lua_api.h"]
+	x += Dir["viewer.h"]
+
 	if x.length > 0
 		sys.rm_rf x
 	end

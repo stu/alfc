@@ -4,8 +4,6 @@ doc
 *.bak
 *.o
 .rant.meta
-lua_helper.c
-lua_api.h
 alfc
 alfc.exe
 bin2c
@@ -14,6 +12,10 @@ version
 *.log
 defaults.h
 viewer.h
+lua_api.h
+lua_common.h
 lua_helper_viewer.c
+lua_common_api.c
+lua_helper.c
 alfc.geany
 

@@ -76,6 +76,12 @@ enum
 typedef struct udtGlobals uGlobalData;
 typedef struct udtScreenDriver uScreenDriver;
 
+enum eMode
+{
+	eMode_Directory = 1,
+	eMode_Viewer,
+};
+
 typedef struct udtKeyBinding
 {
 	uint32_t	key;
@@ -214,6 +220,8 @@ struct udtGlobals
 	char		time_fmt[16];
 
 	char		columns[16];
+
+	int			mode;
 };
 
 enum

@@ -9,49 +9,6 @@
 
  */
 
-enum eLineFeed
-{
-	eLine_Unix = 1,		// LF - 0x0A
-	eLine_DOS = 2,			// CRLF - 0x0D, 0x0A
-	eLine_MAC = 4,			// CR - 0x0D
-	eLine_Mixed = 8
-};
-
-enum eViewMode
-{
-	eView_Text = 1,
-	eView_Hex
-};
-
-typedef struct udtLine
-{
-	uint32_t	length;
-	uint8_t		*off;
-} uLine;
-
-typedef struct udtViewFile
-{
-	char	*fn;
-	uWindow *w;
-
-	uint8_t	*data;
-	int		intLineCount;
-	uLine	*lines;
-
-	int		intViewMode;
-	int		intTLine;
-	int		intHLine;
-	int		intColOffset;
-	int		intMaxCol;
-	int		tabsize;
-	int		nwidth;
-	int		redraw;
-
-	int		crlf_type;
-
-	int		command_length;
-	char	command[128];
-} uViewFile;
 
 
 static uWindow* BuildViewerWindow(uGlobalData *gd)
@@ -641,11 +598,159 @@ static int vw_scroll_left(uViewFile *v)
 	return 0;
 }
 
+
+static int ExecuteViewerString(uViewFile *v, char *sn)
+{
+	char *outbuff;
+	int maxsize;
+	int rc = 0;
+
+	lua_State *l;
+	int vv;
+
+	maxsize = strlen(sn);
+	outbuff = malloc(64 + maxsize);
+
+	if(outbuff == NULL)
+	{
+		LogError("No memory for buffer\n");
+		return -1;
+	}
+
+	memmove(outbuff, sn, maxsize + 1);
+
+	l = lua_open();
+	RegisterViewerFuncs(v, l);
+
+	vv = luaL_loadbuffer(l, (char*)outbuff, maxsize, "BUFFER");
+	if(vv != 0)
+	{
+		LogError("cant load buffer, error %s\nBuffer = %s\n", lua_tostring(l, -1), sn);
+		rc = -1;
+	}
+	else
+	{
+		vv = lua_pcall(l, 0, 0, 0);
+		if(vv != 0)
+		{
+			LogError("lua error : %s\n", lua_tostring(l, -1));
+			rc = -1;
+		}
+	}
+
+	lua_close(l);
+	free(outbuff);
+
+	return rc;
+}
+
+static int ExecuteViewerScript(uViewFile *v, char *sn)
+{
+	char *outbuff;
+	int maxsize;
+	FILE *fp;
+	char *fnx;
+
+	int rc = 0;
+
+	lua_State *l;
+	int vv;
+
+	fnx = ConvertDirectoryName(sn);
+
+	fp = fopen(fnx, "r");
+	if(fp == NULL)
+	{
+		LogError("cant load file : %s\n", fnx);
+		free(fnx);
+		return -1;
+	}
+
+	fseek(fp, 0x0L, SEEK_END);
+	maxsize = ftell(fp);
+	fseek(fp, 0x0L, SEEK_SET);
+
+	outbuff = malloc(64 + maxsize);
+	if(outbuff == NULL)
+	{
+		LogError("No memory for script %s\n", sn);
+		fclose(fp);
+		free(fnx);
+		return -1;
+	}
+
+	fread(outbuff, 1, maxsize, fp);
+	fclose(fp);
+
+	l = lua_open();
+	RegisterViewerFuncs(v, l);
+
+	vv = luaL_loadbuffer(l, (char*)outbuff, maxsize, sn);
+	if(vv != 0)
+	{
+		LogError("cant load file : %s, error %s\n", sn, lua_tostring(l, -1));
+		rc = -1;
+	}
+	else
+	{
+		vv = lua_pcall(l, 0, 0, 0);
+		if(vv != 0)
+		{
+			LogError("script : %s\n", sn);
+			LogError("lua error : %s\n", lua_tostring(l, -1));
+			rc = -1;
+		}
+	}
+
+	lua_close(l);
+	free(outbuff);
+
+	return rc;
+}
+
+/****f* Core/exec_internal_command
+* FUNCTION
+*	This is where the command line goes to call its lua function
+* SYNOPSIS
+*/
+static void exec_internal_viewer_command(uViewFile *v, char *command)
+/*
+* INPUTS
+*	o uGlobalData -- standard for all functions
+*	o command -- entire string to pass to the CLI global lua function
+* RETURNS
+*   o None. We dont care or want to know what comes back.
+* AUTHOR
+*	Stu George
+* EXAMPLE
+exec_internal_command(gd, ":q");
+* SEE ALSO
+* 	Lua_Helper/CallGlobalFunc
+* NOTES
+* 	Strings returned from this function must be free'd.
+* SOURCE
+*/
+{
+	if(command == NULL)
+		return;
+
+	CallGlobalFunc(v->_GL, "CLIParse", "s", command);
+}
+/*
+*****
+*/
+
 int ViewFile(uGlobalData *gd, char *fn)
 {
 	uViewFile *v;
 	int intFlag;
 	struct stat stats;
+
+	int old_mode;
+
+	old_mode = gd->mode;
+
+	gd->mode = eMode_Viewer;
 
 	v = calloc(1, sizeof(uViewFile));
 	v->w = BuildViewerWindow(gd);
@@ -715,6 +820,38 @@ int ViewFile(uGlobalData *gd, char *fn)
 					vw_scroll_right(v);
 					break;
 
+				case ALFC_KEY_ENTER:
+					if(v->command_length > 0)
+					{
+						AddHistory(gd, v->command);
+
+						// exec string via lua...
+						if(v->command[0] == ':')
+							exec_internal_viewer_command(v, v->command);
+						else if(v->command[0] == '@')
+						{
+							char *fn = ConvertDirectoryName(v->command+1);
+							ExecuteViewerScript(v, fn);
+							free(fn);
+						}
+						else
+						{
+							ExecuteViewerString(v, v->command);
+						}
+
+						v->command_length = 0;
+						v->command[v->command_length] = 0;
+
+						if(v->redraw == 1)
+						{
+							DisplayFile(v);
+						}
+
+						v->redraw = 0;
+						DisplayCLI(v);
+					}
+					break;
+
 				default:
 					// terminal could send ^H (0x08) or ASCII DEL (0x7F)
 					if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
@@ -757,6 +894,8 @@ int ViewFile(uGlobalData *gd, char *fn)
 
 	free(v->w);
 	free(v);
+
+	gd->mode = old_mode;
 	return 0;
 }
 
@@ -812,3 +951,4 @@ int gme_SetTabSize(lua_State *L)
 
 	return 0;
 }
+
