@@ -146,7 +146,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 		for k,v in ipairs(lstF) do
 			if v.tagged == 1 then
-				lstT[k]=v
+				lstT[1+#lstT]=v
 				QueueFileOp(eOp_Copy, v.name)
 			end
 		end
@@ -155,7 +155,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		debug_msg("Copying " .. #lstT .. " tagged files")
 		lstF, err = DoFileOps()
 		for k, v in ipairs(lstF) do
-			debug_msg("Copy on " .. v.source_path .. "\\" .. v.source_filename .. " to " .. v.dest_path .. "\\" .. v.dest_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
+			debug_msg("Copy on " .. v.source_path .. "/" .. v.source_filename .. " to " .. v.dest_path .. "/" .. v.dest_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
 		end
 	end
 
@@ -169,7 +169,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 		for k,v in ipairs(lstF) do
 			if v.tagged == 1 then
-				lstT[k]=v
+				lstT[1+#lstT]=v
 				QueueFileOp(eOp_Move, v.name)
 			end
 		end
@@ -178,7 +178,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		debug_msg("Move " .. #lstT .. " tagged files")
 		lstF, err = DoFileOps()
 		for k, v in ipairs(lstF) do
-			debug_msg("Move on " .. v.source_path .. "\\" .. v.source_filename .. " to " .. v.dest_path .. "\\" .. v.dest_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
+			debug_msg("Move on " .. v.source_path .. "/" .. v.source_filename .. " to " .. v.dest_path .. "/" .. v.dest_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
 		end
 	end
 
@@ -193,7 +193,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 		for k,v in ipairs(lstF) do
 			if v.tagged == 1 then
-				lstT[k]=v
+				lstT[1+#lstT]=v
 				QueueFileOp(eOp_Delete, v.name)
 			end
 		end
@@ -203,7 +203,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		lstF, err = DoFileOps()
 
 		for k, v in ipairs(lstF) do
-			debug_msg("delete on " .. v.source_path .. "\\" .. v.source_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
+			debug_msg("delete on " .. v.source_path .. "/" .. v.source_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
 		end
 
 	end

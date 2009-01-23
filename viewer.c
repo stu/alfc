@@ -15,6 +15,15 @@
 
  */
 
+static void FreeBufferLines(uViewFile *v)
+{
+	int i;
+
+	for(i=0; i < v->intLineCount; i++)
+	{
+		free(v->lines[i].off);
+	}
+}
 
 
 static uWindow* BuildViewerWindow(uGlobalData *gd)
@@ -76,6 +85,8 @@ static DList* LoadLines(uViewFile *v, GetLine LoadLine)
 					}
 				}
 			}
+			else
+				free(l[c].off);
 		}
 	}
 	else
@@ -1036,8 +1047,13 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 	if(v->_GL != NULL)
 		lua_close(v->_GL);
 
-	if(v->lines != NULL)
+	if(v->lines != NULL && LoadLine == NULL)
 		free(v->lines);
+	else
+	{
+		FreeBufferLines(v);
+		free(v->lines);
+	}
 
 	if(v->data != NULL)
 		free(v->data);

@@ -125,6 +125,7 @@ LIBS = ""
 alfc = %w( version.o main.o memwatch.o lua_helper.o
 			lua_api.o options.o ncurses_interface.o viewer.o
 			lua_helper_viewer.o lua_common.o lua_common_api.o
+			operations.o
 			) + PORTABILITY_OBJS
 
 gen Action do

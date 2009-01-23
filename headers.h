@@ -13,8 +13,10 @@
 #include <regex.h>
 #include <ctype.h>
 #include <time.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
 
 // default for mingw..
 #ifdef __MINGW_H
@@ -43,6 +45,7 @@
 #include "lua_helper_viewer.h"
 #include "lua_common.h"
 #include "lua_common_api.h"
+#include "operations.h"
 
 // screen config
 #include "ncurses_interface.h"

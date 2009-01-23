@@ -8,6 +8,8 @@
 
 #define GLOBALDATA "uGlobalData"
 static const char *uGlobalData_Key = GLOBALDATA;
+
+
 uGlobalData* GetGlobalData(lua_State *L)
 {
 	uGlobalData *gb;
@@ -1698,6 +1700,75 @@ int gme_QueueFileOp(lua_State *L)
 	return 1;
 }
 
+
+static int ViewOperationsLog(uGlobalData *gd, int intLine, uint8_t *buff, int len)
+{
+	DLElement *e;
+	int j;
+	uFileOperation *op;
+
+	if(gd->lstFileOps == NULL)
+		return -1;
+
+	e = dlist_head(gd->lstFileOps);
+
+	if(e == NULL)
+		return -1;
+	j = intLine;
+	while( j > 0 && e != NULL)
+	{
+		e = dlist_next(e);
+		j -= 1;
+	}
+
+	if(j > 0 || e == NULL)
+		return -1;
+
+	op = dlist_data(e);
+	if(op == NULL || op->result_msg == NULL)
+	{
+		buff[0] = 0;
+	}
+	else if(op->result_code == 0)
+	{
+		switch(op->type)
+		{
+			case eOp_Delete:
+				snprintf((char*)buff, len, "Delete OK on %s", op->op.udtDelete.filename);
+				break;
+
+			case eOp_Copy:
+				snprintf((char*)buff, len, "Copy OK on %s to %s", op->op.udtCopy.source_filename, op->op.udtCopy.dest_path);
+				break;
+
+			case eOp_Move:
+				snprintf((char*)buff, len, "Move OK on %s to %s", op->op.udtCopy.source_filename, op->op.udtCopy.dest_path);
+				break;
+		}
+	}
+	else
+	{
+		switch(op->type)
+		{
+			case eOp_Delete:
+				snprintf((char*)buff, len, "Delete Failed on %s : %s", op->op.udtDelete.filename, op->result_msg);
+				break;
+
+			case eOp_Copy:
+				snprintf((char*)buff, len, "Copy Failed on %s : %s", op->op.udtCopy.source_filename, op->result_msg);
+				break;
+
+			case eOp_Move:
+				snprintf((char*)buff, len, "Move Failed on %s : %s", op->op.udtMove.source_filename, op->result_msg);
+				break;
+		}
+	}
+
+	return 0;
+}
+
+
+
 int gme_DoFileOps(lua_State *L)
 {
 	int err_count = 0;
@@ -1709,7 +1780,6 @@ int gme_DoFileOps(lua_State *L)
 	int i = 1;
 
 	e = dlist_head(gd->lstFileOps);
-
 
 	lua_newtable(L);
 
@@ -1723,14 +1793,20 @@ int gme_DoFileOps(lua_State *L)
 		switch(x->type)
 		{
 			case eOp_Delete:
+				DeleteFile(gd, x);
 				break;
 
 			case eOp_Copy:
+				CopyFile(gd, x);
 				break;
 
 			case eOp_Move:
+				MoveFile(gd, x);
 				break;
 		}
+
+		if(x->result_code != 0)
+			err_count += 1;
 
 		lua_pushnumber(L, i++);
 		lua_newtable(L);
@@ -1801,13 +1877,30 @@ int gme_DoFileOps(lua_State *L)
 
 		lua_settable(L, -3);
 
-		err_count += x->result_code;
-
-		dlist_remove(gd->lstFileOps, e, (void*)&x);
-		FreeFileOp(x);
-
-		e = dlist_head(gd->lstFileOps);
+		e = dlist_next(e);
 	}
+
+	if(err_count > 0)
+	{
+		ViewFile(gd, "OPERATIONS LOG", &ViewOperationsLog);
+		DrawAll(gd);
+	}
+
+	if(gd->selected_window == WINDOW_LEFT)
+	{
+		godir(gd, gd->left_dir);
+		gd->selected_window = WINDOW_RIGHT;
+		godir(gd, gd->right_dir);
+		gd->selected_window = WINDOW_LEFT;
+	}
+	else
+	{
+		godir(gd, gd->right_dir);
+		gd->selected_window = WINDOW_LEFT;
+		godir(gd, gd->left_dir);
+		gd->selected_window = WINDOW_RIGHT;
+	}
+
 
 	lua_pushnumber(L, err_count);
 	return 2;

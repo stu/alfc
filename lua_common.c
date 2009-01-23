@@ -188,12 +188,12 @@ static int ReadHistoryLine(uGlobalData *gd, int intLine, uint8_t *buff, int len)
 	int j;
 	char *x;
 
-	e = dlist_head(gd->lstLogHistory);
+	e = dlist_tail(gd->lstLogHistory);
 
 	j = intLine;
 	while( j > 0 && e != NULL)
 	{
-		e = dlist_next(e);
+		e = dlist_prev(e);
 		j -= 1;
 	}
 
