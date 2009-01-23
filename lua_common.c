@@ -181,3 +181,48 @@ int gmec_ConvertDirectoryName(lua_State *L)
 
 	return 1;
 }
+
+static int ReadHistoryLine(uGlobalData *gd, int intLine, uint8_t *buff, int len)
+{
+	DLElement *e;
+	int j;
+	char *x;
+
+	e = dlist_head(gd->lstLogHistory);
+
+	j = intLine;
+	while( j > 0 && e != NULL)
+	{
+		e = dlist_next(e);
+		j -= 1;
+	}
+
+	if(j > 0 || e == NULL)
+		return -1;
+
+	x = dlist_data(e);
+	if( strlen(x) >= len)
+	{
+		memmove(buff, x, len);
+		buff[len-1] = 0;
+	}
+	else
+	{
+		memmove(buff, x, strlen(x) + 1);
+	}
+
+	return 0;
+}
+
+int gmec_ViewHistory(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	ViewFile(gd, "HISTORY BUFFER", &ReadHistoryLine);
+	DrawAll(gd);
+
+	return 0;
+}
+

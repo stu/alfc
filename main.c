@@ -11,6 +11,49 @@ static void FreeListEntry(void *x);
 
 int intFlag = 0;
 
+void FreeFileOp(void *x)
+{
+	uFileOperation *f = x;
+
+	switch(f->type)
+	{
+		case eOp_Delete:
+			if(f->op.udtDelete.filename != NULL)
+				free(f->op.udtDelete.filename);
+			if(f->op.udtDelete.path != NULL)
+				free(f->op.udtDelete.path);
+			break;
+
+		case eOp_Move:
+			if(f->op.udtMove.source_filename != NULL)
+				free(f->op.udtMove.source_filename);
+			if(f->op.udtMove.source_path != NULL)
+				free(f->op.udtMove.source_path);
+			if(f->op.udtMove.dest_filename != NULL)
+				free(f->op.udtMove.dest_filename);
+			if(f->op.udtMove.dest_path != NULL)
+				free(f->op.udtMove.dest_path);
+			break;
+
+		case eOp_Copy:
+			if(f->op.udtCopy.source_filename != NULL)
+				free(f->op.udtCopy.source_filename);
+			if(f->op.udtCopy.source_path != NULL)
+				free(f->op.udtCopy.source_path);
+			if(f->op.udtCopy.dest_filename != NULL)
+				free(f->op.udtCopy.dest_filename);
+			if(f->op.udtCopy.dest_path != NULL)
+				free(f->op.udtCopy.dest_path);
+			break;
+	}
+
+	if(f->result_msg != NULL)
+		free(f->result_msg);
+
+	memset(f, 0x0, sizeof(uFileOperation));
+	free(f);
+}
+
 static char* GetDateTimeString(char *fmt, time_t t)
 {
 	char *x;
@@ -240,6 +283,33 @@ uWindow* GetInActWindow(uGlobalData *gd)
 	else
 		return gd->win_left;
 }
+
+uint32_t fletcher32(uint16_t *data, size_t len)
+{
+	uint32_t sum1 = 0xffff, sum2 = 0xffff;
+
+	while(len)
+	{
+		unsigned tlen = len > 360 ? 360 : len;
+		len -= tlen;
+
+		do
+		{
+			sum1 += *data++;
+			sum2 += sum1;
+		} while (--tlen);
+
+		sum1 = (sum1 & 0xffff) + (sum1 >> 16);
+		sum2 = (sum2 & 0xffff) + (sum2 >> 16);
+	}
+
+	/* Second reduction step to reduce sums to 16 bits */
+	sum1 = (sum1 & 0xffff) + (sum1 >> 16);
+	sum2 = (sum2 & 0xffff) + (sum2 >> 16);
+
+	return sum2 << 16 | sum1;
+}
+
 
 void SetQuitAppFlag(int flag)
 {
@@ -1022,6 +1092,8 @@ static void BuildWindowLayout(uGlobalData *gd)
 
 char* ConvertKeyToName(int key)
 {
+	char *s;
+
 	struct udtKeyNames
 	{
 		int key;
@@ -1055,22 +1127,42 @@ char* ConvertKeyToName(int key)
 		{ ALFC_KEY_F10, "F10" },
 		{ ALFC_KEY_F11, "F11" },
 		{ ALFC_KEY_F12, "F12" },
+
 		{ -1, NULL }
 	};
 
 	int j;
 
+
+	if(key >= ALFC_KEY_ALT + 'A' && key <= ALFC_KEY_ALT + 'Z')
+	{
+		s = malloc(32);
+		sprintf(s, "ALT-%c", key - (ALFC_KEY_ALT));
+		return s;
+	}
+
+	if(key >= ALFC_KEY_CTRL + 'A' && key <= ALFC_KEY_CTRL + 'Z')
+	{
+		s = malloc(32);
+		sprintf(s, "CTRL-%c", key - (ALFC_KEY_CTRL));
+		return s;
+	}
+
 	for(j=0; keys[j].key != -1; j++)
 	{
 		if(keys[j].key == key)
-			return keys[j].name;
+		{
+			s = malloc(32);
+			sprintf(s, "%s", keys[j].name);
+
+			return s;
+		}
 	}
 
-
-	return "(UNKNOWN KEY)";
+	return strdup("(?)");
 }
 
-static void DrawMenuLine(uGlobalData *gd)
+void DrawMenuLine(uScreenDriver *screen, DList *lstHotKeys)
 {
 	char *buff;
 	int m;
@@ -1078,11 +1170,11 @@ static void DrawMenuLine(uGlobalData *gd)
 
 	DLElement *e;
 
-	m = gd->screen->get_screen_width();
+	m = screen->get_screen_width();
 	buff = malloc(m + 4);
 	memset(buff, ' ', m);
 
-	e = dlist_head(gd->lstHotKeys);
+	e = dlist_head(lstHotKeys);
 	q = buff;
 
 	while(e != NULL)
@@ -1092,25 +1184,30 @@ static void DrawMenuLine(uGlobalData *gd)
 
 		kb = dlist_data(e);
 
-
-		if(e != dlist_head(gd->lstHotKeys))
-			q+= 2;
+		if(e != dlist_head(lstHotKeys))
+			q+= 1;
 
 		keyname = ConvertKeyToName(kb->key);
-		sprintf(q, "%s - %s", keyname, kb->sTitle);
-		q = strchr(buff, 0x0);
-		*q = ' ';
+		if((q-buff) + strlen(keyname) + strlen(kb->sTitle) + 3 < screen->get_screen_width())
+		{
+			sprintf(q, "%s - %s", keyname, kb->sTitle);
+			q = strchr(buff, 0x0);
+			*q++ = ' ';
 
-		q++;
+			if(q - buff < screen->get_screen_width())
+				*q++ = '|';
+		}
+
+		free(keyname);
 
 		e = dlist_next(e);
 	}
 
 
 	buff[m] = 0;
-	gd->screen->set_style(STYLE_TITLE);
-	gd->screen->set_cursor(gd->screen->get_screen_height(), 1);
-	gd->screen->print(buff);
+	screen->set_style(STYLE_TITLE);
+	screen->set_cursor(screen->get_screen_height(), 1);
+	screen->print(buff);
 
 	free(buff);
 }
@@ -2092,10 +2189,40 @@ void DrawAll(uGlobalData *gd)
 	}
 	gd->screen->set_style(STYLE_NORMAL);
 
-	DrawMenuLine(gd);
+	DrawMenuLine(gd->screen, gd->lstHotKeys);
 	DrawCLI(gd);
 	DrawFilter(gd);
 	DrawStatusInfoLine(gd);
+}
+
+static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start_right)
+{
+	gdata->selected_window = WINDOW_LEFT;
+	gdata->lstFilterLeft = malloc(sizeof(DList));
+	dlist_init(gdata->lstFilterLeft, FreeFilter);
+	gdata->lstGlobLeft = malloc(sizeof(DList));
+	dlist_init(gdata->lstGlobLeft, FreeGlob);
+	free(gdata->left_dir);
+	if(start_left != NULL)
+		gdata->left_dir = strdup(start_left);
+	else
+		gdata->left_dir = GetOptionDir(gdata, "startup_left", gdata->lstMRULeft);
+	godir(gdata, gdata->left_dir);
+
+	gdata->selected_window = WINDOW_RIGHT;
+	gdata->lstFilterRight = malloc(sizeof(DList));
+	dlist_init(gdata->lstFilterRight, FreeFilter);
+	gdata->lstGlobRight = malloc(sizeof(DList));
+	dlist_init(gdata->lstGlobRight, FreeGlob);
+	free(gdata->right_dir);
+	if(start_right != NULL)
+		gdata->right_dir = strdup(start_right);
+	else
+		gdata->right_dir = GetOptionDir(gdata, "startup_right", gdata->lstMRURight);
+	godir(gdata, gdata->right_dir);
+
+	gdata->selected_window = WINDOW_LEFT;
+	chdir( gdata->left_dir );
 }
 
 int main(int argc, char *argv[])
@@ -2106,7 +2233,10 @@ int main(int argc, char *argv[])
 	char *start_right = NULL;
 	int i;
 
-	fprintf(stderr, "ALFC v%i.%02i/%04i\n\n", VersionMajor(), VersionMinor(), VersionBuild());
+	int start_mode = eMode_Directory;
+	char *view_file = NULL;
+
+	fprintf(stderr, "ALFC : Another Linux File Commander - Stu George\nVersion v%i.%02i/%04i - Built on " __DATE__ "; " __TIME__ "\n", VersionMajor(), VersionMinor(), VersionBuild());
 
 	for(i=1; i<argc; i++)
 	{
@@ -2122,10 +2252,11 @@ int main(int argc, char *argv[])
 			}
 			else if(strcmp("-?", argv[i]) == 0 || strcmp("--help", argv[i]) == 0)
 			{
-				fprintf(stderr, "-v\tVersion\n"
-								"-?\tHelp\n"
-								"-l DIR\tStart left side in directory DIR\n"
-								"-r DIR\tStart right side in directory DIR\n"
+				fprintf(stderr, "\n-v\t\tVersion\n"
+								"-?\t\tHelp\n"
+								"-l DIR\t\tStart left side in directory DIR\n"
+								"-r DIR\t\tStart right side in directory DIR\n"
+								"-view FILE\tStart in viewer mode\n"
 								);
 				exit(0);
 			}
@@ -2133,6 +2264,12 @@ int main(int argc, char *argv[])
 			{
 				//fprintf(stderr, "ALFC v%i.%02i/%04i\n", VersionMajor(), VersionMinor(), VersionBuild());
 				exit(0);
+			}
+			else if(strcmp("-view", argv[i]) == 0 && 1+i < argc)
+			{
+				view_file = argv[1+i];
+				i+=1;
+				start_mode = eMode_Viewer;
 			}
 		}
 	}
@@ -2150,7 +2287,10 @@ int main(int argc, char *argv[])
 	{
 		int rc;
 
-		gdata->mode = eMode_Directory;
+		gdata->mode = start_mode;
+
+		gdata->lstFileOps = malloc(sizeof(DList));
+		dlist_init(gdata->lstFileOps, FreeFileOp);
 
 		gdata->lstHotKeys = malloc(sizeof(DList));
 		dlist_init(gdata->lstHotKeys, FreeKey);
@@ -2220,35 +2360,19 @@ int main(int argc, char *argv[])
 
 			BuildWindowLayout(gdata);
 
-			gdata->selected_window = WINDOW_LEFT;
-			gdata->lstFilterLeft = malloc(sizeof(DList));
-			dlist_init(gdata->lstFilterLeft, FreeFilter);
-			gdata->lstGlobLeft = malloc(sizeof(DList));
-			dlist_init(gdata->lstGlobLeft, FreeGlob);
-			free(gdata->left_dir);
-			if(start_left != NULL)
-				gdata->left_dir = strdup(start_left);
-			else
-				gdata->left_dir = GetOptionDir(gdata, "startup_left", gdata->lstMRULeft);
-			godir(gdata, gdata->left_dir);
-
-			gdata->selected_window = WINDOW_RIGHT;
-			gdata->lstFilterRight = malloc(sizeof(DList));
-			dlist_init(gdata->lstFilterRight, FreeFilter);
-			gdata->lstGlobRight = malloc(sizeof(DList));
-			dlist_init(gdata->lstGlobRight, FreeGlob);
-			free(gdata->right_dir);
-			if(start_right != NULL)
-				gdata->right_dir = strdup(start_right);
-			else
-				gdata->right_dir = GetOptionDir(gdata, "startup_right", gdata->lstMRURight);
-			godir(gdata, gdata->right_dir);
-
-			gdata->selected_window = WINDOW_LEFT;
-			chdir( gdata->left_dir );
-			DrawAll(gdata);
+			if(gdata->mode == eMode_Directory)
+			{
+				StartDirectoryMode(gdata, start_left, start_right);
+				DrawAll(gdata);
+			}
 
 			ExecStartupScript(gdata);
+
+			if(gdata->mode == eMode_Viewer && view_file != NULL)
+			{
+				ViewFile(gdata, view_file, NULL);
+				intFlag = 1;
+			}
 
 			while(intFlag == 0)
 			{
@@ -2392,6 +2516,12 @@ int main(int argc, char *argv[])
 			// cleanup...
 			SaveHistory(gdata);
 			SaveOptions(gdata);
+		}
+
+		if(gdata->lstFileOps != NULL)
+		{
+			dlist_destroy(gdata->lstFileOps);
+			free(gdata->lstFileOps);
 		}
 
 		if(gdata->lstHotKeys != NULL)

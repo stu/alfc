@@ -27,7 +27,6 @@
 #endif
 #include "memwatch.h"
 
-
 #include "stucore/dlist.h"
 #include "stucore/ini.h"
 #include "stucore/logwrite.h"

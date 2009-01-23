@@ -34,7 +34,7 @@ static uWindow* BuildViewerWindow(uGlobalData *gd)
 	return w;
 }
 
-static DList* LoadLines(uViewFile *v)
+static DList* LoadLines(uViewFile *v, GetLine LoadLine)
 {
 	FILE *fp;
 	int mx = 128;
@@ -45,97 +45,133 @@ static DList* LoadLines(uViewFile *v)
 	c = 0;
 	l = calloc(mx, sizeof(uLine));
 
-	fp = fopen(v->fn, "rb");
-	if(fp != NULL)
+	if(LoadLine != NULL)
 	{
-		// PORTABILITY: 32bit file size??
-		uint32_t len;
-		uint32_t off;
+		int rc = 0;
 
-		fseek(fp, 0x0L, SEEK_END);
-		len = ftell(fp);
-		fseek(fp, 0x0L, SEEK_SET);
-
-		v->data = calloc(1, 64 + len);
-		if(v->data != NULL)
+		while(rc == 0)
 		{
-			fread(v->data, 1, len, fp);
-		}
-		else
-			len = 0;
+			l[c].off = calloc(1, 2048);
 
-		fclose(fp);
+			rc = LoadLine(v->gd, c, l[c].off, 2048);
 
-		off = 0;
-		while(off < len)
-		{
-			int count;
-
-			// create line
-			l[c].off = v->data + off;
-			count = 0;
-
-			while(off < len)
+			if(rc == 0)
 			{
-				if( v->data[off] == 0x0D && v->data[off + 1] == 0x0A)
-				{
-					if(v->crlf_type == eLine_DOS || v->crlf_type == 0)
-						v->crlf_type |= eLine_DOS;
-					else
-						v->crlf_type |= eLine_Mixed;
+				l[c].length = strlen((char*)l[c].off) + 4;
+				l[c].off = realloc(l[c].off, l[c].length);
 
-					off += 2;
-					count += 2;
-					break;
-				}
-				else if( v->data[off] == 0x0D || v->data[off] == 0x0A)
+				if(v->intMaxCol < l[c].length)
+					v->intMaxCol = l[c].length;
+
+				c += 1;
+
+				if(c == mx)
 				{
-					if(v->data[off] == 0x0D)
+					mx = mx * 2;
+					l = realloc(l, mx * sizeof(uLine));
+					if(l == NULL)
 					{
-						if(v->crlf_type == eLine_MAC || v->crlf_type == 0)
-							v->crlf_type |= eLine_MAC;
-						else
-							v->crlf_type |= eLine_Mixed;
+						c = 0;
+						break;
 					}
-					else
-					{
-						if(v->crlf_type == eLine_Unix || v->crlf_type == 0)
-							v->crlf_type |= eLine_Unix;
-						else
-							v->crlf_type |= eLine_Mixed;
-					}
-
-					off += 1;
-					count += 1;
-					break;
-				}
-				else
-				{
-					off += 1;
-					count += 1;
-				}
-			}
-
-			l[c].length = count;
-			if(v->intMaxCol < count)
-				v->intMaxCol = count;
-
-			c += 1;
-
-			if(c == mx)
-			{
-				mx = mx * 2;
-				l = realloc(l, mx * sizeof(uLine));
-				if(l == NULL)
-				{
-					c = 0;
-					break;
 				}
 			}
 		}
 	}
 	else
-		LogInfo("Failed to open %s\n", v->fn);
+	{
+		fp = fopen(v->fn, "rb");
+		if(fp != NULL)
+		{
+			// PORTABILITY: 32bit file size??
+			uint32_t len;
+			uint32_t off;
+
+			fseek(fp, 0x0L, SEEK_END);
+			len = ftell(fp);
+			fseek(fp, 0x0L, SEEK_SET);
+
+			v->data = calloc(1, 64 + len);
+			if(v->data != NULL)
+			{
+				fread(v->data, 1, len, fp);
+			}
+			else
+				len = 0;
+
+			fclose(fp);
+
+			off = 0;
+			while(off < len)
+			{
+				int count;
+
+				// create line
+				l[c].off = v->data + off;
+				count = 0;
+
+				while(off < len)
+				{
+					if( v->data[off] == 0x0D && v->data[off + 1] == 0x0A)
+					{
+						if(v->crlf_type == eLine_DOS || v->crlf_type == 0)
+							v->crlf_type |= eLine_DOS;
+						else
+							v->crlf_type |= eLine_Mixed;
+
+						off += 2;
+						count += 2;
+						break;
+					}
+					else if( v->data[off] == 0x0D || v->data[off] == 0x0A)
+					{
+						if(v->data[off] == 0x0D)
+						{
+							if(v->crlf_type == eLine_MAC || v->crlf_type == 0)
+								v->crlf_type |= eLine_MAC;
+							else
+								v->crlf_type |= eLine_Mixed;
+						}
+						else
+						{
+							if(v->crlf_type == eLine_Unix || v->crlf_type == 0)
+								v->crlf_type |= eLine_Unix;
+							else
+								v->crlf_type |= eLine_Mixed;
+						}
+
+						off += 1;
+						count += 1;
+						break;
+					}
+					else
+					{
+						off += 1;
+						count += 1;
+					}
+				}
+
+				l[c].length = count;
+				if(v->intMaxCol < count)
+					v->intMaxCol = count;
+
+				c += 1;
+
+				if(c == mx)
+				{
+					mx = mx * 2;
+					l = realloc(l, mx * sizeof(uLine));
+					if(l == NULL)
+					{
+						c = 0;
+						break;
+					}
+				}
+			}
+		}
+		else
+			LogInfo("Failed to open %s\n", v->fn);
+	}
 
 	v->intLineCount = c;
 	v->lines = l;
@@ -323,13 +359,13 @@ static int DisplayStatus(uViewFile *v)
 	*p++ = ' ';
 
 	if(v->crlf_type == eLine_DOS)
-		sprintf(p," DOS CRLF ");
+		sprintf(p,"DOS CRLF");
 	else if(v->crlf_type == eLine_MAC)
-		sprintf(p, " OLD MAC ");
+		sprintf(p, "OLD MAC");
 	else if(v->crlf_type == eLine_Unix)
-		sprintf(p, " UNIX ");
+		sprintf(p, "UNIX");
 	else
-		sprintf(p, " MIXED CR/LF ");
+		sprintf(p, "MIXED CR/LF");
 
 	p = strchr(buff, 0x0);
 	//p++ = ' ';
@@ -347,51 +383,6 @@ static int DisplayStatus(uViewFile *v)
 }
 
 
-static void DrawMenuLine(uViewFile *v)
-{
-	char *buff;
-	int m;
-	char *q;
-
-	DLElement *e;
-
-	m = v->w->screen->get_screen_width();
-	buff = malloc(m + 4);
-	memset(buff, ' ', m);
-
-	e = dlist_head(v->lstHotKeys);
-	q = buff;
-
-	while(e != NULL)
-	{
-		uKeyBinding *kb;
-		char *keyname;
-
-		kb = dlist_data(e);
-
-
-		if(e != dlist_head(v->lstHotKeys))
-			q+= 2;
-
-		keyname = ConvertKeyToName(kb->key);
-		sprintf(q, "%s - %s", keyname, kb->sTitle);
-		q = strchr(buff, 0x0);
-		*q = ' ';
-
-		q++;
-
-		e = dlist_next(e);
-	}
-
-
-	buff[m] = 0;
-	v->w->screen->set_style(STYLE_TITLE);
-	v->w->screen->set_cursor(v->w->screen->get_screen_height(), 1);
-	v->w->screen->print(buff);
-
-	free(buff);
-}
-
 static int DisplayCLI(uViewFile *v)
 {
 	v->w->screen->set_style(STYLE_TITLE);
@@ -404,7 +395,7 @@ static int DisplayCLI(uViewFile *v)
 
 	v->w->screen->print(v->command);
 
-	DrawMenuLine(v);
+	DrawMenuLine(v->w->screen, v->lstHotKeys);
 
 	return 0;
 }
@@ -807,7 +798,7 @@ static int LoadGlobalViewerScript(uViewFile *v, char *sn)
 
 	if(sn == NULL)
 	{
-		LogError("cant find global viewer script file. Please setup your options.\n");
+		LogError("cant find global viewer script file. Will attempt to use globals.\n");
 		return -1;
 	}
 
@@ -855,15 +846,19 @@ static int LoadGlobalViewerScript(uViewFile *v, char *sn)
 }
 
 
-int ViewFile(uGlobalData *gd, char *fn)
+int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 {
 	uViewFile *v;
 	struct stat stats;
 	int rc;
 	int old_mode;
 
-	old_mode = gd->mode;
+	if(LoadLine != NULL)
+		AddHistory(gd, "View buffer : %s\n", fn);
+	else
+		AddHistory(gd, "View file : %s\n", fn);
 
+	old_mode = gd->mode;
 	gd->mode = eMode_Viewer;
 
 	v = calloc(1, sizeof(uViewFile));
@@ -890,10 +885,12 @@ int ViewFile(uGlobalData *gd, char *fn)
 	gd->screen->set_cursor(1, ((gd->screen->get_screen_width() - (strlen(" Welcome to Another Linux File Commander ") - 8))/2));
 	gd->screen->print(" Welcome to Another Linux File Commander ");
 
-	stat(fn, &stats);
-	if( S_ISDIR(stats.st_mode) == 0)
+	if(LoadLine != NULL)
+		stat(fn, &stats);
+
+	if(LoadLine != NULL || S_ISDIR(stats.st_mode) == 0)
 	{
-		LoadLines(v);
+		LoadLines(v, LoadLine);
 		DisplayFile(v);
 		DisplayCLI(v);
 

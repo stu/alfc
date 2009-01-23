@@ -54,8 +54,11 @@ typedef struct udtViewFile
 	DList		*lstHotKeys;
 } uViewFile;
 
+
+typedef int (*GetLine)(uGlobalData *gd, int intLine, uint8_t *buff, int len);
+
 extern int RegisterViewerData(uViewFile *v, lua_State *l);
-extern int ViewFile(uGlobalData *gd, char *fn);
+extern int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine);
 
 /* LUA EXT REF */
 /* LUA END EXT REF */

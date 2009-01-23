@@ -81,6 +81,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		local best_match
 
 		local cmd
+		local k, v
 
 		fl = GetFileList()
 
@@ -135,10 +136,87 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		RedrawWindow()
 	end
 
+	local function __TagCopy(command)
+		local lstF
+		local lstT
+		local k,v
+
+		lstF = GetFileList()
+		lstT = {}
+
+		for k,v in ipairs(lstF) do
+			if v.tagged == 1 then
+				lstT[k]=v
+				QueueFileOp(eOp_Copy, v.name)
+			end
+		end
+		lstF = nil
+
+		debug_msg("Copying " .. #lstT .. " tagged files")
+		lstF, err = DoFileOps()
+		for k, v in ipairs(lstF) do
+			debug_msg("Copy on " .. v.source_path .. "\\" .. v.source_filename .. " to " .. v.dest_path .. "\\" .. v.dest_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
+		end
+	end
+
+	local function __TagMove(command)
+		local lstF
+		local lstT
+		local k,v
+
+		lstF = GetFileList()
+		lstT = {}
+
+		for k,v in ipairs(lstF) do
+			if v.tagged == 1 then
+				lstT[k]=v
+				QueueFileOp(eOp_Move, v.name)
+			end
+		end
+		lstF = nil
+
+		debug_msg("Move " .. #lstT .. " tagged files")
+		lstF, err = DoFileOps()
+		for k, v in ipairs(lstF) do
+			debug_msg("Move on " .. v.source_path .. "\\" .. v.source_filename .. " to " .. v.dest_path .. "\\" .. v.dest_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
+		end
+	end
+
+	local function __TagDelete(command)
+		local lstF
+		local lstT
+		local err
+		local k, v
+
+		lstF = GetFileList()
+		lstT = {}
+
+		for k,v in ipairs(lstF) do
+			if v.tagged == 1 then
+				lstT[k]=v
+				QueueFileOp(eOp_Delete, v.name)
+			end
+		end
+		lstF = nil
+
+		debug_msg("Deleting " .. #lstT .. " tagged files")
+		lstF, err = DoFileOps()
+
+		for k, v in ipairs(lstF) do
+			debug_msg("delete on " .. v.source_path .. "\\" .. v.source_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
+		end
+
+	end
+
+
+
 	function CLIParse(command)
 		local cmd
 		local cmds
+		local finished
+		local k, v
 
+		finished = false
 		cmd = command .. " "
 
 		cmds = {}
@@ -152,12 +230,29 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		cmds[":c "] = __ChangeDir
 		cmds[":so "] = __SortOrder
 
+		cmds[":td "] = __TagDelete
+		cmds[":tc "] = __TagCopy
+		cmds[":tm "] = __TagMove
+
+		cmds[":tf "] = __TagFilter
+		cmds[":tg "] = __TagGlob
+		cmds[":ta "] = __TagAll
+		cmds[":tu "] = __TagUnTagAll
+		cmds[":t! "] = __TagFlip
+
+
 		for k,v in pairs(cmds) do
 			if string.sub(cmd, 1, #k) == k then
 				v(string.sub(cmd, #k, #cmd))
+				finished = true
 				break
 			end
 		end
+
+		if finished == false then
+			debug_msg("Unknown command : " .. cmd)
+		end
+
 	end
 
 	-- This function takes our list of files and sorts them
@@ -234,7 +329,17 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	--debug_msg("Global Lua Functions bootstrapped")
 	BindKey(ALFC_KEY_F01, "View", [[ViewFile(GetHighlightedFilename())]])
 	BindKey(ALFC_KEY_F02, "Same", [[:s]])
+	BindKey(ALFC_KEY_F03, "History", [[ViewHistory()]])
 	BindKey(ALFC_KEY_F10, "Quit", [[:q]])
+
+	BindKey(ALFC_KEY_ALT + string.byte("C"), "Copy Tagged", [[:tc]])
+	BindKey(ALFC_KEY_ALT + string.byte("D"), "Del Tagged", [[:td]])
+	BindKey(ALFC_KEY_ALT + string.byte("M"), "Move Tagged", [[:tm]])
+
+	-- Dont bind to common keys you will need to use in the command line bar..
+	--BindKey(ALFC_KEY_DEL, "Del", [[QueueFileOp(eOp_Delete, GetHighlightedFilename()); DoFileOps();]])
+	--BindKey(ALFC_KEY_INS, "Copy", [[QueueFileOp(eOp_Copy, GetHighlightedFilename()); DoFileOps();]])
+
 
 	-- Sometimes I want a quick view for code files
 	BindKey(ALFC_KEY_F11, "CodeOnly", [[SetFilter("\\.[ch]$"); SetGlob("*.lua")]])
@@ -285,5 +390,3 @@ end
 	_G["VIEWER_BOOTSTRAP"] = 1
 
 end -- _G["BOOTSTRAP"]
-
-

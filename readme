@@ -9,3 +9,20 @@ To build the documentation you need Robodoc installed
 
 See help.txt for usage and information;
 
+
+Design Spec
+- Dont over-engineer
+- Not supposed to supplant vi/emacs/foo as programming editor
+- Is supposed to sustain normal admin tasks (file management, config file editing, etc).
+
+
+Hints
+- Whats the easiest way to delete all *.o files?
+:tg *.o
+:td
+
+- What about everything BUT my .c and .h files?
+:tf \.[ch]$
+:t!
+:td
+

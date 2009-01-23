@@ -206,6 +206,9 @@ ret_count = CallGlobalFunc(gd->_GL, "MyFunc", "si,s", "StringParam1", 0x1234, &s
 	char *p;
 	int flag = 0;
 
+	if(GL == NULL)
+		return -1;
+
 	va_start(args, params);
 	lua_getfield(GL, LUA_GLOBALSINDEX, funcname);	/* function to be called */
 

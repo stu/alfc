@@ -1643,9 +1643,173 @@ int gme_ViewFile(lua_State *L)
 
 	GET_LUA_STRING(name, 1);
 
-	ViewFile(gd, name.data);
+	ViewFile(gd, name.data, NULL);
 	DrawAll(gd);
 
 	return 0;
+}
+
+int gme_QueueFileOp(lua_State *L)
+{
+	int op;
+	struct lstr fname;
+	uFileOperation *x;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	op = luaL_checknumber(L, 1);
+	GET_LUA_STRING(fname, 2);
+
+	if(op == eOp_Copy || op == eOp_Move || op == eOp_Delete)
+	{
+		x = calloc(1, sizeof(uFileOperation));
+
+		x->type = op;
+		switch(x->type)
+		{
+			case eOp_Delete:
+				x->op.udtDelete.path = strdup(GetActDPath(gd));
+				x->op.udtDelete.filename = strdup(fname.data);
+				break;
+
+			case eOp_Copy:
+				x->op.udtCopy.source_path = strdup(GetActDPath(gd));
+				x->op.udtCopy.source_filename = strdup(fname.data);
+				x->op.udtCopy.dest_filename = strdup(fname.data);
+				x->op.udtCopy.dest_path = strdup(GetInActDPath(gd));
+				break;
+
+			case eOp_Move:
+				x->op.udtMove.source_path = strdup(GetActDPath(gd));
+				x->op.udtMove.source_filename = strdup(fname.data);
+				x->op.udtMove.dest_filename = strdup(fname.data);
+				x->op.udtMove.dest_path = strdup(GetInActDPath(gd));
+				break;
+
+		}
+
+		dlist_ins(gd->lstFileOps, x);
+		lua_pushnumber(L, 0);
+	}
+	else
+		lua_pushnumber(L, -1);
+
+	return 1;
+}
+
+int gme_DoFileOps(lua_State *L)
+{
+	int err_count = 0;
+	DLElement *e;
+	uFileOperation *x;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	int i = 1;
+
+	e = dlist_head(gd->lstFileOps);
+
+
+	lua_newtable(L);
+
+	while(e != NULL)
+	{
+		x = dlist_data(e);
+
+		x->result_code = 0;
+		x->result_msg = NULL;
+
+		switch(x->type)
+		{
+			case eOp_Delete:
+				break;
+
+			case eOp_Copy:
+				break;
+
+			case eOp_Move:
+				break;
+		}
+
+		lua_pushnumber(L, i++);
+		lua_newtable(L);
+
+		lua_pushstring(L, "operation");
+		lua_pushnumber(L, x->type);
+		lua_settable(L, -3);
+
+		lua_pushstring(L, "result_code");
+		lua_pushnumber(L, x->result_code);
+		lua_settable(L, -3);
+
+		lua_pushstring(L, "result_msg");
+		if(x->result_msg == NULL)
+			lua_pushstring(L, "");
+		else
+			lua_pushstring(L, x->result_msg);
+		lua_settable(L, -3);
+
+		switch(x->type)
+		{
+			case eOp_Delete:
+				lua_pushstring(L, "source_filename");
+				lua_pushstring(L, x->op.udtDelete.filename);
+				lua_settable(L, -3);
+
+				lua_pushstring(L, "source_path");
+				lua_pushstring(L, x->op.udtDelete.path);
+				lua_settable(L, -3);
+				break;
+
+			case eOp_Copy:
+				lua_pushstring(L, "source_filename");
+				lua_pushstring(L, x->op.udtCopy.source_filename);
+				lua_settable(L, -3);
+
+				lua_pushstring(L, "source_path");
+				lua_pushstring(L, x->op.udtCopy.source_path);
+				lua_settable(L, -3);
+
+				lua_pushstring(L, "dest_filename");
+				lua_pushstring(L, x->op.udtCopy.dest_filename);
+				lua_settable(L, -3);
+
+				lua_pushstring(L, "dest_path");
+				lua_pushstring(L, x->op.udtCopy.dest_path);
+				lua_settable(L, -3);
+				break;
+
+			case eOp_Move:
+				lua_pushstring(L, "source_filename");
+				lua_pushstring(L, x->op.udtMove.source_filename);
+				lua_settable(L, -3);
+
+				lua_pushstring(L, "source_path");
+				lua_pushstring(L, x->op.udtMove.source_path);
+				lua_settable(L, -3);
+
+				lua_pushstring(L, "dest_filename");
+				lua_pushstring(L, x->op.udtMove.dest_filename);
+				lua_settable(L, -3);
+
+				lua_pushstring(L, "dest_path");
+				lua_pushstring(L, x->op.udtMove.dest_path);
+				lua_settable(L, -3);
+				break;
+		}
+
+		lua_settable(L, -3);
+
+		err_count += x->result_code;
+
+		dlist_remove(gd->lstFileOps, e, (void*)&x);
+		FreeFileOp(x);
+
+		e = dlist_head(gd->lstFileOps);
+	}
+
+	lua_pushnumber(L, err_count);
+	return 2;
 }
 

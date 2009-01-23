@@ -149,10 +149,10 @@ end
 
 task :tools => %w(bin2c.o) do |t|
 	sys "#{CC} -o bin2c  #{t.prerequisites.join(' ')} "
-	sys "bin2c global.lua include_global_lua > defaults.h"
-	sys "bin2c startup.lua include_startup_lua >> defaults.h"
-	sys "bin2c shutdown.lua include_shutdown_lua >> defaults.h"
-	sys "bin2c options.ini include_options_ini >> defaults.h"
+	sys "./bin2c global.lua include_global_lua > defaults.h"
+	sys "./bin2c startup.lua include_startup_lua >> defaults.h"
+	sys "./bin2c shutdown.lua include_shutdown_lua >> defaults.h"
+	sys "./bin2c options.ini include_options_ini >> defaults.h"
 end
 
 task :appx => alfc do |t|

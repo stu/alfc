@@ -76,6 +76,50 @@ enum
 typedef struct udtGlobals uGlobalData;
 typedef struct udtScreenDriver uScreenDriver;
 
+
+enum eFileOpType
+{
+	eOp_Delete = 1,
+	eOp_Copy,
+	eOp_Move
+};
+
+typedef struct udtFileOperation
+{
+	int		type;
+
+	int		result_code;
+	char	*result_msg;
+
+	union
+	{
+		struct
+		{
+			char	*filename;
+			char	*path;
+		} udtDelete;
+
+		struct
+		{
+			char *source_filename;
+			char *source_path;
+
+			char *dest_filename;
+			char *dest_path;
+		} udtMove;
+
+		struct
+		{
+			char *source_filename;
+			char *source_path;
+
+			char *dest_filename;
+			char *dest_path;
+		} udtCopy;
+	} op;
+} uFileOperation;
+
+
 enum eMode
 {
 	eMode_Directory = 1,
@@ -222,6 +266,8 @@ struct udtGlobals
 	char		columns[16];
 
 	int			mode;
+
+	DList		*lstFileOps;
 };
 
 enum
@@ -235,47 +281,6 @@ enum
 	e_title_foreground,
 	e_title_background
 };
-
-
-enum eFileOpType
-{
-	eOp_Delete = 1,
-	eOp_Copy,
-	eOp_Move
-};
-
-struct udtFileOperation
-{
-	int type;
-
-	union
-	{
-		struct
-		{
-			char	*filename;
-			char	*path;
-		} udtDelete;
-
-		struct
-		{
-			char *source_filename;
-			char *source_path;
-
-			char *dest_filename;
-			char *dest_path;
-		} udtMove;
-
-		struct
-		{
-			char *source_filename;
-			char *source_path;
-
-			char *dest_filename;
-			char *dest_path;
-		} udtCopy;
-	} op;
-};
-
 
 enum eTimeSigils
 {
@@ -339,9 +344,12 @@ extern void DrawActive(uGlobalData *gd);
 extern void DrawFilter(uGlobalData *gd);
 extern void DrawAll(uGlobalData *gd);
 
+extern void FreeFileOp(void *x);
 extern void FreeKey(void *x);
 extern uKeyBinding* ScanKey(DList *lst, int key);
 extern char* ConvertKeyToName(int key);
+extern void DrawMenuLine(uScreenDriver *screen, DList *lstHotKeys);
+extern uint32_t fletcher32(uint16_t *data, size_t len);
 
 #ifdef __cplusplus
 }
