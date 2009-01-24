@@ -1671,8 +1671,8 @@ int gme_QueueFileOp(lua_State *L)
 		switch(x->type)
 		{
 			case eOp_Delete:
-				x->op.udtDelete.path = strdup(GetActDPath(gd));
-				x->op.udtDelete.filename = strdup(fname.data);
+				x->op.udtDelete.source_path = strdup(GetActDPath(gd));
+				x->op.udtDelete.source_filename = strdup(fname.data);
 				break;
 
 			case eOp_Copy:
@@ -1701,7 +1701,7 @@ int gme_QueueFileOp(lua_State *L)
 }
 
 
-static int ViewOperationsLog(uGlobalData *gd, int intLine, uint8_t *buff, int len)
+ int ViewOperationsLog(uGlobalData *gd, int intLine, uint8_t *buff, int len)
 {
 	DLElement *e;
 	int j;
@@ -1734,7 +1734,7 @@ static int ViewOperationsLog(uGlobalData *gd, int intLine, uint8_t *buff, int le
 		switch(op->type)
 		{
 			case eOp_Delete:
-				snprintf((char*)buff, len, "Delete OK on %s", op->op.udtDelete.filename);
+				snprintf((char*)buff, len, "Delete OK on %s", op->op.udtDelete.source_filename);
 				break;
 
 			case eOp_Copy:
@@ -1751,7 +1751,7 @@ static int ViewOperationsLog(uGlobalData *gd, int intLine, uint8_t *buff, int le
 		switch(op->type)
 		{
 			case eOp_Delete:
-				snprintf((char*)buff, len, "Delete Failed on %s : %s", op->op.udtDelete.filename, op->result_msg);
+				snprintf((char*)buff, len, "Delete Failed on %s : %s", op->op.udtDelete.source_filename, op->result_msg);
 				break;
 
 			case eOp_Copy:
@@ -1779,6 +1779,15 @@ int gme_DoFileOps(lua_State *L)
 	assert(gd != NULL);
 	int i = 1;
 
+	uDirEntry *de;
+	char *high1, *high2;
+
+	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
+	high1 = strdup(de->name);
+	de = GetHighlightedFile(GetInActList(gd), GetInActWindow(gd)->highlight_line, GetInActWindow(gd)->top_line);
+	high2 = strdup(de->name);
+
+
 	e = dlist_head(gd->lstFileOps);
 
 	lua_newtable(L);
@@ -1793,20 +1802,21 @@ int gme_DoFileOps(lua_State *L)
 		switch(x->type)
 		{
 			case eOp_Delete:
-				DeleteFile(gd, x);
+				Ops_DeleteFile(gd, x);
 				break;
 
 			case eOp_Copy:
-				CopyFile(gd, x);
+				Ops_CopyFile(gd, x);
 				break;
 
 			case eOp_Move:
-				MoveFile(gd, x);
+				Ops_MoveFile(gd, x);
 				break;
 		}
 
 		if(x->result_code != 0)
 			err_count += 1;
+
 
 		lua_pushnumber(L, i++);
 		lua_newtable(L);
@@ -1830,11 +1840,11 @@ int gme_DoFileOps(lua_State *L)
 		{
 			case eOp_Delete:
 				lua_pushstring(L, "source_filename");
-				lua_pushstring(L, x->op.udtDelete.filename);
+				lua_pushstring(L, x->op.udtDelete.source_filename);
 				lua_settable(L, -3);
 
 				lua_pushstring(L, "source_path");
-				lua_pushstring(L, x->op.udtDelete.path);
+				lua_pushstring(L, x->op.udtDelete.source_path);
 				lua_settable(L, -3);
 				break;
 
@@ -1886,21 +1896,28 @@ int gme_DoFileOps(lua_State *L)
 		DrawAll(gd);
 	}
 
+	dlist_empty(gd->lstFileOps);
+
 	if(gd->selected_window == WINDOW_LEFT)
 	{
-		godir(gd, gd->left_dir);
+		chdir(GetActDPath(gd));
+		UpdateDir(gd, high1);
 		gd->selected_window = WINDOW_RIGHT;
-		godir(gd, gd->right_dir);
+		chdir( GetActDPath(gd));
+		UpdateDir(gd, high2);
 		gd->selected_window = WINDOW_LEFT;
 	}
 	else
 	{
-		godir(gd, gd->right_dir);
+		chdir(GetActDPath(gd));
+		UpdateDir(gd, high1);
 		gd->selected_window = WINDOW_LEFT;
-		godir(gd, gd->left_dir);
+		chdir(GetActDPath(gd));
+		UpdateDir(gd, high2);
 		gd->selected_window = WINDOW_RIGHT;
 	}
-
+	free(high1);
+	free(high2);
 
 	lua_pushnumber(L, err_count);
 	return 2;

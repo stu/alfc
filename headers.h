@@ -14,6 +14,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -45,6 +46,7 @@
 #include "lua_helper_viewer.h"
 #include "lua_common.h"
 #include "lua_common_api.h"
+#include "lua_hash.h"
 #include "operations.h"
 
 // screen config

@@ -1,26 +1,44 @@
 #include "headers.h"
+#include <unistd.h>
 #include <utime.h>
 
-int CopyFile(uGlobalData *gd, uFileOperation *x)
+#define BLOCK_SIZE		(1024*16)
+
+int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 {
 	struct stat statbuff;
 	struct stat ostatbuff;
 	struct utimbuf timebuff;
 
-	char *buff;
+	uint8_t *buff;
+	uint8_t *cbuff;
 
 	char *src;
 	char *dst;
 
+#ifndef __MINGW_H
 	int ifd;
 	int ofd;
+#else
+	FILE *ifp;
+	FILE *ofp;
+#endif
 
 	int flag;
 	size_t offset;
 
-	buff = malloc(16 * 1024);
+	buff = malloc(16+BLOCK_SIZE);
 	if(buff == NULL)
 	{
+		x->result_code = -1;
+		x->result_msg = strdup("Not enough memory for buffer");
+		return x->result_code;
+	}
+
+	cbuff = malloc(16+BLOCK_SIZE);
+	if(cbuff == NULL)
+	{
+		free(buff);
 		x->result_code = -1;
 		x->result_msg = strdup("Not enough memory for buffer");
 		return x->result_code;
@@ -44,20 +62,23 @@ int CopyFile(uGlobalData *gd, uFileOperation *x)
 		free(src);
 		free(dst);
 		free(buff);
+		free(cbuff);
 		return x->result_code;
 	}
 
 	// make sure we are in the path of the file to copy and its valid
-	if(lstat(src ,&statbuff) == -1)
+	if(ALFC_stat(src ,&statbuff) == -1)
 	{
-		x->result_code = errno;
-		x->result_msg = strdup(strerror(x->result_code));
+		x->result_code = -1;
+		x->result_msg = strdup(strerror(errno));
 		free(src);
 		free(dst);
 		free(buff);
+		free(cbuff);
 		return x->result_code;
 	}
 
+#ifndef __MINGW_H
 	// parse through the symlink?
 	if (S_ISLNK(statbuff.st_mode))
 	{
@@ -66,8 +87,10 @@ int CopyFile(uGlobalData *gd, uFileOperation *x)
 		free(src);
 		free(dst);
 		free(buff);
+		free(cbuff);
 		return x->result_code;
 	}
+#endif
 
 	// directory copy
 	if (S_ISDIR(statbuff.st_mode))
@@ -77,6 +100,7 @@ int CopyFile(uGlobalData *gd, uFileOperation *x)
 		free(src);
 		free(dst);
 		free(buff);
+		free(cbuff);
 		return x->result_code;
 	}
 
@@ -88,133 +112,216 @@ int CopyFile(uGlobalData *gd, uFileOperation *x)
 		free(src);
 		free(dst);
 		free(buff);
+		free(cbuff);
 		return x->result_code;
 	}
 
 	// test if destination already exists
-	if(lstat(dst ,&ostatbuff) == 0)
+	if(ALFC_stat(dst, &ostatbuff) == 0)
 	{
 		x->result_code = -1;
 		x->result_msg = strdup("Destination already exists");
 		free(src);
 		free(dst);
 		free(buff);
+		free(cbuff);
 		return x->result_code;
 	}
 
+#ifdef __MINGW_H
+	if((ifp = fopen(src, "rb")) == NULL)
+#else
 	if((ifd = open(src, O_RDONLY)) < 0)
+#endif
 	{
-		x->result_code = errno;
-		x->result_msg = strdup(strerror(x->result_code));
+		x->result_code = -1;
+		x->result_msg = strdup(strerror(errno));
 		free(src);
 		free(dst);
 		free(buff);
+		free(cbuff);
 		return x->result_code;
 	}
 
-	//if((ofd = open(dst, O_WRONLY | O_CREAT | O_TRUNC, statbuff.st_mode)) < 0)
+#ifdef __MINGW_H
+	if((ofp = fopen(dst, "wb+")) == NULL)
+#else
 	if((ofd = open(dst, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | statbuff.st_mode)) < 0)
+#endif
 	{
-		x->result_code = errno;
-		x->result_msg = strdup(strerror(x->result_code));
+		x->result_code = -1;
+		x->result_msg = strdup(strerror(errno));
+#ifdef __MINGW_H
+		fclose(ifp);
+#else
 		close(ifd);
+#endif
 		free(src);
 		free(dst);
 		free(buff);
+		free(cbuff);
 		return x->result_code;
 	}
-
 
 	flag = 0;
 	offset = 0;
 	while(flag == 0)
 	{
 		int size;
+		int size2;
 
 		uint32_t input_crc;
 		uint32_t output_crc;
 
-		if(statbuff.st_size > 16*1024)
-			size = 16*1024;
+		if(statbuff.st_size > BLOCK_SIZE)
+			size = BLOCK_SIZE;
 		else
 			size = statbuff.st_size;
 
-		memset(buff, 0x0, 16*1024);
+		memset(buff, 0x0, BLOCK_SIZE);
+		memset(cbuff, 0x0, BLOCK_SIZE);
 
-		if( read(ifd, buff, size) != size )
+#ifdef __MINGW_H
+		//fseek(ifp, offset, SEEK_SET);
+		lseek64(ifp->_file, offset, SEEK_SET);
+		if( (size2 = fread(buff, 1, size, ifp)) != size )
+#else
+		lseek(ifd, offset, SEEK_SET);
+		if( (size2 = read(ifd, buff, size)) == -1 )
+#endif
 		{
 			x->result_code = -1;
 			x->result_msg = strdup("Error in reading input file");
 
+#ifdef __MINGW_H
+			fclose(ifp);
+			fclose(ofp);
+#else
 			close(ifd);
 			close(ofd);
+#endif
 			unlink(dst);
 			free(src);
 			free(dst);
 			free(buff);
+			free(cbuff);
 			return x->result_code;
 		}
+		size = size2;
+
+#ifdef __MINGW_H
+		fseek(ofp, offset, SEEK_SET);
+		if((size2 = fwrite(buff, 1, size, ofp)) != size)
+#else
+		lseek(ofd, offset, SEEK_SET);
+		if( (size2 = write(ofd, buff, size)) != size)
+#endif
+		{
+			x->result_code = -1;
+			x->result_msg = strdup("Error in writing to output file");
+
+#ifdef __MINGW_H
+			fclose(ifp);
+			fclose(ofp);
+#else
+			close(ifd);
+			close(ofd);
+#endif
+			unlink(dst);
+			free(src);
+			free(dst);
+			free(buff);
+			free(cbuff);
+			return x->result_code;
+		}
+		size = size2;
+
+#ifdef __MINGW_H
+		fseek(ofp, offset, SEEK_SET);
+		if((size2 = fread(cbuff, 1, size, ofp)) != size)
+#else
+		lseek(ofd, offset, SEEK_SET);
+		if((size2 = read(ofd, cbuff, size)) == -1)
+#endif
+		{
+			x->result_code = -1;
+			x->result_msg = strdup("Error in writing to output file");
+
+#ifdef __MINGW_H
+			fclose(ifp);
+			fclose(ofp);
+#else
+			close(ifd);
+			close(ofd);
+#endif
+			unlink(dst);
+			free(src);
+			free(dst);
+			free(buff);
+			free(cbuff);
+			return x->result_code;
+		}
+		size = size2;
+
+		buff[size] = 0;
+		cbuff[size] = 0;
 
 		input_crc = fletcher32((uint16_t*)buff, (1+size) / 2);
-
-		if( write(ofd, buff, size) != size)
-		{
-			x->result_code = -1;
-			x->result_msg = strdup("Error in writing to output file");
-
-			close(ifd);
-			close(ofd);
-			unlink(dst);
-			free(src);
-			free(dst);
-			free(buff);
-			return x->result_code;
-		}
-
-		lseek(ofd, offset, SEEK_SET);
-		memset(buff, 0x0, 16*1024);
-
-		if(read(ofd, buff, size) != size)
-		{
-			x->result_code = -1;
-			x->result_msg = strdup("Error in writing to output file");
-
-			close(ifd);
-			close(ofd);
-			unlink(dst);
-			free(src);
-			free(dst);
-			free(buff);
-			return x->result_code;
-		}
-
-		output_crc = fletcher32((uint16_t*)buff, (size+1) / 2);
+		output_crc = fletcher32((uint16_t*)cbuff, (1+size) / 2);
 
 		if(input_crc != output_crc)
 		{
 			x->result_code = -1;
 			x->result_msg = strdup("Failed CRC Match");
 
+#ifdef __MINGW_H
+			fclose(ifp);
+			fclose(ofp);
+#else
 			close(ifd);
 			close(ofd);
+#endif
 			unlink(dst);
 			free(src);
 			free(dst);
 			free(buff);
+			free(cbuff);
 			return x->result_code;
 		}
 
+		/*
+		sprintf((char*)buff, "Written CRC %04X, %i bytes", output_crc, size);
+		gd->screen->set_style(STYLE_TITLE);
+		gd->screen->set_cursor(gd->screen->get_screen_height(), 1);
+		gd->screen->print((char*)buff);
+		gd->screen->get_keypress();
+		*/
+
 		offset += size;
 		statbuff.st_size -= size;
-		if(statbuff.st_size == 0)
+
+		if(size == 0 || statbuff.st_size == 0)
 			flag = 1;
 	}
 
-	close(ifd);
 
+
+#ifndef __MINGW_H
+	close(ifd);
 	fchmod(ofd, statbuff.st_mode);
 	fchown(ofd, statbuff.st_uid, statbuff.st_gid);
 	close(ofd);
+#else
+	fclose(ifp);
+	fclose(ofp);
+#endif
+
+
+#ifdef __MINGW_H
+	// mingw does not have fchmod (which I'd prefer over chmod).
+	// also does not have any chown variants.
+	chmod(dst, statbuff.st_mode);
+#endif
 
 	timebuff.actime = statbuff.st_atime;
 	timebuff.modtime = statbuff.st_mtime;
@@ -223,6 +330,7 @@ int CopyFile(uGlobalData *gd, uFileOperation *x)
 	free(src);
 	free(dst);
 	free(buff);
+	free(cbuff);
 
 	x->result_code = 0;
 	x->result_msg = strdup("OK");
@@ -230,12 +338,110 @@ int CopyFile(uGlobalData *gd, uFileOperation *x)
 	return x->result_code;
 }
 
-int MoveFile(uGlobalData *gd, uFileOperation *x)
+int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 {
-	return 0;
+	struct stat statbuff;
+	char *src;
+
+	src = malloc( strlen(x->op.udtDelete.source_path) + strlen(x->op.udtDelete.source_filename) + 8);
+	assert(src != NULL);
+
+	strcpy(src, x->op.udtDelete.source_path);
+	strcat(src, "/");
+	strcat(src, x->op.udtDelete.source_filename);
+
+	// make sure we are in the path of the file to copy and its valid
+	if(ALFC_stat(src, &statbuff) == -1)
+	{
+		x->result_code = -1;
+		x->result_msg = strdup(strerror(errno));
+		free(src);
+		return x->result_code;
+	}
+
+#ifndef __MINGW_H
+	// parse through the symlink?
+	if (S_ISLNK(statbuff.st_mode))
+	{
+		x->result_code = -1;
+		x->result_msg = strdup("Symlinks not yet handled.");
+		free(src);
+		return x->result_code;
+	}
+#endif
+
+	// directory copy
+	if (S_ISDIR(statbuff.st_mode))
+	{
+		x->result_code = -1;
+		x->result_msg = strdup("Directory prunes not yet handled.");
+		free(src);
+		return x->result_code;
+	}
+
+	// non-regular copy
+	if (!S_ISREG(statbuff.st_mode))
+	{
+		x->result_code = -1;
+		x->result_msg = strdup("File is not a regular file.");
+		free(src);
+		return x->result_code;
+	}
+
+	// GO!
+	if( unlink(src) == -1)
+	{
+		x->result_code = -1;
+		x->result_msg =  strdup(strerror(errno));
+		free(src);
+		return x->result_code;
+	}
+
+	free(src);
+
+	x->result_code = 0;
+	x->result_msg = strdup("OK");
+
+	return x->result_code;
 }
 
-int DeleteFile(uGlobalData *gd, uFileOperation *x)
+
+int Ops_MoveFile(uGlobalData *gd, uFileOperation *x)
 {
-	return 0;
+	uFileOperation *z;
+
+	z = calloc(1, sizeof(uFileOperation));
+
+	z->type = eOp_Copy;
+	z->op.udtCopy.source_path = x->op.udtMove.source_path;
+	z->op.udtCopy.source_filename = x->op.udtMove.source_filename;
+	z->op.udtCopy.dest_path = x->op.udtMove.dest_path;
+	z->op.udtCopy.dest_filename = x->op.udtMove.dest_filename;
+
+	Ops_CopyFile(gd, z);
+
+	x->result_code = z->result_code;
+	x->result_msg = z->result_msg;
+
+	if(z->result_code == 0)
+	{
+		if(x->result_msg != NULL)
+			free(x->result_msg);
+
+		memset(z, 0x0, sizeof(uFileOperation));
+
+		z->type = eOp_Delete;
+		z->op.udtDelete.source_path = x->op.udtMove.source_path;
+		z->op.udtDelete.source_filename = x->op.udtMove.source_filename;
+
+		Ops_DeleteFile(gd, z);
+
+		x->result_code = z->result_code;
+		x->result_msg = z->result_msg;
+	}
+
+	free(z);
+
+	return x->result_code;
 }
+

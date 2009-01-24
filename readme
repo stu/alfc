@@ -9,6 +9,10 @@ To build the documentation you need Robodoc installed
 
 See help.txt for usage and information;
 
+Copy - Verieifed copies
+Delete - Deletes
+Move - Does a verified copy then does a delete.
+
 
 Design Spec
 - Dont over-engineer

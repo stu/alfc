@@ -1,0 +1,14 @@
+#ifndef LUA_HASH_H
+#define LUA_HASH_H
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+/* LUA EXT REF */
+/* LUA END EXT REF */
+
+#ifdef __cplusplus
+}
+#endif
+#endif // LUA_HASH_H
+

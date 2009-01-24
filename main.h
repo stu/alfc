@@ -95,8 +95,8 @@ typedef struct udtFileOperation
 	{
 		struct
 		{
-			char	*filename;
-			char	*path;
+			char	*source_filename;
+			char	*source_path;
 		} udtDelete;
 
 		struct
@@ -350,6 +350,8 @@ extern uKeyBinding* ScanKey(DList *lst, int key);
 extern char* ConvertKeyToName(int key);
 extern void DrawMenuLine(uScreenDriver *screen, DList *lstHotKeys);
 extern uint32_t fletcher32(uint16_t *data, size_t len);
+
+extern void UpdateDir(uGlobalData *gd, char *set_to_highlight);
 
 #ifdef __cplusplus
 }

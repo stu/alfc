@@ -35,6 +35,12 @@ Current speed keyed commands
 	:so sa - size ascending
 	:so sd - size descending
 
+:tc - Tagged Copy - Does a validated copy from the active to inactive pane
+:td - Tagged Delete - Removes tagged files
+:tm - Tagged Move - Does a validated copy then deletion
+
+
+
 
 Config
 - document date format allowed

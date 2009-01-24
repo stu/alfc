@@ -18,10 +18,10 @@ void FreeFileOp(void *x)
 	switch(f->type)
 	{
 		case eOp_Delete:
-			if(f->op.udtDelete.filename != NULL)
-				free(f->op.udtDelete.filename);
-			if(f->op.udtDelete.path != NULL)
-				free(f->op.udtDelete.path);
+			if(f->op.udtDelete.source_filename != NULL)
+				free(f->op.udtDelete.source_filename);
+			if(f->op.udtDelete.source_path != NULL)
+				free(f->op.udtDelete.source_path);
 			break;
 
 		case eOp_Move:
@@ -574,6 +574,9 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 	lstF = malloc(sizeof(DList));
 	dlist_init(lstF, FreeListEntry);
 
+	GetActWindow(gdata)->highlight_line = 0;
+	GetActWindow(gdata)->top_line = 0;
+
 	cpath = ConvertDirectoryName(path);
 
 	if( chdir(cpath) == 0)
@@ -592,11 +595,9 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 					memset(de, 0x0, sizeof(uDirEntry));
 
 					de->name = strdup(dr->d_name);
-#ifdef __MINGW_H
-					stat(de->name, &buff);
-#else
-					lstat(de->name, &buff);
-#endif
+
+					ALFC_stat(de->name, &buff);
+
 					de->size = ALFC_GetFileSize(de, &buff);
 					de->attrs = ALFC_GetFileAttrs(de, &buff);
 					de->time = ALFC_GetFileTime(de, &buff);
@@ -1621,8 +1622,7 @@ DList* ResetFilteredFileList(DList *lstF, DList *lstA)
 	return lstB;
 }
 
-
-static void UpdateDir(uGlobalData *gd, char *set_to_highlight)
+void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 {
 	if(gd->selected_window == WINDOW_LEFT)
 	{
@@ -1643,6 +1643,7 @@ static void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		}
 		gd->lstLeft = ResetFilteredFileList(gd->lstFilterLeft, gd->lstFullLeft);
 
+		gd->win_left->tagged_count = 0;
 		assert(gd->lstFilterLeft != NULL);
 		assert(gd->lstFullLeft != NULL);
 		assert(gd->lstLeft != NULL);
@@ -1668,6 +1669,7 @@ static void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		}
 		gd->lstRight = ResetFilteredFileList(gd->lstFilterRight, gd->lstFullRight);
 
+		gd->win_right->tagged_count = 0;
 		assert(gd->lstFilterRight != NULL);
 		assert(gd->lstFullRight != NULL);
 		assert(gd->lstRight != NULL);

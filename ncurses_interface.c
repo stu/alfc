@@ -193,12 +193,14 @@ static uint32_t nc_get_keypress(void)
 	}
 #ifdef __MINGW_H
 	// mingw uses wgetch for getch.....
-	else if ((ch >= ALT_0) && (ch <= ALT_Z)) // for mingw this is ALT-A to ALT-Z
+	// PDCurses has ALT_0 ...
+	else if ((ch >= ALT_0) && (toupper(ch) <= ALT_Z)) // for mingw this is ALT-A to ALT-Z
 	{
+		// windows seems to hit here for ALT keys
 		if(ch >= ALT_0 && ch <= ALT_9)
 			key = ALFC_KEY_ALT + (ch - ALT_0) + '0';
 		else
-			key = ALFC_KEY_ALT + (ch - ALT_A) + 'A';
+			key = ALFC_KEY_ALT + (toupper(ch) - ALT_A) + 'A';
 	}
 #else
 	else if ((ch >= 0x80) && (ch <= 0xFF))
@@ -213,6 +215,9 @@ static uint32_t nc_get_keypress(void)
 	else if ((ch == '[') || (ch == 27))
 	{  /* start of escape sequence */
 		ch = getch();
+
+		// Linux (xterm) seems to hit here for ALT keys
+		ch = toupper(ch);
 		if ((ch != '[') && (ch != 0x27))  /* ALT key */
 			key = ALFC_KEY_ALT + ch;
 		else

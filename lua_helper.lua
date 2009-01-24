@@ -155,7 +155,7 @@ function whip_it_real_good(afile, bfile, msg, cfiles)
 end
 
 
-whip_it_real_good("./lua_helper.inc", "./lua_helper.c", "gme_", {"lua_api"})
+whip_it_real_good("./lua_helper.inc", "./lua_helper.c", "gme_", {"lua_api","lua_hash"})
 whip_it_real_good("./lua_common_api.inc", "./lua_common_api.c", "gmec_", {"lua_common"})
 whip_it_real_good("./lua_helper_viewer.inc", "./lua_helper_viewer.c", "gmev_", {"viewer"})
 

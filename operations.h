@@ -4,9 +4,9 @@
 extern "C"{
 #endif
 
-extern int CopyFile(uGlobalData *gd, uFileOperation *op);
-extern int MoveFile(uGlobalData *gd, uFileOperation *op);
-extern int DeleteFile(uGlobalData *gd, uFileOperation *op);
+extern int Ops_CopyFile(uGlobalData *gd, uFileOperation *op);
+extern int Ops_MoveFile(uGlobalData *gd, uFileOperation *op);
+extern int Ops_DeleteFile(uGlobalData *gd, uFileOperation *op);
 
 #ifdef __cplusplus
 }

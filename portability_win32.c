@@ -70,3 +70,8 @@ time_t ALFC_GetFileTime(uDirEntry *de, struct stat *buff)
 	return buff->st_mtime;
 }
 
+int ALFC_stat(char *fn, struct stat *buff)
+{
+	return stat(fn, buff);
+}
+

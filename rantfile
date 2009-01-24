@@ -125,7 +125,7 @@ LIBS = ""
 alfc = %w( version.o main.o memwatch.o lua_helper.o
 			lua_api.o options.o ncurses_interface.o viewer.o
 			lua_helper_viewer.o lua_common.o lua_common_api.o
-			operations.o
+			operations.o lua_hash.o md5.o rmd160.o sha1.o
 			) + PORTABILITY_OBJS
 
 gen Action do
@@ -150,10 +150,10 @@ end
 
 task :tools => %w(bin2c.o) do |t|
 	sys "#{CC} -o bin2c  #{t.prerequisites.join(' ')} "
-	sys "./bin2c global.lua include_global_lua > defaults.h"
-	sys "./bin2c startup.lua include_startup_lua >> defaults.h"
-	sys "./bin2c shutdown.lua include_shutdown_lua >> defaults.h"
-	sys "./bin2c options.ini include_options_ini >> defaults.h"
+	sys "bin2c global.lua include_global_lua > defaults.h"
+	sys "bin2c startup.lua include_startup_lua >> defaults.h"
+	sys "bin2c shutdown.lua include_shutdown_lua >> defaults.h"
+	sys "bin2c options.ini include_options_ini >> defaults.h"
 end
 
 task :appx => alfc do |t|
