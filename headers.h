@@ -30,9 +30,9 @@
 #endif
 #include "memwatch.h"
 
-#include "stucore/dlist.h"
-#include "stucore/ini.h"
-#include "stucore/logwrite.h"
+#include "dlist.h"
+#include "ini.h"
+#include "logwrite.h"
 
 #include "main.h"
 #include "portability.h"
@@ -51,4 +51,14 @@
 
 // screen config
 #include "ncurses_interface.h"
+
+
+#ifdef __MINGW_H
+#ifndef __WORDSIZE
+#define __WORDSIZE 32
+#endif
+#endif
+
+// maps for linux usage
+#define stricmp strcasecmp
 

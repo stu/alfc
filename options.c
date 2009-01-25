@@ -7,7 +7,6 @@
 #endif
 
 #include "headers.h"
-#include "stucore/stucore_config.h"
 
 #include "defaults.h"
 

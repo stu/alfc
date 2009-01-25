@@ -43,11 +43,12 @@ int gme_map(lua_State *L)
 
 	n = luaL_getn(L, 1);  /* get size of table */
 
-	for (i=1; i<=n; i++) {
-	lua_pushvalue(L, 2);   /* push f */
-	lua_rawgeti(L, 1, i);  /* push t[i] */
-	lua_call(L, 1, 1);     /* call f(t[i]) */
-	lua_rawseti(L, 1, i);  /* t[i] = result */
+	for (i=1; i<=n; i++)
+	{
+		lua_pushvalue(L, 2);   /* push f */
+		lua_rawgeti(L, 1, i);  /* push t[i] */
+		lua_call(L, 1, 1);     /* call f(t[i]) */
+		lua_rawseti(L, 1, i);  /* t[i] = result */
 	}
 
 	return 0;  /* no results */
@@ -1093,6 +1094,79 @@ int gme_GetFileList(lua_State *L)
 		lua_settable(L, -3);
 
 		lua_settable(L, -3);
+
+		e = dlist_next(e);
+	}
+
+	return 1;
+}
+
+
+
+/****f* LuaAPI/GetTaggedFileList
+* FUNCTION
+*	Returns a table of file details in the order they are in in memory
+* SYNOPSIS
+tbl = GetFileList()
+* INPUTS
+*	o None
+* RESULTS
+*	o table - table of entries (name, size, directory, tagged)
+* SEE ALSO
+*	TagFile, TagHighlightedFile
+* AUTHOR
+*	Stu George
+* NOTES
+* 	Changing the details in this table does not change whats in memory. This is a local copy only.
+******
+*/
+int gme_GetTaggedFileList(lua_State *L)
+{
+	DLElement *e;
+	uDirEntry *de;
+	DList *lst;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	int i;
+
+	lst = GetActList(gd);
+
+	lua_newtable(L);
+
+	i = 1;
+	e = dlist_head(lst);
+	while(e != NULL)
+	{
+		de = dlist_data(e);
+
+		if(de->tagged == 1)
+		{
+			lua_pushnumber(L, i++);
+			lua_newtable(L);
+
+			lua_pushstring(L, "name");
+			lua_pushstring(L, de->name);
+			lua_settable(L, -3);
+
+			lua_pushstring(L, "size");
+			lua_pushnumber(L, de->size);
+			lua_settable(L, -3);
+
+
+			lua_pushstring(L, "directory");
+			if( S_ISDIR(de->attrs) == 0)
+				lua_pushnumber(L, 0);
+			else
+				lua_pushnumber(L, 1);
+			lua_settable(L, -3);
+
+			lua_pushstring(L, "tagged");
+			lua_pushnumber(L, de->tagged);
+			lua_settable(L, -3);
+
+			lua_settable(L, -3);
+		}
 
 		e = dlist_next(e);
 	}

@@ -1,8 +1,5 @@
-Requires a git clone of 'stucore' to build
-git clone bloodycactus.com:stucore.git
-
-Also requires a lua 5.1 library to link against.
-And NCurses for the ncurses driver
+Also requires a lua 5.1+ library to link against.
+And NCurses for the ncurses driver or PDCurses
 
 To build the documentation you need Robodoc installed
 (minimum 4.99.36)
@@ -29,4 +26,10 @@ Hints
 :tf \.[ch]$
 :t!
 :td
+
+
+ToDo List
+- Recursive Copy/Delete
+- Copy/Delete/Move on screen display dialogue
+
 

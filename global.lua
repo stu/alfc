@@ -9,6 +9,15 @@
 
 if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
+	function x(fname)
+		local f
+		local c
+		f = io.open(fname)
+		c = f:read("*all")
+		debug_msg(MD5Sum(c))
+		f:close()
+	end
+
 	-- merge two tables together
 	local function merge(t, u)
 		local r = {}

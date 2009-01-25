@@ -2313,6 +2313,8 @@ int main(int argc, char *argv[])
 
 	fprintf(stderr, "ALFC : Another Linux File Commander - Stu George\nVersion v%i.%02i/%04i - Built on " __DATE__ "; " __TIME__ "\n", VersionMajor(), VersionMinor(), VersionBuild());
 
+	setenv("ALFC", "$HOME/.alfc/scripts", 0);
+
 	for(i=1; i<argc; i++)
 	{
 		if(argv[i][0] == '-')
