@@ -191,7 +191,7 @@ end
 
 desc "Cleanup..."
 task :clean do
-	x = Dir["*.{bak,o,obj}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"]
+	x = Dir["*.{bak,o,obj}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"] + Dir["Makefile"]
 
 	x += Dir["lua_helper.c"]
 	x += Dir["lua_common_api.c"]

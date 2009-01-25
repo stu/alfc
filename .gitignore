@@ -19,4 +19,5 @@ lua_common_api.c
 lua_helper.c
 alfc.geany
 lua_hash.h
+Makefile
 
