@@ -2082,6 +2082,79 @@ void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstGlob, DList *
 	}
 }
 
+int TagWithGlob(uGlobalData *gd, char *pattern)
+{
+	DLElement *e;
+	uDirEntry *de;
+	int count;
+
+	count = 0;
+	e = dlist_head(GetActList(gd));
+	while(e != NULL)
+	{
+		de = dlist_data(e);
+
+		if( fnmatch(pattern, de->name, 0) == 0)
+		{
+			if(de->tagged == 0)
+			{
+				de->tagged = 1;
+				GetActWindow(gd)->tagged_count += 1;
+
+				count += 1;
+			}
+		}
+
+		e = dlist_next(e);
+	}
+
+	return count;
+}
+
+
+int TagWithFilter(uGlobalData *gd, char *pattern)
+{
+	DLElement *e;
+	uDirEntry *de;
+	int count;
+	regex_t preg;
+	int rc;
+
+	count = 0;
+
+	if((rc = regcomp(&preg, pattern, REG_EXTENDED|REG_NOSUB)) == 0)
+	{
+		e = dlist_head(GetActList(gd));
+		while(e != NULL)
+		{
+			de = dlist_data(e);
+
+			if( regexec(&preg, de->name, 0, NULL, 0) == 0)
+			{
+				if(de->tagged == 0)
+				{
+					de->tagged = 1;
+					GetActWindow(gd)->tagged_count += 1;
+
+					count += 1;
+				}
+			}
+
+			e = dlist_next(e);
+		}
+
+		regfree(&preg);
+	}
+	else
+	{
+		char buff[128];
+		regerror(rc, &preg, buff, 128);
+		LogInfo("regex pattern failed to compile\nError : %s\n", buff);
+	}
+
+	return count;
+}
+
 static void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF)
 {
 	DLElement *e, *e2;

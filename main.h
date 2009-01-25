@@ -352,6 +352,8 @@ extern void DrawMenuLine(uScreenDriver *screen, DList *lstHotKeys);
 extern uint32_t fletcher32(uint16_t *data, size_t len);
 
 extern void UpdateDir(uGlobalData *gd, char *set_to_highlight);
+extern int TagWithGlob(uGlobalData *gd, char *pattern);
+extern int TagWithFilter(uGlobalData *gd, char *pattern);
 
 #ifdef __cplusplus
 }

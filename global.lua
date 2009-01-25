@@ -205,9 +205,27 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		for k, v in ipairs(lstF) do
 			debug_msg("delete on " .. v.source_path .. "/" .. v.source_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
 		end
-
 	end
 
+	local function __TagFilter(command)
+		TagWithFilter(trim(command))
+	end
+
+	local function __TagGlob(command)
+		TagWithGlob(trim(command))
+	end
+
+	local function __TagUnTagAll(command)
+		ClearAllTags();
+	end
+
+	local function __TagAll(command)
+		TagAll();
+	end
+
+	local function __TagFlip(command)
+		TagFlip();
+	end
 
 
 	function CLIParse(command)

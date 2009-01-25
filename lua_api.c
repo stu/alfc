@@ -1923,3 +1923,124 @@ int gme_DoFileOps(lua_State *L)
 	return 2;
 }
 
+int gme_TagWithGlob(lua_State *L)
+{
+	struct lstr g;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(g, 1);
+
+	lua_pushnumber(L, TagWithGlob(gd, g.data));
+
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+	DrawStatusInfoLine(gd);
+
+	return 1;
+}
+
+int gme_TagWithFilter(lua_State *L)
+{
+	struct lstr g;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(g, 1);
+
+	lua_pushnumber(L, TagWithFilter(gd, g.data));
+
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+	DrawStatusInfoLine(gd);
+
+	return 1;
+}
+
+
+int gme_ClearAllTags(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	DLElement *e;
+	uDirEntry *de;
+
+	e = dlist_head(GetActList(gd));
+	while(e != NULL)
+	{
+		de = dlist_data(e);
+		e = dlist_next(e);
+
+		de->tagged = 0;
+	}
+
+	GetActWindow(gd)->tagged_count = 0;
+
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+	DrawStatusInfoLine(gd);
+
+	return 0;
+}
+
+
+int gme_TagAll(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	DLElement *e;
+	uDirEntry *de;
+
+	e = dlist_head(GetActList(gd));
+	while(e != NULL)
+	{
+		de = dlist_data(e);
+		e = dlist_next(e);
+
+		de->tagged = 1;
+	}
+
+	GetActWindow(gd)->tagged_count = dlist_size(GetActList(gd));
+
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+	DrawStatusInfoLine(gd);
+
+	return 0;
+}
+
+
+int gme_TagFlip(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	DLElement *e;
+	uDirEntry *de;
+
+	int count = 0;
+
+	e = dlist_head(GetActList(gd));
+	while(e != NULL)
+	{
+		de = dlist_data(e);
+		e = dlist_next(e);
+
+		if(de->tagged == 0)
+			count += 1;
+
+		de->tagged ^= 1;
+	}
+
+	GetActWindow(gd)->tagged_count = count;
+
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+	DrawStatusInfoLine(gd);
+
+	return 0;
+}

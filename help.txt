@@ -39,6 +39,11 @@ Current speed keyed commands
 :td - Tagged Delete - Removes tagged files
 :tm - Tagged Move - Does a validated copy then deletion
 
+:tf - Tag all files using a filter
+:tf - Tag all files using a glob
+:ta - Tall All
+:tu - Untag All
+:t! - Flip all tags
 
 
 
