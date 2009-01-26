@@ -54,6 +54,8 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 	strcat(dst, "/");
 	strcat(dst, x->op.udtCopy.dest_filename);
 
+	LogInfo("Copy %s to %s\n", src, dst);
+
 	// same?
 	if(strcmp(src, dst) == 0)
 	{
@@ -95,6 +97,17 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 	// directory copy
 	if (S_ISDIR(statbuff.st_mode))
 	{
+		if(strncmp(src, dst, strlen(src))==0)
+		{
+			x->result_code = -1;
+			x->result_msg = strdup("Recursive copies are not supported.");
+			free(src);
+			free(dst);
+			free(buff);
+			free(cbuff);
+			return x->result_code;
+		}
+
 		x->result_code = -1;
 		x->result_msg = strdup("Directory copies not yet handled.");
 		free(src);
@@ -444,4 +457,11 @@ int Ops_MoveFile(uGlobalData *gd, uFileOperation *x)
 
 	return x->result_code;
 }
+
+
+int ops_MakeDirectory(uGlobalData *gd, uFileOperation *x)
+{
+	return 0;
+}
+
 

@@ -10,6 +10,11 @@ extern uint64_t ALFC_GetFileSize(uDirEntry *de, struct stat *buff);
 extern uint32_t ALFC_GetFileAttrs(uDirEntry *de, struct stat *buff);
 extern time_t ALFC_GetFileTime(uDirEntry *de, struct stat *buff);
 extern int ALFC_stat(char *fn, struct stat *buff);
+extern int ALFC_mkdir(char *s);
+extern int ALFC_rmdir(char *s);
+
+extern int ALFC_startup(void);
+extern int ALFC_shutdown(void);
 
 #ifdef __cplusplus
 };

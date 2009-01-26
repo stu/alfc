@@ -616,6 +616,7 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 							first_file = dlist_tail(lstF);
 					}
 				}
+
 				dr = readdir(d);
 			}
 
@@ -809,11 +810,10 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	int size_off;
 	int date_off;
 
+	assert(lstFiles != NULL);
+
 	win->screen->set_style(STYLE_TITLE);
 	win->screen->draw_border(win);
-
-
-	win->screen->set_style(STYLE_TITLE);
 
 	path = ConvertDirectoryName(dpath);
 	if(strlen(path) < win->width-6)
@@ -823,6 +823,7 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	free(path);
 
 	win->screen->set_cursor(win->offset_row + 1, win->offset_col + 2);
+	win->screen->set_style(STYLE_TITLE);
 	win->screen->print(buff);
 	win->screen->set_style(STYLE_NORMAL);
 
@@ -833,6 +834,7 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 
 	e = dlist_head(lstFiles);
 	i = win->top_line;
+
 	while(i > 0 && e != NULL)
 	{
 		e = dlist_next(e);
@@ -967,7 +969,7 @@ static void DrawFileInfo(uWindow *win)
 	max_namelen = size_offset - (2 + 6);
 	memset(buff, ' ', 4096);
 
-	sprintf(buff, "File: ");
+	memmove(buff, "File: ", 6);
 	if(de != NULL)
 	{
 		if(strlen(de->name) > max_namelen)
@@ -1649,6 +1651,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		assert(gd->lstLeft != NULL);
 		assert(gd->lstGlobLeft != NULL);
 		UpdateFilterList(gd, gd->lstFilterLeft, gd->lstGlobLeft, gd->lstFullLeft, gd->lstLeft);
+		assert(gd->lstLeft != NULL);
 	}
 	else
 	{
@@ -1677,15 +1680,20 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		UpdateFilterList(gd, gd->lstFilterRight, gd->lstGlobRight, gd->lstFullRight, gd->lstRight);
 	}
 
+
 	GetActWindow(gd)->top_line = 0;
 	GetActWindow(gd)->highlight_line = 0;
+	assert(gd->lstLeft != NULL);
 
 	if(set_to_highlight != NULL)
 	{
 		int idx = GetFileIndex(GetActList(gd), set_to_highlight);
-		SetHighlightedFile(gd, idx);
+		if(idx >= 0)
+			SetHighlightedFile(gd, idx);
 	}
 
+	assert(gd->lstLeft != NULL);
+	assert(GetActList(gd) != NULL);
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
 }
@@ -1747,30 +1755,34 @@ int updir(uGlobalData *gd)
 
 int godir(uGlobalData *gd, char *dir)
 {
-	char *cpath;
+	char *cpath1;
+	char *cpath2;
 
-	cpath = ConvertDirectoryName( GetActDPath(gd) );
-
-	if( chdir(cpath) != 0)
+	cpath1 = ConvertDirectoryName( GetActDPath(gd) );
+	if( chdir(cpath1) != 0)
 	{
-		LogInfo("Could not change to directory %s\n", cpath);
-		free(cpath);
+		LogInfo("Could not change to directory %s\n", cpath1);
+		free(cpath1);
 		return -1;
 	}
 
-	free(cpath);
-
-	cpath = ConvertDirectoryName(dir);
-
-	if( chdir(cpath) != 0)
+	cpath2 = ConvertDirectoryName(dir);
+	if(strcmp(cpath1, cpath2) != 0)
 	{
-		free(cpath);
-		LogInfo("Could not change to directory\n");
-		return -1;
+		if( chdir(cpath2) != 0)
+		{
+			free(cpath1);
+			free(cpath2);
+			LogInfo("Could not change to directory %s\n", cpath2);
+			return -1;
+		}
 	}
 
 	UpdateDir(gd, NULL);
-	free(cpath);
+	free(cpath1);
+	free(cpath2);
+
+	assert(gd->lstLeft != NULL);
 
 	return 0;
 }
@@ -1989,7 +2001,6 @@ void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstGlob, DList *
 
 	deold = GetHighlightedFile(lstF, GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
 
-
 	DList *lstNew;
 	DList *lstOld;
 
@@ -2071,15 +2082,23 @@ void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstGlob, DList *
 		}
 	}
 
-	UpdateGlobList(gd, lstGlob, lstFull, lstF);
-	SortList(gd, lstF);
 
-	status = GetFileIndex(lstF, deold->name);
-	if( SetHighlightedFile(gd, status) == -1)
+	UpdateGlobList(gd, lstGlob, lstFull, lstF);
+	if( dlist_size(lstF) > 0)
 	{
-		GetActWindow(gd)->top_line = 0;
-		GetActWindow(gd)->highlight_line = 0;
+		assert(lstF != NULL);
+		SortList(gd, lstF);
+		assert(lstF != NULL);
+
+		status = GetFileIndex(lstF, deold->name);
+		if( SetHighlightedFile(gd, status) == -1)
+		{
+			GetActWindow(gd)->top_line = 0;
+			GetActWindow(gd)->highlight_line = 0;
+		}
 	}
+
+	assert(lstF != NULL);
 }
 
 int TagWithGlob(uGlobalData *gd, char *pattern)
@@ -2252,6 +2271,7 @@ void DrawAll(uGlobalData *gd)
 {
 	int j;
 
+
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawFileListWindow(GetInActWindow(gd), GetInActList(gd), GetInActDPath(gd));
 	DrawActive(gd);
@@ -2282,7 +2302,11 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 		gdata->left_dir = strdup(start_left);
 	else
 		gdata->left_dir = GetOptionDir(gdata, "startup_left", gdata->lstMRULeft);
-	godir(gdata, gdata->left_dir);
+	if(godir(gdata, gdata->left_dir) == -1)
+		godir(gdata, GetCurrentWorkingDirectory());
+
+	fprintf(stderr, "%s\n", gdata->left_dir);
+	assert(gdata->lstLeft != NULL);
 
 	gdata->selected_window = WINDOW_RIGHT;
 	gdata->lstFilterRight = malloc(sizeof(DList));
@@ -2294,7 +2318,10 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 		gdata->right_dir = strdup(start_right);
 	else
 		gdata->right_dir = GetOptionDir(gdata, "startup_right", gdata->lstMRURight);
-	godir(gdata, gdata->right_dir);
+	if(godir(gdata, gdata->right_dir) == -1)
+		godir(gdata, GetCurrentWorkingDirectory());
+
+	assert(gdata->lstRight != NULL);
 
 	gdata->selected_window = WINDOW_LEFT;
 	chdir( gdata->left_dir );
@@ -2313,7 +2340,11 @@ int main(int argc, char *argv[])
 
 	fprintf(stderr, "ALFC : Another Linux File Commander - Stu George\nVersion v%i.%02i/%04i - Built on " __DATE__ "; " __TIME__ "\n", VersionMajor(), VersionMinor(), VersionBuild());
 
+	ALFC_startup();
+
+#ifndef __MINGW_H
 	setenv("ALFC", "$HOME/.alfc/scripts", 0);
+#endif
 
 	for(i=1; i<argc; i++)
 	{
@@ -2726,6 +2757,8 @@ int main(int argc, char *argv[])
 
 		LogWrite_Shutdown();
 	}
+
+	ALFC_shutdown();
 
 	return 0;
 }

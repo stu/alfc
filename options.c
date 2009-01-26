@@ -1,13 +1,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#ifdef __MINGW_H
-// needed for mkdir on mingw
-#include <io.h>
-#endif
-
 #include "headers.h"
-
 #include "defaults.h"
 
 int ParseTimeFormat(uGlobalData *gd, char *tf)
@@ -143,11 +137,8 @@ void CreateHomeDirectory(void)
 
 	q = ConvertDirectoryName("$HOME/.alfc");
 
-#ifndef __MINGW_H
-	mkdir(q, 0744);
-#else
-	mkdir(q);
-#endif
+	ALFC_mkdir(q);
+
 	free(q);
 }
 

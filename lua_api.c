@@ -1705,10 +1705,11 @@ int gme_RedrawWindow(lua_State *L)
 	assert(gd != NULL);
 
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+	DrawStatusInfoLine(gd);
 
 	return 0;
 }
-
 
 int gme_ViewFile(lua_State *L)
 {
@@ -1754,6 +1755,7 @@ int gme_QueueFileOp(lua_State *L)
 				x->op.udtCopy.source_filename = strdup(fname.data);
 				x->op.udtCopy.dest_filename = strdup(fname.data);
 				x->op.udtCopy.dest_path = strdup(GetInActDPath(gd));
+				LogInfo("%s/%s to %s/%s\n", x->op.udtCopy.source_path, x->op.udtCopy.source_filename, x->op.udtCopy.dest_path, x->op.udtCopy.dest_filename );
 				break;
 
 			case eOp_Move:
@@ -1761,6 +1763,9 @@ int gme_QueueFileOp(lua_State *L)
 				x->op.udtMove.source_filename = strdup(fname.data);
 				x->op.udtMove.dest_filename = strdup(fname.data);
 				x->op.udtMove.dest_path = strdup(GetInActDPath(gd));
+				break;
+
+			case eOp_MakeDir:
 				break;
 
 		}
@@ -1775,7 +1780,7 @@ int gme_QueueFileOp(lua_State *L)
 }
 
 
- int ViewOperationsLog(uGlobalData *gd, int intLine, uint8_t *buff, int len)
+static int ViewOperationsLog(uGlobalData *gd, int intLine, uint8_t *buff, int len)
 {
 	DLElement *e;
 	int j;
@@ -1856,11 +1861,17 @@ int gme_DoFileOps(lua_State *L)
 	uDirEntry *de;
 	char *high1, *high2;
 
-	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
-	high1 = strdup(de->name);
-	de = GetHighlightedFile(GetInActList(gd), GetInActWindow(gd)->highlight_line, GetInActWindow(gd)->top_line);
-	high2 = strdup(de->name);
 
+	high1 = NULL;
+	high2 = NULL;
+
+	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
+	if(de != NULL)
+		high1 = strdup(de->name);
+
+	de = GetHighlightedFile(GetInActList(gd), GetInActWindow(gd)->highlight_line, GetInActWindow(gd)->top_line);
+	if(de != NULL)
+		high2 = strdup(de->name);
 
 	e = dlist_head(gd->lstFileOps);
 
@@ -1964,7 +1975,7 @@ int gme_DoFileOps(lua_State *L)
 		e = dlist_next(e);
 	}
 
-	if(err_count > 0)
+	//if(err_count > 0)
 	{
 		ViewFile(gd, "OPERATIONS LOG", &ViewOperationsLog);
 		DrawAll(gd);
@@ -2073,18 +2084,19 @@ int gme_TagAll(lua_State *L)
 	while(e != NULL)
 	{
 		de = dlist_data(e);
-		e = dlist_next(e);
-
 		de->tagged = 1;
+
+		e = dlist_next(e);
 	}
 
 	GetActWindow(gd)->tagged_count = dlist_size(GetActList(gd));
 
-	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
 	DrawStatusInfoLine(gd);
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 
-	return 0;
+	lua_pushnumber(L, GetActWindow(gd)->tagged_count);
+	return 1;
 }
 
 
@@ -2116,5 +2128,37 @@ int gme_TagFlip(lua_State *L)
 	DrawActive(gd);
 	DrawStatusInfoLine(gd);
 
-	return 0;
+	lua_pushnumber(L, GetActWindow(gd)->tagged_count);
+	return 1;
 }
+
+int gme_CreateDirectory(lua_State *L)
+{
+	struct lstr g;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(g, 1);
+
+	lua_pushnumber(L, ALFC_mkdir(g.data));
+
+	return 1;
+}
+
+
+int gme_RemoveDirectory(lua_State *L)
+{
+	struct lstr g;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(g, 1);
+
+	LogInfo("delete %s\n", g.data);
+	lua_pushnumber(L, ALFC_rmdir(g.data));
+
+	return 1;
+}
+

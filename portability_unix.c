@@ -58,3 +58,22 @@ int ALFC_stat(char *fn, struct stat *buff)
 	return lstat(fn, buff);
 }
 
+int ALFC_mkdir(char *s)
+{
+	return mkdir(s, 0744);
+}
+
+int ALFC_rmdir(char *s)
+{
+	return rmdir(s);
+}
+
+int ALFC_startup(void)
+{
+	return 0;
+}
+
+int ALFC_shutdown(void)
+{
+	return 0;
+}

@@ -81,7 +81,10 @@ enum eFileOpType
 {
 	eOp_Delete = 1,
 	eOp_Copy,
-	eOp_Move
+	eOp_Move,
+	eOp_MakeDir,
+	eOp_DeleteDir,
+
 };
 
 typedef struct udtFileOperation
@@ -116,6 +119,19 @@ typedef struct udtFileOperation
 			char *dest_filename;
 			char *dest_path;
 		} udtCopy;
+
+		struct
+		{
+			char *source_filename;
+			char *source_path;
+		} udtMakeDir;
+
+		struct
+		{
+			char *source_filename;
+			char *source_path;
+		} udtDeleteDir;
+
 	} op;
 } uFileOperation;
 

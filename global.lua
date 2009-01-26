@@ -148,24 +148,58 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	local function __TagCopy(command)
 		local lstF
 		local lstT
-		local k,v
+		local k,v, err
+
+		local path1, path2
 
 		lstF = GetFileList()
 		lstT = {}
 
 		for k,v in ipairs(lstF) do
 			if v.tagged == 1 then
-				lstT[1+#lstT]=v
-				QueueFileOp(eOp_Copy, v.name)
+				if v.directory == 1 then
+					path1 = GetCurrentWorkingDirectory()
+
+					SetCurrentWorkingDirectory(v.name)
+
+					SwitchPanes()
+					path2 = GetCurrentWorkingDirectory()
+
+					CreateDirectory(v.name)
+					--QueueFileOp(eOp_MakeDirectory, v.name);
+
+					SetCurrentWorkingDirectory(v.name)
+					SwitchPanes()
+					TagAll()
+					__TagCopy(command)
+
+					SetCurrentWorkingDirectory(path1)
+					SwitchPanes()
+					SetCurrentWorkingDirectory(path2)
+					SwitchPanes()
+				else
+					lstT[1+#lstT] = v
+					QueueFileOp(eOp_Copy, v.name)
+				end
 			end
 		end
 		lstF = nil
 
-		debug_msg("Copying " .. #lstT .. " tagged files")
-		lstF, err = DoFileOps()
-		for k, v in ipairs(lstF) do
-			debug_msg("Copy on " .. v.source_path .. "/" .. v.source_filename .. " to " .. v.dest_path .. "/" .. v.dest_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
+		--debug_msg("Copying " .. #lstT .. " tagged files")
+		if #lstT > 0 then
+			lstF, err = DoFileOps()
+			--[[
+			if err > 0 then
+				lstT = {}
+				for k, v in ipairs(lstF) do
+					lstT[1+#lstT] = "Copy on " .. v.source_path .. "/" .. v.source_filename .. " to " .. v.dest_path .. "/" .. v.dest_filename .. " = (" .. v.result_code .. ") " .. v.result_msg
+				end
+
+				ViewLuaTable(gd, "COPY OPERATIONS LOG", lstT);
+			end
+			]]
 		end
+
 	end
 
 	local function __TagMove(command)
@@ -195,24 +229,40 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		local lstF
 		local lstT
 		local err
-		local k, v
+		local k, v, err
 
 		lstF = GetFileList()
 		lstT = {}
 
 		for k,v in ipairs(lstF) do
 			if v.tagged == 1 then
-				lstT[1+#lstT]=v
-				QueueFileOp(eOp_Delete, v.name)
+				if v.directory == 1 then
+					local path1
+
+					path1 = GetCurrentWorkingDirectory()
+					SetCurrentWorkingDirectory(v.name)
+
+					if TagAll() > 0 then
+						__TagDelete(command)
+					end
+
+					SetCurrentWorkingDirectory(path1)
+					RemoveDirectory(v.name)
+					SetCurrentWorkingDirectory(path1)
+				else
+					lstT[1+#lstT]=v
+					QueueFileOp(eOp_Delete, v.name)
+				end
 			end
 		end
 		lstF = nil
 
 		debug_msg("Deleting " .. #lstT .. " tagged files")
-		lstF, err = DoFileOps()
-
-		for k, v in ipairs(lstF) do
-			debug_msg("delete on " .. v.source_path .. "/" .. v.source_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
+		if #lstT > 0 then
+			lstF, err = DoFileOps()
+			--for k, v in ipairs(lstF) do
+			--	debug_msg("delete on " .. v.source_path .. "/" .. v.source_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
+			--end
 		end
 	end
 

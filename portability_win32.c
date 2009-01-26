@@ -1,12 +1,19 @@
 #include <windows.h>
+#ifdef __MINGW_H
+// needed for mkdir on mingw
+#include <io.h>
+#endif
+
 #include "headers.h"
+
+static char *alfc_script_home;
 
 char* ALFC_getenv(const char *s)
 {
+	char *p;
+
 	if(strcmp(s, "HOME") == 0)
 	{
-		char *p;
-
 		p = getenv("HOME");
 		if(p != NULL)
 			return p;
@@ -16,6 +23,14 @@ char* ALFC_getenv(const char *s)
 			return p;
 
 		return NULL;
+	}
+	else if(strcmp(s, "ALFC") == 0)
+	{
+		p = getenv("ALFC");
+		if(p != NULL)
+			return p;
+
+		return alfc_script_home;
 	}
 	else
 		return getenv(s);
@@ -75,3 +90,30 @@ int ALFC_stat(char *fn, struct stat *buff)
 	return stat(fn, buff);
 }
 
+int ALFC_mkdir(char *s)
+{
+	return mkdir(s);
+}
+
+int ALFC_rmdir(char *s)
+{
+	int rc = rmdir(s);
+	if(rc != 0)
+		LogInfo("rmdir : %s\n", strerror(errno));
+	return rc;
+}
+
+
+int ALFC_startup(void)
+{
+	alfc_script_home = ConvertDirectoryName("$HOME/.alfc/scripts");
+
+	return 0;
+}
+
+int ALFC_shutdown(void)
+{
+	if(alfc_script_home != NULL)
+		free(alfc_script_home);
+	return 0;
+}
