@@ -382,6 +382,7 @@ void LoadOptions(uGlobalData *gdata)
 		CreateHomeDirectory();
 		CreateIfNotExist("$HOME/.alfc/options.ini", include_options_ini, include_options_ini_SIZE);
 		CreateIfNotExist("$HOME/.alfc/global.lua", include_global_lua, include_global_lua_SIZE);
+		CreateIfNotExist("$HOME/.alfc/viewer.lua", include_viewer_lua, include_viewer_lua_SIZE);
 		CreateIfNotExist("$HOME/.alfc/startup.lua", include_startup_lua, include_startup_lua_SIZE);
 		CreateIfNotExist("$HOME/.alfc/shutdown.lua", include_shutdown_lua, include_shutdown_lua_SIZE);
 

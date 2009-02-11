@@ -406,7 +406,7 @@ static int DisplayCLI(uViewFile *v)
 
 	v->w->screen->print(v->command);
 
-	DrawMenuLine(v->w->screen, v->lstHotKeys);
+	v->w->screen->set_cursor(v->w->screen->get_screen_height()-1, 4 + strlen(v->command));
 
 	return 0;
 }
@@ -903,6 +903,7 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 	{
 		LoadLines(v, LoadLine);
 		DisplayFile(v);
+		DrawMenuLine(v->w->screen, v->lstHotKeys);
 		DisplayCLI(v);
 
 		v->quit_flag = 0;
@@ -1029,6 +1030,7 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 							LogInfo("Unknown key 0x%04x\n", key);
 						break;
 				}
+				DisplayCLI(v);
 			}
 		}
 	}
