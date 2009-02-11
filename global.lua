@@ -281,6 +281,24 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		TagAll();
 	end
 
+	local function __TagAllFiles(command)
+		lstF = GetFileList()
+		for k,v in ipairs(lstF) do
+			if v.tagged == 0 and v.directory == 0 then
+				TagFile(v.name)
+			end
+		end
+	end
+
+	local function __TagAllDirs(command)
+		lstF = GetFileList()
+		for k,v in ipairs(lstF) do
+			if v.tagged == 0 and v.directory == 1 then
+				TagFile(v.name)
+			end
+		end
+	end
+
 	local function __TagFlip(command)
 		TagFlip();
 	end
@@ -313,6 +331,8 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		cmds[":tf "] = __TagFilter
 		cmds[":tg "] = __TagGlob
 		cmds[":ta "] = __TagAll
+		cmds[":taf "] = __TagAllFiles
+		cmds[":tad "] = __TagAllDirs
 		cmds[":tu "] = __TagUnTagAll
 		cmds[":t! "] = __TagFlip
 

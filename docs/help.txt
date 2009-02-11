@@ -44,7 +44,9 @@ Current speed keyed commands
 
 :tf - Tag all files using a filter
 :tf - Tag all files using a glob
-:ta - Tall All
+:ta - Tag All
+:taf - Tag All Files
+:tad - Tag All Directories
 :tu - Untag All
 :t! - Flip all tags
 
