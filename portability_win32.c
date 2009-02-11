@@ -1,12 +1,25 @@
 #include <windows.h>
-#ifdef __MINGW_H
-// needed for mkdir on mingw
-#include <io.h>
-#endif
-
 #include "headers.h"
 
 static char *alfc_script_home;
+
+static void GetWindowsErrorMsg(char *func)
+{
+    LPVOID lpMsgBuf;
+    LPVOID lpDisplayBuf;
+	DWORD dw;
+
+	dw = GetLastError();
+
+	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, dw, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL );
+
+	lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT, (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)func) + 40) * sizeof(TCHAR));
+	sprintf(lpDisplayBuf, "%s failed with error %d: %s", func, dw, lpMsgBuf);
+	LogInfo(lpDisplayBuf);
+
+	LocalFree(lpMsgBuf);
+	LocalFree(lpDisplayBuf);
+}
 
 char* ALFC_getenv(const char *s)
 {
@@ -55,22 +68,22 @@ void ALFC_GetUserInfo(uGlobalData *gd)
 uint64_t ALFC_GetFileSize(uDirEntry *de, struct stat *buff)
 {
 	WIN32_FIND_DATA fd;
-	HANDLE err;
+	HANDLE hFind;
 	uint64_t rc;
 
 	if( S_ISDIR(buff->st_mode) != 0)
 		return 0;
 
-	err = FindFirstFile(de->name, &fd);
+	hFind = FindFirstFile(de->name, &fd);
 
-	if(err == INVALID_HANDLE_VALUE)
+	if(hFind == INVALID_HANDLE_VALUE)
 		return 0L;
 
 	rc = fd.nFileSizeHigh & 0xFFFFFFFF;
 	rc = rc << 32;
 	rc |= fd.nFileSizeLow & 0xFFFFFFFF;
 
-	FindClose(&fd);
+	FindClose(hFind);
 
 	return rc;
 }
@@ -92,14 +105,60 @@ int ALFC_stat(char *fn, struct stat *buff)
 
 int ALFC_mkdir(char *s)
 {
-	return mkdir(s);
+	int rc;
+
+	rc = CreateDirectory(s, NULL);
+
+	if(rc == 0)
+		rc = -1;
+	else
+		rc = 0;
+
+	if(rc == -1)
+	{
+		GetWindowsErrorMsg(s);
+	}
+
+	return rc;
 }
 
 int ALFC_rmdir(char *s)
 {
-	int rc = rmdir(s);
-	if(rc != 0)
-		LogInfo("rmdir : %s\n", strerror(errno));
+	int rc;
+
+	rc = RemoveDirectory(s);
+
+	// 0 = fail, non zero for success
+	if(rc == 0)
+		rc = -1;
+	else
+		rc = 0;
+
+	if(rc == -1)
+	{
+		GetWindowsErrorMsg("rmdir");
+	}
+
+	return rc;
+}
+
+int ALFC_unlink(char *s)
+{
+	int rc;
+
+	rc = DeleteFile(s);
+
+	// 0 = fail, non zero for success
+	if(rc == 0)
+		rc = -1;
+	else
+		rc = 0;
+
+	if(rc == -1)
+	{
+		GetWindowsErrorMsg("unlink");
+	}
+
 	return rc;
 }
 

@@ -373,6 +373,7 @@ void LoadOptions(uGlobalData *gdata)
 	char *x;
 	char *fmt;
 
+
 	gdata->optfilename = ConvertDirectoryName("$HOME/.alfc/options.ini");
 	gdata->optfile = INI_load(gdata->optfilename);
 
@@ -484,7 +485,7 @@ void LoadOptions(uGlobalData *gdata)
 
 void SaveOptions(uGlobalData *gdata)
 {
-	CreateHomeDirectory();
+	//CreateHomeDirectory();
 	INI_save(gdata->optfilename, gdata->optfile);
 }
 

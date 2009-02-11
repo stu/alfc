@@ -158,6 +158,7 @@ static void nc_print_string(const char *s)
 		s++;
 	}
 	doupdate();
+	refresh();
 }
 
 static void nc_print_string_abs(const char *s)
@@ -175,6 +176,7 @@ static void nc_print_string_abs(const char *s)
  		s++;
 	}
 	doupdate();
+	refresh();
 }
 
 static uint32_t nc_get_keypress(void)

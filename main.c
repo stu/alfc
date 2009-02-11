@@ -1239,10 +1239,39 @@ void DrawStatusInfoLine(uGlobalData *gd)
 
 void SwitchPanes(uGlobalData *gd)
 {
+	uDirEntry *de;
+	int j;
+	uWindow *w;
+	int size_off;
+	int date_off;
+	int max_namelen;
+
+	w = GetActWindow(gd);
+	size_off = CalcSizeOff(w, w->width-3);
+	date_off = CalcDateOff(w, size_off);
+	max_namelen = date_off - 2;
+	de = GetHighlightedFile(GetActList(gd), w->highlight_line, w->top_line);
+	j = w->highlight_line;
+	w->highlight_line = -1;
+	PrintFileLine(de, j, w, max_namelen, size_off, date_off);
+	w->highlight_line = j;
+
 	if(gd->selected_window == WINDOW_RIGHT)
+	{
 		gd->selected_window = WINDOW_LEFT;
+	}
 	else
+	{
 		gd->selected_window = WINDOW_RIGHT;
+	}
+
+
+	w = GetActWindow(gd);
+	size_off = CalcSizeOff(w, w->width-3);
+	date_off = CalcDateOff(w, size_off);
+	max_namelen = date_off - 2;
+	de = GetHighlightedFile(GetActList(gd), w->highlight_line, w->top_line);
+	PrintFileLine(de, w->highlight_line, w, max_namelen, size_off, date_off);
 
 	DrawActive(gd);
 	DrawStatusInfoLine(gd);
@@ -2271,7 +2300,6 @@ void DrawAll(uGlobalData *gd)
 {
 	int j;
 
-
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawFileListWindow(GetInActWindow(gd), GetInActList(gd), GetInActDPath(gd));
 	DrawActive(gd);
@@ -2301,11 +2329,10 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 	if(start_left != NULL)
 		gdata->left_dir = strdup(start_left);
 	else
-		gdata->left_dir = GetOptionDir(gdata, "startup_left", gdata->lstMRULeft);
+		gdata->left_dir = GetOptionDir(gdata, "left_startup", gdata->lstMRULeft);
 	if(godir(gdata, gdata->left_dir) == -1)
 		godir(gdata, GetCurrentWorkingDirectory());
 
-	fprintf(stderr, "%s\n", gdata->left_dir);
 	assert(gdata->lstLeft != NULL);
 
 	gdata->selected_window = WINDOW_RIGHT;
@@ -2317,7 +2344,7 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 	if(start_right != NULL)
 		gdata->right_dir = strdup(start_right);
 	else
-		gdata->right_dir = GetOptionDir(gdata, "startup_right", gdata->lstMRURight);
+		gdata->right_dir = GetOptionDir(gdata, "right_startup", gdata->lstMRURight);
 	if(godir(gdata, gdata->right_dir) == -1)
 		godir(gdata, GetCurrentWorkingDirectory());
 

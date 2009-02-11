@@ -100,6 +100,8 @@ typedef struct udtFileOperation
 		{
 			char	*source_filename;
 			char	*source_path;
+
+			uint64_t source_length;
 		} udtDelete;
 
 		struct
@@ -109,6 +111,8 @@ typedef struct udtFileOperation
 
 			char *dest_filename;
 			char *dest_path;
+
+			uint64_t source_length;
 		} udtMove;
 
 		struct
@@ -118,6 +122,8 @@ typedef struct udtFileOperation
 
 			char *dest_filename;
 			char *dest_path;
+
+			uint64_t source_length;
 		} udtCopy;
 
 		struct
@@ -284,6 +290,9 @@ struct udtGlobals
 	int			mode;
 
 	DList		*lstFileOps;
+
+
+	DList 		*lstViewerList;
 };
 
 enum

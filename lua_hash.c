@@ -73,7 +73,7 @@ int gme_RIPEMD160Sum(lua_State *L)
 	struct lstr fstring;
 	uGlobalData *gd;
 
-	uint32_t *msg;
+	uint8_t *msg;
 	uint32_t nbytes;
 	uint32_t X[16];
 	uint32_t MDbuf[160/32];
@@ -84,7 +84,7 @@ int gme_RIPEMD160Sum(lua_State *L)
 	assert(gd != NULL);
 
 	GET_LUA_STRING(fstring, 1);
-	msg = (uint32_t*)fstring.data;
+	msg = (uint8_t*)fstring.data;
 
 	MDinit(MDbuf);
 
@@ -97,7 +97,7 @@ int gme_RIPEMD160Sum(lua_State *L)
 		}
 		compress(MDbuf, X);
 	}
-	MDfinish(MDbuf, (uint8_t*)fstring.data, fstring.length, 0);
+	MDfinish(MDbuf, msg, fstring.length, 0);
 
 
 	sprintf(buff, "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",

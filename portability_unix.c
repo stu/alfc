@@ -77,3 +77,8 @@ int ALFC_shutdown(void)
 {
 	return 0;
 }
+
+int ALFC_unlink(char *s)
+{
+	return unlink(s);
+}

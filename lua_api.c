@@ -102,7 +102,7 @@ opt = GetOption(GroupName, ItemName)
 *	o opt (string) - Option that had been asked for, or if no
 *	  option existed, an empty string is returned.
 * EXAMPLE
-opt = GetOption("general", "left_startup_directory")
+opt = GetOption("general", "left_startup")
 * NOTES
 * 	May not match what is on disk, as these options are returned
 * 	from the running program, and things are bound to change
@@ -154,7 +154,7 @@ SetOption(GroupName, ItemName, Value)
 * RESULTS
 *	o None
 * EXAMPLE
-SetOption("general", "left_startup_directory", "$HOME")
+SetOption("general", "left_startup", "$HOME")
 * NOTES
 *	Options are stored like such;
 *
@@ -1755,7 +1755,7 @@ int gme_QueueFileOp(lua_State *L)
 				x->op.udtCopy.source_filename = strdup(fname.data);
 				x->op.udtCopy.dest_filename = strdup(fname.data);
 				x->op.udtCopy.dest_path = strdup(GetInActDPath(gd));
-				LogInfo("%s/%s to %s/%s\n", x->op.udtCopy.source_path, x->op.udtCopy.source_filename, x->op.udtCopy.dest_path, x->op.udtCopy.dest_filename );
+				//LogInfo("%s/%s to %s/%s\n", x->op.udtCopy.source_path, x->op.udtCopy.source_filename, x->op.udtCopy.dest_path, x->op.udtCopy.dest_filename );
 				break;
 
 			case eOp_Move:
@@ -1780,7 +1780,7 @@ int gme_QueueFileOp(lua_State *L)
 }
 
 
-static int ViewOperationsLog(uGlobalData *gd, int intLine, uint8_t *buff, int len)
+int ViewOperationsLog(uGlobalData *gd, int intLine, uint8_t *buff, int len)
 {
 	DLElement *e;
 	int j;
@@ -1842,6 +1842,90 @@ static int ViewOperationsLog(uGlobalData *gd, int intLine, uint8_t *buff, int le
 				break;
 		}
 	}
+
+	return 0;
+}
+
+static int ViewDList(uGlobalData *gd, int intLine, uint8_t *buff, int len)
+{
+	DLElement *e;
+	char *s;
+	int j;
+
+	if(gd->lstViewerList == NULL)
+		return -1;
+
+	e = dlist_head(gd->lstViewerList);
+
+	if(e == NULL)
+		return -1;
+	j = intLine;
+	while( j > 0 && e != NULL)
+	{
+		e = dlist_next(e);
+		j -= 1;
+	}
+
+	if(j > 0 || e == NULL)
+		return -1;
+
+	s = dlist_data(e);
+	if(s == NULL)
+	{
+		buff[0] = 0;
+	}
+	else
+	{
+		int len2;
+
+		len2 = strlen(s)+1;
+
+		if(len2 > len-1)
+			len2 = len-1;
+
+		memset(buff, 0x0, len);
+		memmove((char*)buff, s, len2);
+	}
+
+	return 0;
+}
+
+
+int gme_ViewLuaTable(lua_State *L)
+{
+	struct lstr sTitle;
+	uGlobalData *gd;
+
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	DList *lstOld;
+
+	lstOld = gd->lstViewerList;
+
+	GET_LUA_STRING(sTitle, 1);
+
+	if(lua_istable(L, 2) == 0)
+		luaL_error(L, "expected table at parm #2 in ViewLuaTable, but got something else");
+
+	gd->lstViewerList = malloc(sizeof(DList));
+	dlist_init(gd->lstViewerList, NULL);
+
+	lua_pushnil(L);
+	while(lua_next(L, 2)!=0)
+	{
+		dlist_ins(gd->lstViewerList, lua_tostring(L,-1));
+		lua_pop(L,1);
+	}
+
+	ViewFile(gd, sTitle.data, &ViewDList);
+	DrawAll(gd);
+
+	dlist_destroy(gd->lstViewerList);
+	free(gd->lstViewerList);
+
+	gd->lstViewerList = lstOld;
 
 	return 0;
 }
@@ -1931,6 +2015,10 @@ int gme_DoFileOps(lua_State *L)
 				lua_pushstring(L, "source_path");
 				lua_pushstring(L, x->op.udtDelete.source_path);
 				lua_settable(L, -3);
+
+				lua_pushstring(L, "length");
+				lua_pushnumber(L, x->op.udtDelete.source_length);
+				lua_settable(L, -3);
 				break;
 
 			case eOp_Copy:
@@ -1949,6 +2037,11 @@ int gme_DoFileOps(lua_State *L)
 				lua_pushstring(L, "dest_path");
 				lua_pushstring(L, x->op.udtCopy.dest_path);
 				lua_settable(L, -3);
+
+				lua_pushstring(L, "length");
+				lua_pushnumber(L, x->op.udtCopy.source_length);
+				lua_settable(L, -3);
+
 				break;
 
 			case eOp_Move:
@@ -1967,6 +2060,10 @@ int gme_DoFileOps(lua_State *L)
 				lua_pushstring(L, "dest_path");
 				lua_pushstring(L, x->op.udtMove.dest_path);
 				lua_settable(L, -3);
+
+				lua_pushstring(L, "length");
+				lua_pushnumber(L, x->op.udtMove.source_length);
+				lua_settable(L, -3);
 				break;
 		}
 
@@ -1975,11 +2072,13 @@ int gme_DoFileOps(lua_State *L)
 		e = dlist_next(e);
 	}
 
+	/*
 	//if(err_count > 0)
 	{
 		ViewFile(gd, "OPERATIONS LOG", &ViewOperationsLog);
 		DrawAll(gd);
 	}
+	*/
 
 	dlist_empty(gd->lstFileOps);
 
@@ -2156,9 +2255,25 @@ int gme_RemoveDirectory(lua_State *L)
 
 	GET_LUA_STRING(g, 1);
 
-	LogInfo("delete %s\n", g.data);
 	lua_pushnumber(L, ALFC_rmdir(g.data));
 
 	return 1;
+}
+
+int gme_status(lua_State *L)
+{
+	struct lstr s;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(s, 1);
+
+	gd->screen->set_style(STYLE_TITLE);
+	gd->screen->set_cursor(gd->screen->get_screen_height()-1, 1);
+	gd->screen->erase_eol();
+	gd->screen->print_abs(s.data);
+
+	return 0;
 }
 

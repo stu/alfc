@@ -54,7 +54,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 	strcat(dst, "/");
 	strcat(dst, x->op.udtCopy.dest_filename);
 
-	LogInfo("Copy %s to %s\n", src, dst);
+	//LogInfo("Copy %s to %s\n", src, dst);
 
 	// same?
 	if(strcmp(src, dst) == 0)
@@ -176,6 +176,9 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 		return x->result_code;
 	}
 
+
+	x->op.udtCopy.source_length = statbuff.st_size;
+
 	flag = 0;
 	offset = 0;
 	while(flag == 0)
@@ -213,7 +216,8 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 			close(ifd);
 			close(ofd);
 #endif
-			unlink(dst);
+			ALFC_unlink(dst);
+
 			free(src);
 			free(dst);
 			free(buff);
@@ -240,7 +244,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 			close(ifd);
 			close(ofd);
 #endif
-			unlink(dst);
+			ALFC_unlink(dst);
 			free(src);
 			free(dst);
 			free(buff);
@@ -267,7 +271,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 			close(ifd);
 			close(ofd);
 #endif
-			unlink(dst);
+			ALFC_unlink(dst);
 			free(src);
 			free(dst);
 			free(buff);
@@ -294,7 +298,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 			close(ifd);
 			close(ofd);
 #endif
-			unlink(dst);
+			ALFC_unlink(dst);
 			free(src);
 			free(dst);
 			free(buff);
@@ -401,8 +405,10 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 		return x->result_code;
 	}
 
+	x->op.udtDelete.source_length = statbuff.st_size;
+
 	// GO!
-	if( unlink(src) == -1)
+	if( ALFC_unlink(src) != 0)
 	{
 		x->result_code = -1;
 		x->result_msg =  strdup(strerror(errno));
@@ -436,8 +442,11 @@ int Ops_MoveFile(uGlobalData *gd, uFileOperation *x)
 	x->result_code = z->result_code;
 	x->result_msg = z->result_msg;
 
+
 	if(z->result_code == 0)
 	{
+		x->op.udtMove.source_length = z->op.udtCopy.source_length;
+
 		if(x->result_msg != NULL)
 			free(x->result_msg);
 
