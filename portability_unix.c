@@ -82,3 +82,8 @@ int ALFC_unlink(char *s)
 {
 	return unlink(s);
 }
+
+char* ALFC_get_last_error(int err)
+{
+	return strerror(errno);
+}

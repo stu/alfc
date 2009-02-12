@@ -7,6 +7,87 @@
 ]]
 
 if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
+function comma_value(amount)
+	local formatted = amount
+	while true do
+		formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
+		if (k==0) then
+			break
+		end
+	end
+	return formatted
+end
+
+
+---============================================================
+-- rounds a number to the nearest decimal places
+--
+function round(val, decimal)
+	if (decimal) then
+		return math.floor( (val * 10^decimal) + 0.5) / (10^decimal)
+	else
+		return math.floor(val+0.5)
+	end
+end
+
+
+--===================================================================
+-- given a numeric value formats output with comma to separate thousands
+-- and rounded to given decimal places
+--
+--
+function format_num(amount, decimal, prefix, neg_prefix)
+	local str_amount,  formatted, famount, remain
+
+	decimal = decimal or 2  -- default 2 decimal places
+	neg_prefix = neg_prefix or "-" -- default negative sign
+
+	famount = math.abs(round(amount,decimal))
+	famount = math.floor(famount)
+
+	remain = round(math.abs(amount) - famount, decimal)
+
+	-- comma to separate the thousands
+	formatted = comma_value(famount)
+
+	-- attach the decimal portion
+	if (decimal > 0) then
+		remain = string.sub(tostring(remain),3)
+		formatted = formatted .. "." .. remain ..
+		string.rep("0", decimal - string.len(remain))
+	end
+
+	-- attach prefix string e.g '$'
+	formatted = (prefix or "") .. formatted
+
+	-- if value is negative then format accordingly
+	if (amount<0) then
+		if (neg_prefix=="()") then
+			formatted = "("..formatted ..")"
+		else
+			formatted = neg_prefix .. formatted
+		end
+	end
+
+	return formatted
+end
+
+
+	function size_mash(s)
+		local c = { 1024, 1024*1024, 1024*1024*1024, 1024*1024*1024*1024, 1024*1024*1024*1024*1024 }
+
+		if s < c[1] then
+			return s .. " bytes"
+		elseif s < c[2] then
+			return format_num(s/c[1], 2) .. "kb"
+		elseif s < c[3] then
+			return format_num(s / c[2], 2) .. "mb"
+		elseif s < c[4] then
+			return format_num(s / c[3], 2) .. "gb"
+		else
+			return format_num(s / c[5], 2) .. "tb"
+		end
+	end
 
 	function x(fname)
 		local f
@@ -137,22 +218,37 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 			SetOption("options", "sort_order", "size_asc")
 		elseif trim(command) == "sd" then
 			SetOption("options", "sort_order", "size_desc")
+		elseif trim(command) == "da" then
+			SetOption("options", "sort_order", "date_asc")
+		elseif trim(command) == "dd" then
+			SetOption("options", "sort_order", "date_desc")
 		end
 
 		-- re-sort..
 		SortFileList()
+		SwitchPanes()
+		SortFileList()
+		RedrawWindow()
+		SwitchPanes()
 		RedrawWindow()
 	end
 
-	local function __TagCopy(command)
+	local function __TagCopyX(command, buff)
 		local lstF
 		local lstT
-		local k,v, err
+		local k,v, err, errc
+		local file_size
+		local file_count
+
+		file_size = 0
+		file_count = 0
 
 		local path1, path2
 
 		lstF = GetFileList()
 		lstT = {}
+
+		err = 0
 
 		for k,v in ipairs(lstF) do
 			if v.tagged == 1 then
@@ -169,8 +265,9 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 					SetCurrentWorkingDirectory(v.name)
 					SwitchPanes()
-					TagAll()
-					__TagCopy(command)
+					if TagAll() > 0 then
+						err = err + __TagCopyX(command, buff)
+					end
 
 					SetCurrentWorkingDirectory(path1)
 					SwitchPanes()
@@ -184,54 +281,106 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		end
 		lstF = nil
 
-		--debug_msg("Copying " .. #lstT .. " tagged files")
 		if #lstT > 0 then
-			lstF, err = DoFileOps()
-			--[[
-			if err > 0 then
-				lstT = {}
-				for k, v in ipairs(lstF) do
-					lstT[1+#lstT] = "Copy on " .. v.source_path .. "/" .. v.source_filename .. " to " .. v.dest_path .. "/" .. v.dest_filename .. " = (" .. v.result_code .. ") " .. v.result_msg
+			lstF, errc = DoFileOps()
+			err = err + errc
+			lstT = nil
+			for k, v in ipairs(lstF) do
+				if v.result_code == 0 then
+					file_count = file_count + 1
+					file_size = file_size + v.length
 				end
-
-				ViewLuaTable(gd, "COPY OPERATIONS LOG", lstT);
+				buff[1+#buff] = "Copy " .. v.result_msg ..  " on " .. v.source_path .. "/" .. v.source_filename
 			end
-			]]
+
+			buff[1 + #buff] = ""
+			buff[1 + #buff] = "Copied " .. file_count .. " files at " .. size_mash(file_size)
 		end
 
+		return err
 	end
 
-	local function __TagMove(command)
+
+	local function __TagMoveX(command, buff)
 		local lstF
 		local lstT
-		local k,v
+		local k,v, err, errc
+		local file_size
+		local file_count
+
+		file_size = 0
+		file_count = 0
 
 		lstF = GetFileList()
 		lstT = {}
+		err = 0
 
 		for k,v in ipairs(lstF) do
 			if v.tagged == 1 then
-				lstT[1+#lstT]=v
-				QueueFileOp(eOp_Move, v.name)
+				if v.directory == 1 then
+					local path1
+					local path2
+
+					path1 = GetCurrentWorkingDirectory()
+					SwitchPanes()
+					path2 = GetCurrentWorkingDirectory()
+					CreateDirectory(v.name)
+					SetCurrentWorkingDirectory(v.name)
+					SwitchPanes()
+					SetCurrentWorkingDirectory(v.name)
+
+					if TagAll() > 0 then
+						err = err + __TagMoveX(command, buff)
+					end
+
+					ChangeDirUp()
+					RemoveDirectory(v.name)
+					SetCurrentWorkingDirectory(path1)
+					SwitchPanes()
+					SetCurrentWorkingDirectory(path2)
+					SwitchPanes()
+				else
+					lstT[1+#lstT]=v
+					QueueFileOp(eOp_Move, v.name)
+				end
 			end
 		end
 		lstF = nil
 
-		debug_msg("Move " .. #lstT .. " tagged files")
-		lstF, err = DoFileOps()
-		for k, v in ipairs(lstF) do
-			debug_msg("Move on " .. v.source_path .. "/" .. v.source_filename .. " to " .. v.dest_path .. "/" .. v.dest_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
+		if #lstT > 0 then
+			lstF, errc = DoFileOps()
+			err = err + errc
+			lstT = nil
+			for k, v in ipairs(lstF) do
+				if v.result_code == 0 then
+					file_count = file_count + 1
+					file_size = file_size + v.length
+				end
+				buff[1+#buff] = "Move " .. v.result_msg ..  " on " .. v.source_path .. "/" .. v.source_filename
+			end
+			buff[1 + #buff] = ""
+			buff[1 + #buff] = "Moved " .. file_count .. " files at " .. size_mash(file_size)
 		end
+
+		return err
 	end
 
-	local function __TagDelete(command)
+	local function __TagDeleteX(command, buff)
 		local lstF
 		local lstT
 		local err
-		local k, v, err
+		local k,v, err, errc
+
+		local file_size
+		local file_count
+
+		file_size = 0
+		file_count = 0
 
 		lstF = GetFileList()
 		lstT = {}
+
+		err = 0
 
 		for k,v in ipairs(lstF) do
 			if v.tagged == 1 then
@@ -242,10 +391,10 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 					SetCurrentWorkingDirectory(v.name)
 
 					if TagAll() > 0 then
-						__TagDelete(command)
+						err = err + __TagDeleteX(command, buff)
 					end
 
-					SetCurrentWorkingDirectory(path1)
+					ChangeDirUp()
 					RemoveDirectory(v.name)
 					SetCurrentWorkingDirectory(path1)
 				else
@@ -256,12 +405,42 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		end
 		lstF = nil
 
-		debug_msg("Deleting " .. #lstT .. " tagged files")
 		if #lstT > 0 then
-			lstF, err = DoFileOps()
-			--for k, v in ipairs(lstF) do
-			--	debug_msg("delete on " .. v.source_path .. "/" .. v.source_filename .. " = (" .. v.result_code .. ") " .. v.result_msg)
-			--end
+			lstF, errc = DoFileOps()
+			err = err + errc
+			lstT = nil
+			for k, v in ipairs(lstF) do
+				if v.result_code == 0 then
+					file_count = file_count + 1
+					file_size = file_size + v.length
+				end
+				buff[1+#buff] = "Delete " .. v.result_msg ..  " on " .. v.source_path .. "/" .. v.source_filename
+			end
+			buff[1 + #buff] = ""
+			buff[1 + #buff] = "Delted " .. file_count .. " files at " .. size_mash(file_size)
+		end
+
+		return err
+	end
+
+	local function __TagCopy(command)
+		local buff = {}
+		if __TagCopyX(command, buff) > 0 or GetOption("copy_move", "display_log") == "true" then
+			ViewLuaTable("COPY OPERATIONS LOG", buff);
+		end
+	end
+	local function __TagMove(command)
+		local buff = {}
+		__TagMoveX(command, buff)
+		if __TagCopyX(command, buff) > 0 or GetOption("copy_move", "display_log") == "true" then
+			ViewLuaTable("MOVE OPERATIONS LOG", buff);
+		end
+	end
+	local function __TagDelete(command)
+		local buff = {}
+		__TagDeleteX(command, buff)
+		if __TagCopyX(command, buff) > 0 or GetOption("delete", "display_log") == "true" then
+			ViewLuaTable("DELETE OPERATIONS LOG", buff);
 		end
 	end
 
@@ -362,6 +541,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		local opt_dirs_first;
 		local opt_sort_order;
 		local sortfunc
+		local dsortfunc
 
 		opt_dirs_first = GetOption("options", "directories_first")
 		opt_sort_order = GetOption("options", "sort_order")
@@ -387,14 +567,24 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		end
 
 
+		-- name ascending
+		dsortfunc = function(a,b) return a.data.name<b.data.name end
 		if opt_sort_order == "name_desc" then
 			sortfunc = function(a,b) return a.data.name>b.data.name end
+			dsortfunc = sortfunc
 		elseif opt_sort_order == "name_asc" then
 			sortfunc = function(a,b) return a.data.name<b.data.name end
+			dsortfunc = sortfunc
 		elseif opt_sort_order == "size_desc" then
 			sortfunc = function(a,b) return a.data.size>b.data.size end
 		elseif opt_sort_order == "size_asc" then
 			sortfunc = function(a,b) return a.data.size<b.data.size end
+		elseif opt_sort_order == "date_asc" then
+			sortfunc = function(a,b) return a.data.date<b.data.date end
+			dsortfunc = sortfunc
+		elseif opt_sort_order == "date_desc" then
+			sortfunc = function(a,b) return a.data.date>b.data.date end
+			dsortfunc = sortfunc
 		else
 			-- default use name ascending...
 			sortfunc = function(a,b) return a.data.name<b.data.name end
@@ -402,7 +592,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 		if opt_dirs_first == "true" then
 			-- sort by name for dirs always
-			table.sort(lstSD, function(a,b) return a.data.name<b.data.name end)
+			table.sort(lstSD, dsortfunc)
 
 			-- now sort files
 			table.sort(lstSF, sortfunc)
@@ -424,22 +614,28 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 	--debug_msg("Global Lua Functions bootstrapped")
 	BindKey(ALFC_KEY_F01, "View", [[ViewFile(GetHighlightedFilename())]])
-	BindKey(ALFC_KEY_F02, "Same", [[:s]])
-	BindKey(ALFC_KEY_F03, "History", [[ViewHistory()]])
-	BindKey(ALFC_KEY_F10, "Quit", [[:q]])
+
+	--BindKey(ALFC_KEY_F02, "Same", [[:s]])
+	--BindKey(ALFC_KEY_F03, "History", [[ViewHistory()]])
+
+	BindKey(ALFC_KEY_ALT + string.byte("X"), "Quit", [[:q]])
+
+	BindKey(ALFC_KEY_F12, "Tag", [[TagHighlightedFile()]])
 
 	BindKey(ALFC_KEY_ALT + string.byte("C"), "Copy Tagged", [[:tc]])
 	BindKey(ALFC_KEY_ALT + string.byte("D"), "Del Tagged", [[:td]])
 	BindKey(ALFC_KEY_ALT + string.byte("M"), "Move Tagged", [[:tm]])
 
+	BindKey(ALFC_KEY_ALT + string.byte("A"), "About", [[About()]])
+
+	BindKey(ALFC_KEY_ALT + string.byte("H"), "About", [[SetCurrentWorkingDirectory("$HOME")]])
+
 	-- Dont bind to common keys you will need to use in the command line bar..
 	--BindKey(ALFC_KEY_DEL, "Del", [[QueueFileOp(eOp_Delete, GetHighlightedFilename()); DoFileOps();]])
 	--BindKey(ALFC_KEY_INS, "Copy", [[QueueFileOp(eOp_Copy, GetHighlightedFilename()); DoFileOps();]])
 
-
 	-- Sometimes I want a quick view for code files
 	BindKey(ALFC_KEY_F11, "CodeOnly", [[SetFilter("\\.[ch]$"); SetGlob("*.lua")]])
-	BindKey(ALFC_KEY_F12, "Tag", [[TagHighlightedFile()]])
 
 	_G["DIR_BOOTSTRAP"] = 1
 end -- _G["BOOTSTRAP"]

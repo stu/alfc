@@ -1,5 +1,90 @@
 #include "headers.h"
 
+/****f* LuaAPI/VersionMajor
+* FUNCTION
+*	Returns the major version number
+* SYNOPSIS
+major = VersionMajor()
+* INPUTS
+*	o None
+* RESULTS
+*	o major (number) -- major number (eg: 1)
+* EXAMPLE
+debug_msg("ALFC v " .. VersionMajor())
+* AUTHOR
+*	Stu George
+******
+*/
+int gmec_VersionMajor(lua_State *L)
+{
+	lua_pushnumber(L, VersionMajor());
+	return 1;
+}
+/****f* LuaAPI/VersionMinor
+* FUNCTION
+*	Returns the minor version number
+* SYNOPSIS
+minor = VersionMinor()
+* INPUTS
+*	o None
+* RESULTS
+*	o minor (number) -- minor number (eg: 2)
+* EXAMPLE
+debug_msg("ALFC minor version = " .. VersionMinor())
+* AUTHOR
+*	Stu George
+******
+*/
+int gmec_VersionMinor(lua_State *L)
+{
+	lua_pushnumber(L, VersionMinor());
+	return 1;
+}
+/****f* LuaAPI/VersionBuild
+* FUNCTION
+*	Returns the build number
+* SYNOPSIS
+build = VersionBuild()
+* INPUTS
+*	o None
+* RESULTS
+*	o build (number) -- build number (eg: 1234)
+* EXAMPLE
+debug_msg("ALFC build " .. VersionBuild())
+* AUTHOR
+*	Stu George
+******
+*/
+int gmec_VersionBuild(lua_State *L)
+{
+	lua_pushnumber(L, VersionBuild());
+	return 1;
+}
+/****f* LuaAPI/Version
+* FUNCTION
+*	This function returns the version in a hexadecimal encoding. The upper 8 bits
+*   are the major number, the next 8 bits are minor and the lower 16 are build.
+*    0-15 - Build
+*   16-23 - Minor
+*   24-31 - Major
+* SYNOPSIS
+vers = Version()
+* INPUTS
+*	o None
+* RESULTS
+*	o version (number) -- version number (eg: 1.02.1234 as 0x010204D2)
+* EXAMPLE
+debug_msg("ALFC version " .. Version())
+* AUTHOR
+*	Stu George
+******
+*/
+int gmec_Version(lua_State *L)
+{
+	lua_pushnumber(L, (VersionMajor() << 24) | (VersionMinor() << 16) | VersionBuild());
+	return 1;
+}
+
 int gmec_GetMode(lua_State *L)
 {
 	uGlobalData *gd;
@@ -182,47 +267,13 @@ int gmec_ConvertDirectoryName(lua_State *L)
 	return 1;
 }
 
-static int ReadHistoryLine(uGlobalData *gd, int intLine, uint8_t *buff, int len)
-{
-	DLElement *e;
-	int j;
-	char *x;
-
-	e = dlist_tail(gd->lstLogHistory);
-
-	j = intLine;
-	while( j > 0 && e != NULL)
-	{
-		e = dlist_prev(e);
-		j -= 1;
-	}
-
-	if(j > 0 || e == NULL)
-		return -1;
-
-	x = dlist_data(e);
-	if( strlen(x) >= len)
-	{
-		memmove(buff, x, len);
-		buff[len-1] = 0;
-	}
-	else
-	{
-		memmove(buff, x, strlen(x) + 1);
-	}
-
-	return 0;
-}
-
-int gmec_ViewHistory(lua_State *L)
+int gmec_DriverName(lua_State *L)
 {
 	uGlobalData *gd;
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
 
-	ViewFile(gd, "HISTORY BUFFER", &ReadHistoryLine);
-	DrawAll(gd);
-
-	return 0;
+	lua_pushstring(L, gd->screen->driver_name());
+	return 1;
 }
 

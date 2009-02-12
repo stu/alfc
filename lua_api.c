@@ -1068,6 +1068,9 @@ int gme_GetFileList(lua_State *L)
 	e = dlist_head(lst);
 	while(e != NULL)
 	{
+		char *buff_date;
+		char date_fmt[8] = { et_Year4,et_Month,et_Day,' ',et_Hour24,et_Min,et_Sec, 0};
+
 		de = dlist_data(e);
 
 		lua_pushnumber(L, i++);
@@ -1081,6 +1084,10 @@ int gme_GetFileList(lua_State *L)
 		lua_pushnumber(L, de->size);
 		lua_settable(L, -3);
 
+		buff_date = GetDateTimeString(date_fmt, de->time);
+		lua_pushstring(L, "date");
+		lua_pushstring(L, buff_date);
+		lua_settable(L, -3);
 
 		lua_pushstring(L, "directory");
 		if( S_ISDIR(de->attrs) == 0)
@@ -1746,23 +1753,22 @@ int gme_QueueFileOp(lua_State *L)
 		switch(x->type)
 		{
 			case eOp_Delete:
-				x->op.udtDelete.source_path = strdup(GetActDPath(gd));
-				x->op.udtDelete.source_filename = strdup(fname.data);
+				x->op.udtDelete.source_path = ConvertDirectoryName(GetActDPath(gd));
+				x->op.udtDelete.source_filename = ConvertDirectoryName(fname.data);
 				break;
 
 			case eOp_Copy:
-				x->op.udtCopy.source_path = strdup(GetActDPath(gd));
-				x->op.udtCopy.source_filename = strdup(fname.data);
-				x->op.udtCopy.dest_filename = strdup(fname.data);
-				x->op.udtCopy.dest_path = strdup(GetInActDPath(gd));
-				//LogInfo("%s/%s to %s/%s\n", x->op.udtCopy.source_path, x->op.udtCopy.source_filename, x->op.udtCopy.dest_path, x->op.udtCopy.dest_filename );
+				x->op.udtCopy.source_path = ConvertDirectoryName(GetActDPath(gd));
+				x->op.udtCopy.source_filename = ConvertDirectoryName(fname.data);
+				x->op.udtCopy.dest_filename = ConvertDirectoryName(fname.data);
+				x->op.udtCopy.dest_path = ConvertDirectoryName(GetInActDPath(gd));
 				break;
 
 			case eOp_Move:
-				x->op.udtMove.source_path = strdup(GetActDPath(gd));
-				x->op.udtMove.source_filename = strdup(fname.data);
-				x->op.udtMove.dest_filename = strdup(fname.data);
-				x->op.udtMove.dest_path = strdup(GetInActDPath(gd));
+				x->op.udtMove.source_path = ConvertDirectoryName(GetActDPath(gd));
+				x->op.udtMove.source_filename = ConvertDirectoryName(fname.data);
+				x->op.udtMove.dest_filename = ConvertDirectoryName(fname.data);
+				x->op.udtMove.dest_path = ConvertDirectoryName(GetInActDPath(gd));
 				break;
 
 			case eOp_MakeDir:
@@ -1779,73 +1785,6 @@ int gme_QueueFileOp(lua_State *L)
 	return 1;
 }
 
-
-int ViewOperationsLog(uGlobalData *gd, int intLine, uint8_t *buff, int len)
-{
-	DLElement *e;
-	int j;
-	uFileOperation *op;
-
-	if(gd->lstFileOps == NULL)
-		return -1;
-
-	e = dlist_head(gd->lstFileOps);
-
-	if(e == NULL)
-		return -1;
-	j = intLine;
-	while( j > 0 && e != NULL)
-	{
-		e = dlist_next(e);
-		j -= 1;
-	}
-
-	if(j > 0 || e == NULL)
-		return -1;
-
-	op = dlist_data(e);
-	if(op == NULL || op->result_msg == NULL)
-	{
-		buff[0] = 0;
-	}
-	else if(op->result_code == 0)
-	{
-		switch(op->type)
-		{
-			case eOp_Delete:
-				snprintf((char*)buff, len, "Delete OK on %s", op->op.udtDelete.source_filename);
-				break;
-
-			case eOp_Copy:
-				snprintf((char*)buff, len, "Copy OK on %s to %s", op->op.udtCopy.source_filename, op->op.udtCopy.dest_path);
-				break;
-
-			case eOp_Move:
-				snprintf((char*)buff, len, "Move OK on %s to %s", op->op.udtCopy.source_filename, op->op.udtCopy.dest_path);
-				break;
-		}
-	}
-	else
-	{
-		switch(op->type)
-		{
-			case eOp_Delete:
-				snprintf((char*)buff, len, "Delete Failed on %s : %s", op->op.udtDelete.source_filename, op->result_msg);
-				break;
-
-			case eOp_Copy:
-				snprintf((char*)buff, len, "Copy Failed on %s : %s", op->op.udtCopy.source_filename, op->result_msg);
-				break;
-
-			case eOp_Move:
-				snprintf((char*)buff, len, "Move Failed on %s : %s", op->op.udtMove.source_filename, op->result_msg);
-				break;
-		}
-	}
-
-	return 0;
-}
-
 static int ViewDList(uGlobalData *gd, int intLine, uint8_t *buff, int len)
 {
 	DLElement *e;
@@ -1859,6 +1798,7 @@ static int ViewDList(uGlobalData *gd, int intLine, uint8_t *buff, int len)
 
 	if(e == NULL)
 		return -1;
+
 	j = intLine;
 	while( j > 0 && e != NULL)
 	{
@@ -1944,7 +1884,6 @@ int gme_DoFileOps(lua_State *L)
 
 	uDirEntry *de;
 	char *high1, *high2;
-
 
 	high1 = NULL;
 	high2 = NULL;
@@ -2071,14 +2010,6 @@ int gme_DoFileOps(lua_State *L)
 
 		e = dlist_next(e);
 	}
-
-	/*
-	//if(err_count > 0)
-	{
-		ViewFile(gd, "OPERATIONS LOG", &ViewOperationsLog);
-		DrawAll(gd);
-	}
-	*/
 
 	dlist_empty(gd->lstFileOps);
 
@@ -2231,6 +2162,26 @@ int gme_TagFlip(lua_State *L)
 	return 1;
 }
 
+
+int gme_ViewHistory(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	DList *lstOld;
+
+	lstOld = gd->lstViewerList;
+	gd->lstViewerList = gd->lstLogHistory;
+
+	ViewFile(gd, "HISTORY BUFFER", &ViewDList);
+	DrawAll(gd);
+
+	gd->lstViewerList = lstOld;
+
+	return 0;
+}
+
 int gme_CreateDirectory(lua_State *L)
 {
 	struct lstr g;
@@ -2273,6 +2224,20 @@ int gme_status(lua_State *L)
 	gd->screen->set_cursor(gd->screen->get_screen_height()-1, 1);
 	gd->screen->erase_eol();
 	gd->screen->print_abs(s.data);
+
+	return 0;
+}
+
+int gme_About(lua_State *L)
+{
+	uGlobalData *gd;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	about_window(gd);
+
+	DrawAll(gd);
 
 	return 0;
 }

@@ -13,6 +13,7 @@ extern int ALFC_stat(char *fn, struct stat *buff);
 extern int ALFC_mkdir(char *s);
 extern int ALFC_rmdir(char *s);
 extern int ALFC_unlink(char *s);
+extern char* ALFC_get_last_error(int err);
 
 extern int ALFC_startup(void);
 extern int ALFC_shutdown(void);

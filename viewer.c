@@ -365,7 +365,10 @@ static int DisplayStatus(uViewFile *v)
 	p=strchr(buff, 0);
 	*p++ = ' ';
 
-	sprintf(p, "%3i%%",  (1 + v->intTLine + v->intHLine) * 100 / v->intLineCount );
+	if(v->intLineCount == 0)
+		sprintf(p, "%3i%%",  (1 + v->intTLine + v->intHLine) * 100 / 1);
+	else
+		sprintf(p, "%3i%%",  (1 + v->intTLine + v->intHLine) * 100 / v->intLineCount );
 	p=strchr(buff, 0);
 	*p++ = ' ';
 
@@ -992,14 +995,6 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 
 							v->command_length = 0;
 							v->command[v->command_length] = 0;
-
-							if(v->redraw == 1)
-							{
-								DisplayFile(v);
-							}
-
-							v->redraw = 0;
-							DisplayCLI(v);
 						}
 						break;
 
@@ -1031,6 +1026,14 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 						break;
 				}
 				DisplayCLI(v);
+			}
+
+
+			if(v->redraw == 1)
+			{
+				DisplayFile(v);
+				DisplayCLI(v);
+				v->redraw = 0;
 			}
 		}
 	}
@@ -1203,4 +1206,23 @@ int gmev_BindKey(lua_State *L)
 	lua_pushnumber(L, 0);
 	return 1;
 }
+
+int gmev_About(lua_State *L)
+{
+	uGlobalData *gd;
+	uViewFile *v;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	v = GetViewerData(L);
+	assert(v != NULL);
+
+	about_window(gd);
+
+	v->redraw = 1;
+
+	return 0;
+}
+
 

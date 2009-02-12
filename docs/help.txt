@@ -11,6 +11,7 @@ Written under the GPL v2 license.
 ALFC embeds the Lua scripting language to give you a lot of power
 and flexability in your system management.
 
+
 Moving Around ALFC
 
 
@@ -20,6 +21,7 @@ Current speed keyed commands
 :s - Make inactive window pane the same path as the active pane.
 :c - cd
 	:c ~/foo/bar
+	:c $HOME/Documents
 :j - Jump
 	:j PinkShirt - Finds the closest match to PinkShirt in the list.... which might
 	match Pink or even just P....
@@ -37,6 +39,8 @@ Current speed keyed commands
 	:so nd - name descending
 	:so sa - size ascending
 	:so sd - size descending
+	:so da - date ascending
+	:so dd - date descending
 
 :tc - Tagged Copy - Does a validated copy from the active to inactive pane
 :td - Tagged Delete - Removes tagged files
@@ -66,18 +70,18 @@ Stu George - Right now, everything
 ToDo list for next release
 
 Core
-	- Viewer / Editor (both for hex)
+	- Viewer (HEX)
+	- Editor (both for text/hex)
+	- Menu interface
 
 Files
-	- Copy Files
-	- Move Files
-	- Delete Files
 	- Rename Files
 
 Directories
 	- Create Directory
 	- Delete Directory
 	- Rename Directory
+
 
 Birth and Rebirth
 

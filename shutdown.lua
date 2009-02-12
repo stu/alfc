@@ -1,1 +1,1 @@
-debug_msg("Thanks for using ALFC.\n");
+debug_msg("\nThanks for using ALFC.\n");

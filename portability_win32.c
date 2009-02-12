@@ -2,23 +2,21 @@
 #include "headers.h"
 
 static char *alfc_script_home;
+static char *last_error;
 
 static void GetWindowsErrorMsg(char *func)
 {
     LPVOID lpMsgBuf;
-    LPVOID lpDisplayBuf;
 	DWORD dw;
 
 	dw = GetLastError();
 
 	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, dw, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL );
 
-	lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT, (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)func) + 40) * sizeof(TCHAR));
-	sprintf(lpDisplayBuf, "%s failed with error %d: %s", func, dw, lpMsgBuf);
-	LogInfo(lpDisplayBuf);
-
+	last_error = (LPVOID)LocalAlloc(LMEM_ZEROINIT, (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)func) + 40) * sizeof(TCHAR));
+	sprintf(last_error, "%s failed with error %d: %s", func, dw, lpMsgBuf);
+	LogInfo(last_error);
 	LocalFree(lpMsgBuf);
-	LocalFree(lpDisplayBuf);
 }
 
 char* ALFC_getenv(const char *s)
@@ -146,6 +144,9 @@ int ALFC_unlink(char *s)
 {
 	int rc;
 
+	// remove any hidden/readonly attributes etc before deletion
+	SetFileAttributes(s, FILE_ATTRIBUTE_NORMAL);
+
 	rc = DeleteFile(s);
 
 	// 0 = fail, non zero for success
@@ -165,6 +166,7 @@ int ALFC_unlink(char *s)
 
 int ALFC_startup(void)
 {
+	last_error = NULL;
 	alfc_script_home = ConvertDirectoryName("$HOME/.alfc/scripts");
 
 	return 0;
@@ -172,7 +174,16 @@ int ALFC_startup(void)
 
 int ALFC_shutdown(void)
 {
+	if(last_error != NULL)
+		LocalFree(last_error);
+
 	if(alfc_script_home != NULL)
 		free(alfc_script_home);
 	return 0;
 }
+
+char* ALFC_get_last_error(int err)
+{
+	return last_error;
+}
+

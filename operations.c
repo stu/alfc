@@ -46,12 +46,16 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 
 	src = malloc( strlen(x->op.udtCopy.source_path) + strlen(x->op.udtCopy.source_filename) + 8);
 	strcpy(src, x->op.udtCopy.source_path);
-	strcat(src, "/");
+	if(src[strlen(src)] != '/')
+		strcat(src, "/");
 	strcat(src, x->op.udtCopy.source_filename);
+
+
 
 	dst = malloc( strlen(x->op.udtCopy.dest_path) + strlen(x->op.udtCopy.dest_filename) + 8);
 	strcpy(dst, x->op.udtCopy.dest_path);
-	strcat(dst, "/");
+	if(dst[strlen(dst)] != '/')
+		strcat(dst, "/");
 	strcat(dst, x->op.udtCopy.dest_filename);
 
 	//LogInfo("Copy %s to %s\n", src, dst);
@@ -69,7 +73,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 	}
 
 	// make sure we are in the path of the file to copy and its valid
-	if(ALFC_stat(src ,&statbuff) == -1)
+	if(ALFC_stat(src, &statbuff) == -1)
 	{
 		x->result_code = -1;
 		x->result_msg = strdup(strerror(errno));
@@ -132,13 +136,38 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 	// test if destination already exists
 	if(ALFC_stat(dst, &ostatbuff) == 0)
 	{
-		x->result_code = -1;
-		x->result_msg = strdup("Destination already exists");
-		free(src);
-		free(dst);
-		free(buff);
-		free(cbuff);
-		return x->result_code;
+		if( IsTrue(INI_get(gd->optfile, "copy_move", "overwrite")) == 0)
+		{
+			if( ALFC_unlink(dst) != 0)
+			{
+				x->result_code = -1;
+				x->result_msg = strdup(ALFC_get_last_error(errno));
+				free(src);
+				return x->result_code;
+			}
+
+			// make sure its gone!
+			if(ALFC_stat(dst, &ostatbuff) == 0)
+			{
+				x->result_code = -1;
+				x->result_msg = strdup("Destination failed to delete with overwrite");
+				free(src);
+				free(dst);
+				free(buff);
+				free(cbuff);
+				return x->result_code;
+			}
+		}
+		else
+		{
+			x->result_code = -1;
+			x->result_msg = strdup("Destination already exists");
+			free(src);
+			free(dst);
+			free(buff);
+			free(cbuff);
+			return x->result_code;
+		}
 	}
 
 #ifdef __MINGW_H
@@ -364,7 +393,8 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 	assert(src != NULL);
 
 	strcpy(src, x->op.udtDelete.source_path);
-	strcat(src, "/");
+	if(src[strlen(src)] != '/')
+		strcat(src, "/");
 	strcat(src, x->op.udtDelete.source_filename);
 
 	// make sure we are in the path of the file to copy and its valid
@@ -411,7 +441,7 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 	if( ALFC_unlink(src) != 0)
 	{
 		x->result_code = -1;
-		x->result_msg =  strdup(strerror(errno));
+		x->result_msg = strdup(ALFC_get_last_error(errno));
 		free(src);
 		return x->result_code;
 	}

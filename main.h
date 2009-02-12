@@ -187,6 +187,8 @@ struct udtScreenDriver
 {
 	uGlobalData *gd;
 
+	char* (*driver_name)(void);
+
 	int (*init)(uScreenDriver *scr);
 	int (*deinit)(void);
 
@@ -290,8 +292,6 @@ struct udtGlobals
 	int			mode;
 
 	DList		*lstFileOps;
-
-
 	DList 		*lstViewerList;
 };
 
@@ -375,6 +375,8 @@ extern uKeyBinding* ScanKey(DList *lst, int key);
 extern char* ConvertKeyToName(int key);
 extern void DrawMenuLine(uScreenDriver *screen, DList *lstHotKeys);
 extern uint32_t fletcher32(uint16_t *data, size_t len);
+extern char* GetDateTimeString(char *fmt, time_t t);
+extern void about_window(uGlobalData *gd);
 
 extern void UpdateDir(uGlobalData *gd, char *set_to_highlight);
 extern int TagWithGlob(uGlobalData *gd, char *pattern);

@@ -135,8 +135,8 @@ int LoadGlobalScript(uGlobalData *gd, char *sn)
 	fp = fopen(cpath, "r");
 	if(fp == NULL)
 	{
-		free(cpath);
 		LogError("cant load file : %s\n", cpath);
+		free(cpath);
 		return -1;
 	}
 
@@ -147,9 +147,9 @@ int LoadGlobalScript(uGlobalData *gd, char *sn)
 	gd->gcode = malloc(64 + maxsize);
 	if(gd->gcode == NULL)
 	{
-		free(cpath);
 		LogError("No memory for script %s\n", cpath);
 		fclose(fp);
+		free(cpath);
 		return -1;
 	}
 

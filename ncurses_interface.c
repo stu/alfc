@@ -35,6 +35,11 @@ struct udtStyles
 
 };
 
+static char* driver_name(void)
+{
+	return "ncurses";
+}
+
 // convert internal colours to curses colours
 static uint32_t nc_convert_colour(int color)
 {
@@ -93,7 +98,7 @@ static void nc_draw_frame(uWindow *w)
 {
 	int i;
 
-	setcolour(STYLE_TITLE, styles[STYLE_TITLE].s_on);
+	//setcolour(STYLE_TITLE, styles[STYLE_TITLE].s_on);
 
 	setcursor(1 + w->offset_row, 1 + w->offset_col);					dr_outchar(ACS_ULCORNER);
 	setcursor(1 + w->offset_row, 1 + w->offset_col + (w->width-1));				dr_outchar(ACS_URCORNER);
@@ -112,7 +117,7 @@ static void nc_draw_frame(uWindow *w)
 		setcursor(1 + w->offset_row + i, w->offset_col + w->width);			nc_print_vline();
 	}
 
-	setcolour(STYLE_NORMAL, styles[STYLE_NORMAL].s_on);
+	//setcolour(STYLE_NORMAL, styles[STYLE_NORMAL].s_on);
 }
 
 static void nc_print_string(const char *s)
@@ -446,6 +451,8 @@ static void terminate_signal(int a)
 uScreenDriver screen_ncurses =
 {
 	NULL,
+
+	driver_name,
 
 	nc_screen_init,		// init screen
 	nc_screen_deinit,	// uninit

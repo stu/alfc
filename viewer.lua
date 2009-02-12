@@ -29,7 +29,9 @@ function CLIParse(command)
 	end
 end
 
+	BindKey(ALFC_KEY_ALT + string.byte("A"), "About", [[About()]])
 	BindKey(ALFC_KEY_F10, "Quit", [[:q]])
+
 
 	-- initialise bootstrap and protect code from being called more than once
 	-- which should not happen anyway but lets define functions and protect...

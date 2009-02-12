@@ -104,6 +104,9 @@ int IsTrue(const char *s)
 	char *z;
 	int rc;
 
+	if(s == NULL)
+		return -1;
+
 	p = strdup(s);
 	q = p;
 
@@ -482,6 +485,9 @@ void LoadOptions(uGlobalData *gdata)
 		ParseTimeFormat(gdata, "hh:mm.ss AMPM");
 
 	LoadHistory(gdata);
+
+	if( INI_get(gdata->optfile, "options", "sort_order") == NULL)
+		INI_UpdateItem(gdata->optfile, "options", "sort_order", "name_asc");
 }
 
 void SaveOptions(uGlobalData *gdata)

@@ -54,7 +54,7 @@ void FreeFileOp(void *x)
 	free(f);
 }
 
-static char* GetDateTimeString(char *fmt, time_t t)
+char* GetDateTimeString(char *fmt, time_t t)
 {
 	char *x;
 	char *q;
@@ -134,6 +134,103 @@ static char* GetDateTimeString(char *fmt, time_t t)
 		x[0] = ' ';
 
 	return realloc(x, strlen(x)+1);
+}
+
+void about_window(uGlobalData *gd)
+{
+	uint32_t key;
+	uWindow *w;
+
+	char *buff;
+
+	int height;
+	int width;
+	char *p, *q;
+
+	// big enough to hold string...
+	buff = malloc(1024);
+	sprintf(buff, "\n"
+			"Welcome to Another Linux File Commander\n"
+			"By Stu George\n"
+			"\n"
+			"Version %i.%02i.%04i\n"
+			"Compiled on %s - %s\n"
+			"\n"
+			"Licensed under the GNU GPL v2\n"
+			"\n",
+			VersionMajor(), VersionMinor(), VersionBuild(), __DATE__, __TIME__);
+
+	height = 0;
+	width = 0;
+
+	p = buff;
+	while(*p != 0)
+	{
+		q = strchr(p, '\n');
+
+		if(q != NULL)
+		{
+			if(width < q - p) width = q - p;
+			p = q + 1;
+		}
+		else
+		{
+			q = strchr(p, 0);
+			if(width < q - p) width = q - p;
+			p = q;
+		}
+
+		height += 1;
+
+	};
+
+	width += 4;
+	height += 2;
+
+
+	w = calloc(1, sizeof(uWindow));
+	w->gd = gd;
+	w->screen = gd->screen;
+
+	w->offset_row = (gd->screen->get_screen_height() - height) / 2;
+	w->offset_col = (gd->screen->get_screen_width() - width) / 2;
+	w->width = width;
+	w->height = height;
+
+	gd->screen->set_style(STYLE_HIGHLIGHT);
+	gd->screen->draw_border(w);
+
+	gd->screen->set_style(STYLE_HIGHLIGHT);
+
+	p = buff;
+	height = 0;
+
+	while( *p != 0)
+	{
+		q = strchr(p, '\n');
+		if(q != NULL)
+			*q = 0;
+
+		gd->screen->set_cursor(2 + w->offset_row + height, 2 + w->offset_col);
+		for(width=0; width < w->width-2; width++)
+			gd->screen->print_abs(" ");
+
+		gd->screen->set_cursor(2 + w->offset_row + height, 1 + w->offset_col +  ( w->width - strlen(p))/2 );
+		gd->screen->print_abs(p);
+
+		if(q != NULL)
+			p = q + 1;
+		else
+			p = strchr(p, 0);
+
+		height += 1;
+	}
+
+	key = gd->screen->get_keypress();
+
+	free(w);
+
+	gd->screen->set_style(STYLE_TITLE);
 }
 
 static void SortList(uGlobalData *gd, DList *lstFiles)
@@ -423,8 +520,8 @@ char* ConvertDirectoryName(const char *x)
 	}
 
 	*z = 0;
-
 	free(a);
+
 	return realloc(p, 16 + strlen(p));
 }
 
@@ -1030,18 +1127,26 @@ static void DrawActiveFileInfo(uGlobalData *gd)
 void DrawActive(uGlobalData *gd)
 {
 	uWindow *win;
+	char *sort_opt;
+	char buff[256];
+
 	int i;
 
 	gd->screen->set_style(STYLE_TITLE);
 
 	win = GetActWindow(gd);
 
+	sort_opt = INI_get(gd->optfile, "options", "sort_order");
+
+	sprintf(buff, "[ ** ACTIVE ** : Sort: %s ]", sort_opt);
+
 	gd->screen->set_cursor(win->offset_row + win->height, win->offset_col + 2);
-	gd->screen->print("[ ** ACTIVE ** ]");
+	//gd->screen->print("[ ** ACTIVE ** ]");
+	gd->screen->print(buff);
 
 	win = GetInActWindow(gd);
 
-	for(i=0; i<16; i++)
+	for(i=0; i< win->width - 2 ; i++)
 	{
 		gd->screen->set_cursor(win->offset_row + win->height, i + win->offset_col + 2);
 		gd->screen->print_hline();
@@ -2302,7 +2407,8 @@ void DrawAll(uGlobalData *gd)
 
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawFileListWindow(GetInActWindow(gd), GetInActList(gd), GetInActDPath(gd));
-	DrawActive(gd);
+
+	//DrawActive(gd);
 
 	gd->screen->set_style(STYLE_TITLE);
 	for(j=GetActWindow(gd)->height + 2; j < gd->screen->get_screen_height(); j++ )
@@ -2314,8 +2420,13 @@ void DrawAll(uGlobalData *gd)
 
 	DrawMenuLine(gd->screen, gd->lstHotKeys);
 	DrawCLI(gd);
-	DrawFilter(gd);
-	DrawStatusInfoLine(gd);
+
+	// covered in switch panes...
+	//DrawFilter(gd);
+	//DrawStatusInfoLine(gd);
+
+	SwitchPanes(gd);
+	SwitchPanes(gd);
 }
 
 static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start_right)
@@ -2330,8 +2441,12 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 		gdata->left_dir = strdup(start_left);
 	else
 		gdata->left_dir = GetOptionDir(gdata, "left_startup", gdata->lstMRULeft);
+
+	if(gdata->left_dir == NULL)
+		gdata->left_dir = GetCurrentWorkingDirectory();
+
 	if(godir(gdata, gdata->left_dir) == -1)
-		godir(gdata, GetCurrentWorkingDirectory());
+		godir(gdata, "$HOME");
 
 	assert(gdata->lstLeft != NULL);
 
@@ -2345,8 +2460,12 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 		gdata->right_dir = strdup(start_right);
 	else
 		gdata->right_dir = GetOptionDir(gdata, "right_startup", gdata->lstMRURight);
+
+	if(gdata->right_dir == NULL)
+		gdata->right_dir = GetCurrentWorkingDirectory();
+
 	if(godir(gdata, gdata->right_dir) == -1)
-		godir(gdata, GetCurrentWorkingDirectory());
+		godir(gdata, "$HOME");
 
 	assert(gdata->lstRight != NULL);
 
