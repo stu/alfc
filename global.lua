@@ -518,7 +518,7 @@ end
 
 		for k,v in pairs(cmds) do
 			if string.sub(cmd, 1, #k) == k then
-				v(string.sub(cmd, #k, #cmd))
+				v(string.sub(cmd, #k+1, #cmd-1))
 				finished = true
 				break
 			end

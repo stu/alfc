@@ -422,6 +422,7 @@ static int DisplayFile(uViewFile *v)
 
 	ln = v->intTLine;
 
+	v->w->screen->set_style(STYLE_TITLE);
 	v->w->offset_col += v->nwidth;
 	v->w->width -= v->nwidth;
 	v->w->screen->draw_border(v->w);

@@ -1753,22 +1753,22 @@ int gme_QueueFileOp(lua_State *L)
 		switch(x->type)
 		{
 			case eOp_Delete:
-				x->op.udtDelete.source_path = ConvertDirectoryName(GetActDPath(gd));
-				x->op.udtDelete.source_filename = ConvertDirectoryName(fname.data);
+				x->op.udtDelete.source_path = strdup(GetActDPath(gd));
+				x->op.udtDelete.source_filename = strdup(fname.data);
 				break;
 
 			case eOp_Copy:
-				x->op.udtCopy.source_path = ConvertDirectoryName(GetActDPath(gd));
-				x->op.udtCopy.source_filename = ConvertDirectoryName(fname.data);
-				x->op.udtCopy.dest_filename = ConvertDirectoryName(fname.data);
-				x->op.udtCopy.dest_path = ConvertDirectoryName(GetInActDPath(gd));
+				x->op.udtCopy.source_path = strdup(GetActDPath(gd));
+				x->op.udtCopy.source_filename = strdup(fname.data);
+				x->op.udtCopy.dest_filename = strdup(fname.data);
+				x->op.udtCopy.dest_path = strdup(GetInActDPath(gd));
 				break;
 
 			case eOp_Move:
-				x->op.udtMove.source_path = ConvertDirectoryName(GetActDPath(gd));
-				x->op.udtMove.source_filename = ConvertDirectoryName(fname.data);
-				x->op.udtMove.dest_filename = ConvertDirectoryName(fname.data);
-				x->op.udtMove.dest_path = ConvertDirectoryName(GetInActDPath(gd));
+				x->op.udtMove.source_path = strdup(GetActDPath(gd));
+				x->op.udtMove.source_filename = strdup(fname.data);
+				x->op.udtMove.dest_filename = strdup(fname.data);
+				x->op.udtMove.dest_path = strdup(GetInActDPath(gd));
 				break;
 
 			case eOp_MakeDir:

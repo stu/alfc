@@ -489,6 +489,10 @@ char* ConvertDirectoryName(const char *x)
 
 				strcat(p, env);
 			}
+			else
+			{
+				// FIXME
+			}
 
 			q = z;
 		}
@@ -677,7 +681,8 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 	GetActWindow(gdata)->highlight_line = 0;
 	GetActWindow(gdata)->top_line = 0;
 
-	cpath = ConvertDirectoryName(path);
+	cpath=strdup(path);
+	//cpath = ConvertDirectoryName(path);
 
 	if( chdir(cpath) == 0)
 	{
@@ -915,7 +920,8 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	win->screen->set_style(STYLE_TITLE);
 	win->screen->draw_border(win);
 
-	path = ConvertDirectoryName(dpath);
+	//path = ConvertDirectoryName(dpath);
+	path = strdup(dpath);
 	if(strlen(path) < win->width-6)
 		sprintf(buff, "[ %s ]", path);
 	else
@@ -1839,7 +1845,8 @@ int change_dir(uGlobalData *gd, char *dir)
 {
 	char *cpath;
 
-	cpath = ConvertDirectoryName( dir );
+	//cpath = ConvertDirectoryName( dir );
+	cpath = strdup(dir);
 
 	if( chdir(cpath) != 0)
 	{
@@ -1861,7 +1868,8 @@ int updir(uGlobalData *gd)
 	char *cpath;
 	char *scan;
 
-	cpath = ConvertDirectoryName(  GetActDPath(gd) );
+	//cpath = ConvertDirectoryName(  GetActDPath(gd) );
+	cpath = strdup(GetActDPath(gd));
 
 	if( chdir(cpath) != 0)
 	{
@@ -1895,7 +1903,7 @@ int godir(uGlobalData *gd, char *dir)
 	char *cpath1;
 	char *cpath2;
 
-	cpath1 = ConvertDirectoryName( GetActDPath(gd) );
+	cpath1 = strdup( GetActDPath(gd) );
 	if( chdir(cpath1) != 0)
 	{
 		LogInfo("Could not change to directory %s\n", cpath1);
@@ -1935,7 +1943,7 @@ int downdir(uGlobalData *gd)
 	if( S_ISDIR(de->attrs) == 0 )
 		return -1;
 
-	cpath = ConvertDirectoryName(  GetActDPath(gd) );
+	cpath = strdup( GetActDPath(gd) );
 
 	if( chdir(cpath) != 0)
 	{
@@ -2443,13 +2451,13 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 	if(start_left != NULL)
 		gdata->left_dir = strdup(start_left);
 	else
-		gdata->left_dir = GetOptionDir(gdata, "left_startup", gdata->lstMRULeft);
+		gdata->left_dir = ConvertDirectoryName(GetOptionDir(gdata, "left_startup", gdata->lstMRULeft));
 
 	if(gdata->left_dir == NULL)
 		gdata->left_dir = GetCurrentWorkingDirectory();
 
 	if(godir(gdata, gdata->left_dir) == -1)
-		godir(gdata, "$HOME");
+		godir(gdata, ConvertDirectoryName("$HOME"));
 
 	assert(gdata->lstLeft != NULL);
 
@@ -2462,13 +2470,13 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 	if(start_right != NULL)
 		gdata->right_dir = strdup(start_right);
 	else
-		gdata->right_dir = GetOptionDir(gdata, "right_startup", gdata->lstMRURight);
+		gdata->right_dir = ConvertDirectoryName(GetOptionDir(gdata, "right_startup", gdata->lstMRURight));
 
 	if(gdata->right_dir == NULL)
 		gdata->right_dir = GetCurrentWorkingDirectory();
 
 	if(godir(gdata, gdata->right_dir) == -1)
-		godir(gdata, "$HOME");
+		godir(gdata, ConvertDirectoryName("$HOME"));
 
 	assert(gdata->lstRight != NULL);
 
