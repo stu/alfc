@@ -142,6 +142,7 @@ void about_window(uGlobalData *gd)
 	uWindow *w;
 
 	char *buff;
+	char buff2[128];
 
 	int height;
 	int width;
@@ -211,12 +212,12 @@ void about_window(uGlobalData *gd)
 		if(q != NULL)
 			*q = 0;
 
-		gd->screen->set_cursor(2 + w->offset_row + height, 2 + w->offset_col);
-		for(width=0; width < w->width-2; width++)
-			gd->screen->print_abs(" ");
+		memset(buff2, ' ', w->width);
+		memmove(buff2 + ( (w->width-2) - strlen(p))/2, p, strlen(p) );
+		buff2[w->width-2] = 0;
 
-		gd->screen->set_cursor(2 + w->offset_row + height, 1 + w->offset_col +  ( w->width - strlen(p))/2 );
-		gd->screen->print_abs(p);
+		gd->screen->set_cursor(2 + w->offset_row + height, 2 + w->offset_col);
+		gd->screen->print_abs(buff2);
 
 		if(q != NULL)
 			p = q + 1;
@@ -225,6 +226,8 @@ void about_window(uGlobalData *gd)
 
 		height += 1;
 	}
+
+	gd->screen->set_cursor(gd->screen->get_screen_height(), gd->screen->get_screen_width());
 
 	key = gd->screen->get_keypress();
 
@@ -2597,7 +2600,7 @@ int main(int argc, char *argv[])
 
 		if(rc == 0)
 		{
-			LogInfo("" LUA_RELEASE "; " LUA_COPYRIGHT "\n" LUA_AUTHORS "\n\n");
+			LogInfo("\n" LUA_RELEASE "; " LUA_COPYRIGHT "\n" LUA_AUTHORS "\n\n");
 
 			if(gdata->screen->get_screen_width() < 60 || gdata->screen->get_screen_height() < 20)
 			{
