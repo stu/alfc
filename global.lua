@@ -7,70 +7,84 @@
 ]]
 
 if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
-function comma_value(amount)
-	local formatted = amount
-	while true do
-		formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
-		if (k==0) then
-			break
+
+	cmds = {}
+
+
+	function CreateMenu(key, name, list)
+		local k,v
+		--debug_msg("Create menu " .. name)
+
+		for k,v in pairs(list) do
+			--debug_msg("\t" .. v.name)
 		end
-	end
-	return formatted
-end
 
-
----============================================================
--- rounds a number to the nearest decimal places
---
-function round(val, decimal)
-	if (decimal) then
-		return math.floor( (val * 10^decimal) + 0.5) / (10^decimal)
-	else
-		return math.floor(val+0.5)
-	end
-end
-
-
---===================================================================
--- given a numeric value formats output with comma to separate thousands
--- and rounded to given decimal places
---
---
-function format_num(amount, decimal, prefix, neg_prefix)
-	local str_amount,  formatted, famount, remain
-
-	decimal = decimal or 2  -- default 2 decimal places
-	neg_prefix = neg_prefix or "-" -- default negative sign
-
-	famount = math.abs(round(amount,decimal))
-	famount = math.floor(famount)
-
-	remain = round(math.abs(amount) - famount, decimal)
-
-	-- comma to separate the thousands
-	formatted = comma_value(famount)
-
-	-- attach the decimal portion
-	if (decimal > 0) then
-		remain = string.sub(tostring(remain),3)
-		formatted = formatted .. "." .. remain ..
-		string.rep("0", decimal - string.len(remain))
 	end
 
-	-- attach prefix string e.g '$'
-	formatted = (prefix or "") .. formatted
+	function comma_value(amount)
+		local formatted = amount
+		while true do
+			formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
+			if (k==0) then
+				break
+			end
+		end
+		return formatted
+	end
 
-	-- if value is negative then format accordingly
-	if (amount<0) then
-		if (neg_prefix=="()") then
-			formatted = "("..formatted ..")"
+
+	---============================================================
+	-- rounds a number to the nearest decimal places
+	--
+	function round(val, decimal)
+		if (decimal) then
+			return math.floor( (val * 10^decimal) + 0.5) / (10^decimal)
 		else
-			formatted = neg_prefix .. formatted
+			return math.floor(val+0.5)
 		end
 	end
 
-	return formatted
-end
+
+	--===================================================================
+	-- given a numeric value formats output with comma to separate thousands
+	-- and rounded to given decimal places
+	--
+	--
+	function format_num(amount, decimal, prefix, neg_prefix)
+		local str_amount,  formatted, famount, remain
+
+		decimal = decimal or 2  -- default 2 decimal places
+		neg_prefix = neg_prefix or "-" -- default negative sign
+
+		famount = math.abs(round(amount,decimal))
+		famount = math.floor(famount)
+
+		remain = round(math.abs(amount) - famount, decimal)
+
+		-- comma to separate the thousands
+		formatted = comma_value(famount)
+
+		-- attach the decimal portion
+		if (decimal > 0) then
+			remain = string.sub(tostring(remain),3)
+			formatted = formatted .. "." .. remain ..
+			string.rep("0", decimal - string.len(remain))
+		end
+
+		-- attach prefix string e.g '$'
+		formatted = (prefix or "") .. formatted
+
+		-- if value is negative then format accordingly
+		if (amount<0) then
+			if (neg_prefix=="()") then
+				formatted = "("..formatted ..")"
+			else
+				formatted = neg_prefix .. formatted
+			end
+		end
+
+		return formatted
+	end
 
 
 	function size_mash(s)
@@ -89,17 +103,8 @@ end
 		end
 	end
 
-	function x(fname)
-		local f
-		local c
-		f = io.open(fname)
-		c = f:read("*all")
-		debug_msg(MD5Sum(c))
-		f:close()
-	end
-
 	-- merge two tables together
-	local function merge(t, u)
+	function merge(t, u)
 		local r = {}
 		local k, v
 		for k, v in ipairs(t) do
@@ -115,39 +120,39 @@ end
 	-- This is an internal function that parses the internal
 	-- command line
 	-- eg: it turns ":q" into QuitApp etc..
-	local function __QuitApp()
+	function __QuitApp()
 		SetQuitAppFlag(1)
 	end
 
-	local function __FilterAdd(command)
+	function __FilterAdd(command)
 		local cmd
 
 		cmd = trim(command)
 		AddFilter(cmd)
 	end
 
-	local function __Filter(command)
+	function __Filter(command)
 		local cmd
 
 		cmd = trim(command)
 		SetFilter(cmd)
 	end
 
-	local function __GlobAdd(command)
+	function __GlobAdd(command)
 		local cmd
 
 		cmd = trim(command)
 		AddGlob(cmd)
 	end
 
-	local function __Glob(command)
+	function __Glob(command)
 		local cmd
 
 		cmd = trim(command)
 		SetGlob(cmd)
 	end
 
-	local function __MakeInactivePaneSame(command)
+	function __MakeInactivePaneSame(command)
 		local npath
 
 		-- Get path from active window
@@ -162,7 +167,7 @@ end
 
 
 	-- this wont work when you want a file and directories are first listed....
-	local function __Jump(command)
+	function __Jump(command)
 		local j
 		local in_dir
 
@@ -200,7 +205,7 @@ end
 
 	end
 
-	local function __ChangeDir(command)
+	function __ChangeDir(command)
 		local cmd = command
 
 		-- try to deal with spaces
@@ -209,7 +214,7 @@ end
 		end
 	end
 
-	local function __SortOrder(command)
+	function __SortOrder(command)
 		if trim(command) == "na" then
 			SetOption("options", "sort_order", "name_asc")
 		elseif trim(command) == "nd" then
@@ -233,7 +238,7 @@ end
 		RedrawWindow()
 	end
 
-	local function __TagCopyX(command, buff)
+	function __TagCopyX(command, buff)
 		local lstF
 		local lstT
 		local k,v, err, errc
@@ -245,7 +250,7 @@ end
 
 		local path1, path2
 
-		lstF = GetFileList()
+		lstF = GetTaggedFileList()
 		lstT = {}
 
 		err = 0
@@ -301,7 +306,7 @@ end
 	end
 
 
-	local function __TagMoveX(command, buff)
+	function __TagMoveX(command, buff)
 		local lstF
 		local lstT
 		local k,v, err, errc
@@ -311,7 +316,7 @@ end
 		file_size = 0
 		file_count = 0
 
-		lstF = GetFileList()
+		lstF = GetTaggedFileList()
 		lstT = {}
 		err = 0
 
@@ -365,7 +370,7 @@ end
 		return err
 	end
 
-	local function __TagDeleteX(command, buff)
+	function __TagDeleteX(command, buff)
 		local lstF
 		local lstT
 		local err
@@ -377,7 +382,7 @@ end
 		file_size = 0
 		file_count = 0
 
-		lstF = GetFileList()
+		lstF = GetTaggedFileList()
 		lstT = {}
 
 		err = 0
@@ -423,44 +428,47 @@ end
 		return err
 	end
 
-	local function __TagCopy(command)
+	function __TagCopy(command)
 		local buff = {}
+		if #GetTaggedFileList() == 0 then TagHighlightedFile() end
 		if __TagCopyX(command, buff) > 0 or GetOption("copy_move", "display_log") == "true" then
 			ViewLuaTable("COPY OPERATIONS LOG", buff);
 		end
 	end
-	local function __TagMove(command)
+	function __TagMove(command)
 		local buff = {}
+		if #GetTaggedFileList() == 0 then TagHighlightedFile() end
 		__TagMoveX(command, buff)
 		if __TagCopyX(command, buff) > 0 or GetOption("copy_move", "display_log") == "true" then
 			ViewLuaTable("MOVE OPERATIONS LOG", buff);
 		end
 	end
-	local function __TagDelete(command)
+	function __TagDelete(command)
 		local buff = {}
+		if #GetTaggedFileList() == 0 then TagHighlightedFile() end
 		__TagDeleteX(command, buff)
 		if __TagCopyX(command, buff) > 0 or GetOption("delete", "display_log") == "true" then
 			ViewLuaTable("DELETE OPERATIONS LOG", buff);
 		end
 	end
 
-	local function __TagFilter(command)
+	function __TagFilter(command)
 		TagWithFilter(trim(command))
 	end
 
-	local function __TagGlob(command)
+	function __TagGlob(command)
 		TagWithGlob(trim(command))
 	end
 
-	local function __TagUnTagAll(command)
+	function __TagUnTagAll(command)
 		ClearAllTags();
 	end
 
-	local function __TagAll(command)
+	function __TagAll(command)
 		TagAll();
 	end
 
-	local function __TagAllFiles(command)
+	function __TagAllFiles(command)
 		lstF = GetFileList()
 		for k,v in ipairs(lstF) do
 			if v.tagged == 0 and v.directory == 0 then
@@ -469,7 +477,7 @@ end
 		end
 	end
 
-	local function __TagAllDirs(command)
+	function __TagAllDirs(command)
 		lstF = GetFileList()
 		for k,v in ipairs(lstF) do
 			if v.tagged == 0 and v.directory == 1 then
@@ -478,42 +486,18 @@ end
 		end
 	end
 
-	local function __TagFlip(command)
+	function __TagFlip(command)
 		TagFlip();
 	end
 
 
 	function CLIParse(command)
 		local cmd
-		local cmds
 		local finished
 		local k, v
 
 		finished = false
 		cmd = command .. " "
-
-		cmds = {}
-		cmds[":q "] = __QuitApp
-		cmds[":f "] = __Filter
-		cmds[":f+ "] = __FilterAdd
-		cmds[":g "] = __Glob
-		cmds[":g+ "] = __GlobAdd
-		cmds[":s "] = __MakeInactivePaneSame
-		cmds[":j "] = __Jump
-		cmds[":c "] = __ChangeDir
-		cmds[":so "] = __SortOrder
-
-		cmds[":td "] = __TagDelete
-		cmds[":tc "] = __TagCopy
-		cmds[":tm "] = __TagMove
-
-		cmds[":tf "] = __TagFilter
-		cmds[":tg "] = __TagGlob
-		cmds[":ta "] = __TagAll
-		cmds[":taf "] = __TagAllFiles
-		cmds[":tad "] = __TagAllDirs
-		cmds[":tu "] = __TagUnTagAll
-		cmds[":t! "] = __TagFlip
 
 
 		for k,v in pairs(cmds) do
@@ -612,13 +596,60 @@ end
 
 	end
 
-	--debug_msg("Global Lua Functions bootstrapped")
+	function LoadPlugins()
+		local k, v, lstPlugins
+
+		lstPlugins = GetFileListFromPath("$HOME/.alfc");
+
+		for k, v in pairs(lstPlugins) do
+			--if DoesFileExist("$HOME/.alfc/core_extract.lua") == 0 then
+			--IncludeFile("$HOME/.alfc/core_extract.lua")
+			--end
+
+			-- match 'core_' * '.lua'
+			if string.find(v.name, "^(core_).*([.]lua)$") ~= nil then
+
+
+				IncludeFile(string.gsub(v.path .. pathsep .. v.name, "\\", "/"))
+			end
+		end
+		lstPlugins = nil
+	end
+
+		cmds = {}
+		cmds[":q "] = __QuitApp
+		cmds[":f "] = __Filter
+		cmds[":f+ "] = __FilterAdd
+		cmds[":g "] = __Glob
+		cmds[":g+ "] = __GlobAdd
+		cmds[":s "] = __MakeInactivePaneSame
+		cmds[":j "] = __Jump
+		cmds[":c "] = __ChangeDir
+		cmds[":so "] = __SortOrder
+
+		cmds[":td "] = __TagDelete
+		cmds[":tc "] = __TagCopy
+		cmds[":tm "] = __TagMove
+
+		cmds[":tf "] = __TagFilter
+		cmds[":tg "] = __TagGlob
+		cmds[":ta "] = __TagAll
+		cmds[":taf "] = __TagAllFiles
+		cmds[":tad "] = __TagAllDirs
+		cmds[":tu "] = __TagUnTagAll
+		cmds[":t! "] = __TagFlip
+
+
+	LoadPlugins()
+
+	debug_msg("Global Lua Functions bootstrapped")
 	BindKey(ALFC_KEY_F01, "View", [[ViewFile(GetHighlightedFilename())]])
 
 	--BindKey(ALFC_KEY_F02, "Same", [[:s]])
 	--BindKey(ALFC_KEY_F03, "History", [[ViewHistory()]])
 
 	BindKey(ALFC_KEY_ALT + string.byte("X"), "Quit", [[:q]])
+	--BindKey(ALFC_KEY_CTRL + string.byte("X"), "Quit", [[:q]])
 
 	BindKey(ALFC_KEY_F12, "Tag", [[TagHighlightedFile()]])
 
@@ -627,8 +658,7 @@ end
 	BindKey(ALFC_KEY_ALT + string.byte("M"), "Move Tagged", [[:tm]])
 
 	BindKey(ALFC_KEY_ALT + string.byte("A"), "About", [[About()]])
-
-	BindKey(ALFC_KEY_ALT + string.byte("H"), "About", [[SetCurrentWorkingDirectory("$HOME")]])
+	BindKey(ALFC_KEY_ALT + string.byte("H"), "Home", [[SetCurrentWorkingDirectory("$HOME")]])
 
 	-- Dont bind to common keys you will need to use in the command line bar..
 	--BindKey(ALFC_KEY_DEL, "Del", [[QueueFileOp(eOp_Delete, GetHighlightedFilename()); DoFileOps();]])
@@ -636,6 +666,21 @@ end
 
 	-- Sometimes I want a quick view for code files
 	BindKey(ALFC_KEY_F11, "CodeOnly", [[SetFilter("\\.[ch]$"); SetGlob("*.lua")]])
+
+	CreateMenu(ALFC_KEY_ALT + string.byte("F"), "File", {
+				{ key = 'X', name = "Exit", code = [[__QuitApp()]]},
+				{ key = 'A', name = "About", code = [[About()]] },
+				{ key = 'F1', name = "Help", code = [[ViewFile("help.txt")]] },
+			})
+
+	CreateMenu(ALFC_KEY_ALT + string.byte("1"), "Left Panel", {
+				{ key = 'S', name = "make Same as Right", code = [[__MakeInactivePaneSame()]]},
+				{ key = 'A', name = "About", code = [[About()]] },
+			})
+
+	CreateMenu(ALFC_KEY_ALT + string.byte("2"), "Right Panel", {
+				{ key = 'S', name = "make Same as left", code = [[__MakeInactivePaneSame()]]},
+			})
 
 	_G["DIR_BOOTSTRAP"] = 1
 end -- _G["BOOTSTRAP"]

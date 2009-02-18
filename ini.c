@@ -408,4 +408,33 @@ char* INI_get(INIFILE *ini, char *group, char *item)
 	return NULL;
 }
 
+void INI_DeleteGroup(INIFILE *f, char *group)
+{
+	DLElement *egroup;
+	struct udtGroup *g;
+	char *gname;
+
+	gname = malloc(4 + strlen(group));
+
+	strcpy(gname, "[");
+	strcat(gname, group);
+	strcat(gname, "]");
+
+	egroup = dlist_head(f->lstGroups);
+
+	while(egroup != NULL)
+	{
+		g = dlist_data(egroup);
+
+		if(stricmp(gname, g->name) == 0)
+		{
+			dlist_remove(f->lstGroups, egroup, (void*)&g);
+			FreeINIGroup(g);
+			free(gname);
+			return;
+		}
+
+		egroup = dlist_next(egroup);
+	}
+}
 

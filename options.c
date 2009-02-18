@@ -166,10 +166,10 @@ static void CreateBaselineINIFile(uGlobalData *gdata)
 	INI_UpdateItem(gdata->optfile, "colours", "foreground", "grey");
 
 	INI_UpdateItem(gdata->optfile, "colours", "title_fg", "white");
-	INI_UpdateItem(gdata->optfile, "colours", "title_bg", "magenta");
+	INI_UpdateItem(gdata->optfile, "colours", "title_bg", "blue");
 
-	INI_UpdateItem(gdata->optfile, "colours", "hi_fg", "white");
-	INI_UpdateItem(gdata->optfile, "colours", "hi_bg", "blue");
+	INI_UpdateItem(gdata->optfile, "colours", "hi_fg", "yeloow");
+	INI_UpdateItem(gdata->optfile, "colours", "hi_bg", "red");
 
 }
 
@@ -276,6 +276,9 @@ static void LoadHistory(uGlobalData *gd)
 	else
 		c = 0;
 
+	// fake to prime loop to pass test..
+	x = (char*)opthist;
+
 	i = 0;
 	while(i < c && x != NULL)
 	{
@@ -334,6 +337,14 @@ static void LoadMRU(uGlobalData *gd, DList *lst, char *opt)
 	else
 		c = 0;
 
+
+	x = INI_get(gd->optfile, "options", "mru_count");
+	if(x != NULL && atoi(x) >= 4 && atoi(x) < c)
+		c = atoi(x);
+
+	// fake to pass loop test
+	x = (char*)gd;
+
 	i = 0;
 	while(i < c && x != NULL)
 	{
@@ -388,6 +399,8 @@ void LoadOptions(uGlobalData *gdata)
 		CreateIfNotExist("$HOME/.alfc/viewer.lua", include_viewer_lua, include_viewer_lua_SIZE);
 		CreateIfNotExist("$HOME/.alfc/startup.lua", include_startup_lua, include_startup_lua_SIZE);
 		CreateIfNotExist("$HOME/.alfc/shutdown.lua", include_shutdown_lua, include_shutdown_lua_SIZE);
+
+		CreateIfNotExist("$HOME/.alfc/core_extract.lua", core_extract_lua, core_extract_lua_SIZE);
 
 		gdata->optfile = INI_load(gdata->optfilename);
 	}

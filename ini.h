@@ -17,6 +17,7 @@ extern char* INI_get(INIFILE *ini, char *group, char *item);
 extern INIFILE* INI_EmptyINF(void);
 extern int INI_save(char *fname, INIFILE *f);
 extern void INI_UpdateItem(INIFILE *f, char *group, char *key, char *val);
+extern void INI_DeleteGroup(INIFILE *f, char *group);
 
 #ifdef __cplusplus
 };

@@ -54,7 +54,6 @@ int gme_map(lua_State *L)
 	return 0;  /* no results */
 }
 
-
 /****f* LuaAPI/ExecuteScript
 * FUNCTION
 *	This function will take a path and convert
@@ -830,6 +829,41 @@ int gme_GetHighlightedFilename(lua_State *L)
 	return 1;
 }
 
+
+/****f* LuaAPI/GetHighlightedFile
+* FUNCTION
+*	Returns a table of current highlighted file details
+* SYNOPSIS
+tbl = GetHighlightedFile()
+* INPUTS
+*	o None
+* RESULTS
+*	o table - table of entries with current entry (name, size, directory, tagged)
+* SEE ALSO
+*	GetHighlightedFilenam, GetFileList, GetTaggedFileList
+* AUTHOR
+*	Stu George
+* NOTES
+* 	Changing the details in this table does not change whats in memory. This is a local copy only.
+******
+*/
+int gme_GetHighlightedFile(lua_State *L)
+{
+	uDirEntry *de;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	lua_newtable(L);
+
+	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
+	if(de != NULL)
+		push_file(L, de, 1, GetActDPath(gd));
+
+	return 1;
+}
+
+
 /****f* LuaAPI/TagHighlightedFile
 * FUNCTION
 *	Will toggle the tagged flag of the file currently highlighted
@@ -1068,39 +1102,9 @@ int gme_GetFileList(lua_State *L)
 	e = dlist_head(lst);
 	while(e != NULL)
 	{
-		char *buff_date;
-		char date_fmt[8] = { et_Year4,et_Month,et_Day,' ',et_Hour24,et_Min,et_Sec, 0};
-
 		de = dlist_data(e);
 
-		lua_pushnumber(L, i++);
-		lua_newtable(L);
-
-		lua_pushstring(L, "name");
-		lua_pushstring(L, de->name);
-		lua_settable(L, -3);
-
-		lua_pushstring(L, "size");
-		lua_pushnumber(L, de->size);
-		lua_settable(L, -3);
-
-		buff_date = GetDateTimeString(date_fmt, de->time);
-		lua_pushstring(L, "date");
-		lua_pushstring(L, buff_date);
-		lua_settable(L, -3);
-
-		lua_pushstring(L, "directory");
-		if( S_ISDIR(de->attrs) == 0)
-			lua_pushnumber(L, 0);
-		else
-			lua_pushnumber(L, 1);
-		lua_settable(L, -3);
-
-		lua_pushstring(L, "tagged");
-		lua_pushnumber(L, de->tagged);
-		lua_settable(L, -3);
-
-		lua_settable(L, -3);
+		push_file(L, de, i++, GetActDPath(gd));
 
 		e = dlist_next(e);
 	}
@@ -1148,32 +1152,7 @@ int gme_GetTaggedFileList(lua_State *L)
 		de = dlist_data(e);
 
 		if(de->tagged == 1)
-		{
-			lua_pushnumber(L, i++);
-			lua_newtable(L);
-
-			lua_pushstring(L, "name");
-			lua_pushstring(L, de->name);
-			lua_settable(L, -3);
-
-			lua_pushstring(L, "size");
-			lua_pushnumber(L, de->size);
-			lua_settable(L, -3);
-
-
-			lua_pushstring(L, "directory");
-			if( S_ISDIR(de->attrs) == 0)
-				lua_pushnumber(L, 0);
-			else
-				lua_pushnumber(L, 1);
-			lua_settable(L, -3);
-
-			lua_pushstring(L, "tagged");
-			lua_pushnumber(L, de->tagged);
-			lua_settable(L, -3);
-
-			lua_settable(L, -3);
-		}
+			push_file(L, de, i++, GetActDPath(gd));
 
 		e = dlist_next(e);
 	}

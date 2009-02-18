@@ -381,6 +381,11 @@ extern void about_window(uGlobalData *gd);
 extern void UpdateDir(uGlobalData *gd, char *set_to_highlight);
 extern int TagWithGlob(uGlobalData *gd, char *pattern);
 extern int TagWithFilter(uGlobalData *gd, char *pattern);
+extern DList* GetFiles(char *path);
+extern int ALFC_main(int start_mode, char *view_file);
+
+extern char *start_left;
+extern char *start_right;
 
 #ifdef __cplusplus
 }

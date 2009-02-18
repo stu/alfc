@@ -66,7 +66,7 @@ int ExecuteScript(uGlobalData *gb, char *sn)
 	int v;
 
 	fnx = ConvertDirectoryName(sn);
-	fp = fopen(fnx, "r");
+	fp = fopen(fnx, "rb");
 	if(fp == NULL)
 	{
 		LogError("cant load file : %s\n", sn);
@@ -126,16 +126,16 @@ int LoadGlobalScript(uGlobalData *gd, char *sn)
 
 	if(sn == NULL)
 	{
-		LogError("cant find global script file. Please setup your options.\n");
+		LogError("LoadGlobalScript : Cant find global script file. Please setup your options.\n");
 		return -1;
 	}
 
 	cpath = ConvertDirectoryName(sn);
 
-	fp = fopen(cpath, "r");
+	fp = fopen(cpath, "rb");
 	if(fp == NULL)
 	{
-		LogError("cant load file : %s\n", cpath);
+		LogError("LoadGlobalScript : Cant load file : %s\n", cpath);
 		free(cpath);
 		return -1;
 	}
@@ -147,7 +147,7 @@ int LoadGlobalScript(uGlobalData *gd, char *sn)
 	gd->gcode = malloc(64 + maxsize);
 	if(gd->gcode == NULL)
 	{
-		LogError("No memory for script %s\n", cpath);
+		LogError("LoadGlobalScript : No memory for script %s\n", cpath);
 		fclose(fp);
 		free(cpath);
 		return -1;
@@ -166,8 +166,8 @@ int LoadGlobalScript(uGlobalData *gd, char *sn)
 	v = lua_pcall(gd->_GL, 0, 0, 0);			/* call 'SetGlobals' with 0 arguments and 0 result */
 	if(v != 0)
 	{
-		LogError("_gl lua error : %s\n", lua_tostring(gd->_GL, -1));
-		return -1;
+		LogError("LoadGlobalScript : _gl lua error : %s\n", lua_tostring(gd->_GL, -1));
+		return 1;
 	}
 
 	return 0;

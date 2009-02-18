@@ -50,7 +50,13 @@
 #include "operations.h"
 
 // screen config
+#ifdef DRV_NCURSES
 #include "ncurses_interface.h"
+#endif
+#ifdef DRV_X11
+#include "x11_interface.h"
+#endif
+
 
 
 #ifdef __MINGW_H

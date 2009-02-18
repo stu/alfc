@@ -277,3 +277,160 @@ int gmec_DriverName(lua_State *L)
 	return 1;
 }
 
+
+int gmec_IncludeFile(lua_State *L)
+{
+	struct lstr s;
+	char *cpath;
+	uint8_t *buff;
+	int buffsize;
+	int v;
+	FILE *fp;
+
+	GET_LUA_STRING(s, 1);
+
+	cpath = ConvertDirectoryName(s.data);
+
+	fp = fopen(cpath, "rb");
+	if(fp == NULL)
+	{
+		free(cpath);
+		return luaL_error(L, "Could not open file %s\n", s.data);
+	}
+
+	fseek(fp, 0x0L, SEEK_END);
+	buffsize = ftell(fp);
+	fseek(fp, 0x0L, SEEK_SET);
+
+	buff = malloc(buffsize + 32);
+	if(buff == NULL)
+	{
+		free(cpath);
+		fclose(fp);
+		return luaL_error(L, "Not enough memory to load file %s\n", s.data);
+	}
+
+	fread(buff, 1, buffsize, fp);
+	fclose(fp);
+	free(cpath);
+
+	v = luaL_loadbuffer(L, (char*)buff, buffsize, s.data);
+	if(v != 0)
+	{
+		LogError("cant include (%s) lua error : %s", s.data, lua_tostring(L, -1));
+	}
+	else
+	{
+		v = lua_pcall(L, 0, 0, 0);			// call 'SetGlobals' with 0 arguments and 0 result
+		if(v != 0)
+		{
+			LogError("include (%s) lua error : %s", s.data, lua_tostring(L, -1));
+		}
+	}
+
+	free(buff);
+
+	return 0;
+}
+
+int gmec_DoesFileExist(lua_State *L)
+{
+	char *dir;
+	struct lstr d;
+	struct stat buff;
+
+	GET_LUA_STRING(d, 1);
+	dir = ConvertDirectoryName(d.data);
+
+	if( ALFC_stat(dir, &buff) == 0)
+		lua_pushnumber(L, 0);
+	else
+		lua_pushnumber(L, -1);
+
+	free(dir);
+	return 1;
+}
+
+void push_file(lua_State *L, uDirEntry *de, int idx, char *path)
+{
+	char *buff_date;
+	char date_fmt[8] = { et_Year4,et_Month,et_Day,' ',et_Hour24,et_Min,et_Sec, 0};
+
+	lua_pushnumber(L, idx);
+	lua_newtable(L);
+
+		lua_pushstring(L, "name");
+		lua_pushstring(L, de->name);
+		lua_settable(L, -3);
+
+		lua_pushstring(L, "size");
+		lua_pushnumber(L, de->size);
+		lua_settable(L, -3);
+
+		buff_date = GetDateTimeString(date_fmt, de->time);
+		lua_pushstring(L, "date");
+		lua_pushstring(L, buff_date);
+		lua_settable(L, -3);
+		free(buff_date);
+
+		lua_pushstring(L, "directory");
+		if( S_ISDIR(de->attrs) == 0)
+			lua_pushnumber(L, 0);
+		else
+			lua_pushnumber(L, 1);
+		lua_settable(L, -3);
+
+		lua_pushstring(L, "tagged");
+		lua_pushnumber(L, de->tagged);
+		lua_settable(L, -3);
+
+		lua_pushstring(L, "path");
+		lua_pushstring(L, path);
+		lua_settable(L, -3);
+
+	lua_settable(L, -3);
+}
+
+int gmec_GetFileListFromPath(lua_State *L)
+{
+	DList *lst;
+	DLElement *e;
+	struct lstr d;
+	uGlobalData *gd;
+	uDirEntry *de;
+	char *dir;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(d, 1);
+
+	dir = ConvertDirectoryName(d.data);
+	lst = GetFiles(dir);
+
+	if(lst != NULL)
+	{
+		int i;
+
+		lua_newtable(L);
+
+		i = 1;
+		e = dlist_head(lst);
+		while(e != NULL)
+		{
+			de = dlist_data(e);
+
+			push_file(L, de, i++, dir);
+
+			e = dlist_next(e);
+		}
+	}
+
+	free(dir);
+
+	dlist_destroy(lst);
+	free(lst);
+
+	return 1;
+}
+

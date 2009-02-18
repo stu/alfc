@@ -75,9 +75,6 @@ void _LogWrite(char *file, long line, int flags, char *strX, ...)
 	if(strLogBuffer == NULL)
 		return;
 
-	if( ((intLogFlags&~LOG_STDERR) & flags) != flags)
-		return;
-
 	if(strX != NULL)
 	{
 		va_start(args, strX);
@@ -98,6 +95,12 @@ void _LogWrite(char *file, long line, int flags, char *strX, ...)
 	else
 	{
 		sprintf(x, "%s", strLogBuffer);
+	}
+
+	if(((intLogFlags&~LOG_STDERR) & flags) != flags)
+	{
+		free(x);
+		return;
 	}
 
 	if( (flags & LOG_STDERR) == LOG_STDERR)

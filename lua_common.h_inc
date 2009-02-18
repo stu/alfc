@@ -4,6 +4,8 @@
 extern "C"{
 #endif
 
+extern void push_file(lua_State *L, uDirEntry *de, int idx, char *path);
+
 /* LUA EXT REF */
 /* LUA END EXT REF */
 

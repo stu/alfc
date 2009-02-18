@@ -9,7 +9,30 @@
 static void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF);
 static void FreeListEntry(void *x);
 
+char *start_left = NULL;
+char *start_right = NULL;
+
 int intFlag = 0;
+
+static char* replace(const char *in, char a,  char b)
+{
+	char *x = malloc(strlen(in) + 4);
+	char *p = x;
+
+	while(*in != 0)
+	{
+		*p = *in;
+
+		if(*p == a)
+			*p = b;
+
+		p++;
+		in++;
+	}
+	*p++ = *in;
+
+	return x;
+}
 
 void FreeFileOp(void *x)
 {
@@ -489,10 +512,7 @@ char* ConvertDirectoryName(const char *x)
 
 				strcat(p, env);
 			}
-			else
-			{
-				// FIXME
-			}
+
 
 			q = z;
 		}
@@ -659,38 +679,29 @@ static void FreeListEntry(void *x)
 	free(de);
 }
 
-static DList* GetFiles(uGlobalData *gdata, char *path)
+DList* GetFiles(char *path)
 {
 	DList *lstF;
 	DIR *d;
 	char *cpath;
-	int dirsfirst;
-	DLElement *first_file;
 	struct dirent *dr;
 	uDirEntry *de;
 	struct stat buff;
 
-
-	dirsfirst = 0;
-	if(IsTrue(INI_get(gdata->optfile, "options", "directories_first"))==0)
-		dirsfirst = 1;
+	//char *dirx;
+	//dirx = GetCurrentWorkingDirectory();
 
 	lstF = malloc(sizeof(DList));
 	dlist_init(lstF, FreeListEntry);
 
-	GetActWindow(gdata)->highlight_line = 0;
-	GetActWindow(gdata)->top_line = 0;
+	cpath = replace(path, '\\', '/');
 
-	cpath=strdup(path);
-	//cpath = ConvertDirectoryName(path);
-
-	if( chdir(cpath) == 0)
-	{
+	//if( chdir(cpath) == 0)
+	//{
 		d = opendir(cpath);
 		if(d != NULL)
 		{
 			dr = readdir(d);
-			first_file = NULL;
 
 			while(dr != NULL)
 			{
@@ -707,19 +718,7 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 					de->attrs = ALFC_GetFileAttrs(de, &buff);
 					de->time = ALFC_GetFileTime(de, &buff);
 
-					if(dirsfirst == 1 && S_ISDIR(de->attrs) != 0 )
-					{
-						if(first_file == NULL)
-							dlist_ins(lstF, de);
-						else
-							dlist_ins_prev(lstF, first_file, de);
-					}
-					else
-					{
-						dlist_ins(lstF, de);
-						if(first_file == NULL)
-							first_file = dlist_tail(lstF);
-					}
+					dlist_ins(lstF, de);
 				}
 
 				dr = readdir(d);
@@ -731,11 +730,14 @@ static DList* GetFiles(uGlobalData *gdata, char *path)
 		{
 			LogError("Unable to opendir %s\nerror (%i) %s\n", cpath, errno, strerror(errno));
 		}
-	}
-	else
-	{
-		LogError("Unable to cd to %s\nerror (%i) %s\n", cpath, errno, strerror(errno));
-	}
+
+		//chdir(dirx);
+		//free(dirx);
+	//}
+	//else
+	//{
+	//	LogError("Unable to cd to %s\nerror (%i) %s\n", cpath, errno, strerror(errno));
+	//}
 
 	free(cpath);
 
@@ -921,7 +923,7 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	win->screen->draw_border(win);
 
 	//path = ConvertDirectoryName(dpath);
-	path = strdup(dpath);
+	path = replace(dpath, '\\', '/');
 	if(strlen(path) < win->width-6)
 		sprintf(buff, "[ %s ]", path);
 	else
@@ -1779,7 +1781,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 			dlist_destroy(gd->lstFullLeft);
 			free(gd->lstFullLeft);
 		}
-		gd->lstFullLeft = GetFiles(gd, gd->left_dir);
+		gd->lstFullLeft = GetFiles(gd->left_dir);
 
 		if(gd->lstLeft != NULL)
 		{
@@ -1806,7 +1808,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 			dlist_destroy(gd->lstFullRight);
 			free(gd->lstFullRight);
 		}
-		gd->lstFullRight = GetFiles(gd, gd->right_dir);
+		gd->lstFullRight = GetFiles(gd->right_dir);
 
 		if(gd->lstRight != NULL)
 		{
@@ -1822,7 +1824,6 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		assert(gd->lstGlobRight != NULL);
 		UpdateFilterList(gd, gd->lstFilterRight, gd->lstGlobRight, gd->lstFullRight, gd->lstRight);
 	}
-
 
 	GetActWindow(gd)->top_line = 0;
 	GetActWindow(gd)->highlight_line = 0;
@@ -1846,7 +1847,7 @@ int change_dir(uGlobalData *gd, char *dir)
 	char *cpath;
 
 	//cpath = ConvertDirectoryName( dir );
-	cpath = strdup(dir);
+	cpath = replace(dir, '\\', '/');
 
 	if( chdir(cpath) != 0)
 	{
@@ -1869,7 +1870,7 @@ int updir(uGlobalData *gd)
 	char *scan;
 
 	//cpath = ConvertDirectoryName(  GetActDPath(gd) );
-	cpath = strdup(GetActDPath(gd));
+	cpath = replace(GetActDPath(gd), '\\', '/');
 
 	if( chdir(cpath) != 0)
 	{
@@ -2442,6 +2443,8 @@ void DrawAll(uGlobalData *gd)
 
 static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start_right)
 {
+	char *x;
+
 	gdata->selected_window = WINDOW_LEFT;
 	gdata->lstFilterLeft = malloc(sizeof(DList));
 	dlist_init(gdata->lstFilterLeft, FreeFilter);
@@ -2451,7 +2454,11 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 	if(start_left != NULL)
 		gdata->left_dir = strdup(start_left);
 	else
-		gdata->left_dir = ConvertDirectoryName(GetOptionDir(gdata, "left_startup", gdata->lstMRULeft));
+	{
+		x = GetOptionDir(gdata, "left_startup", gdata->lstMRULeft);
+		gdata->left_dir = ConvertDirectoryName(x);
+		free(x);
+	}
 
 	if(gdata->left_dir == NULL)
 		gdata->left_dir = GetCurrentWorkingDirectory();
@@ -2470,7 +2477,11 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 	if(start_right != NULL)
 		gdata->right_dir = strdup(start_right);
 	else
-		gdata->right_dir = ConvertDirectoryName(GetOptionDir(gdata, "right_startup", gdata->lstMRURight));
+	{
+		x = GetOptionDir(gdata, "right_startup", gdata->lstMRURight);
+		gdata->right_dir = ConvertDirectoryName(x);
+		free(x);
+	}
 
 	if(gdata->right_dir == NULL)
 		gdata->right_dir = GetCurrentWorkingDirectory();
@@ -2484,18 +2495,12 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 	chdir( gdata->left_dir );
 }
 
-int main(int argc, char *argv[])
+int ALFC_main(int start_mode, char *view_file)
 {
 	uGlobalData *gdata;
 
-	char *start_left = NULL;
-	char *start_right = NULL;
-	int i;
-
-	int start_mode = eMode_Directory;
-	char *view_file = NULL;
-
-	fprintf(stderr, "ALFC : Another Linux File Commander - Stu George\nVersion v%i.%02i/%04i - Built on " __DATE__ "; " __TIME__ "\n", VersionMajor(), VersionMinor(), VersionBuild());
+	LogWrite_Startup(0, LOG_INFO | LOG_DEBUG | LOG_ERROR | LOG_STDERR, 5000);
+	LogInfo("ALFC : Another Linux File Commander - Stu George\nVersion v%i.%02i/%04i - Built on " __DATE__ "; " __TIME__ "\n", VersionMajor(), VersionMinor(), VersionBuild());
 
 	ALFC_startup();
 
@@ -2503,48 +2508,10 @@ int main(int argc, char *argv[])
 	setenv("ALFC", "$HOME/.alfc/scripts", 0);
 #endif
 
-	for(i=1; i<argc; i++)
-	{
-		if(argv[i][0] == '-')
-		{
-			if(1+i < argc && strcmp("-l", argv[i]) == 0)
-			{
-				start_left = argv[i+1];
-			}
-			if(1+i < argc && strcmp("-r", argv[i]) == 0)
-			{
-				start_right = argv[i+1];
-			}
-			else if(strcmp("-?", argv[i]) == 0 || strcmp("--help", argv[i]) == 0)
-			{
-				fprintf(stderr, "\n-v\t\tVersion\n"
-								"-?\t\tHelp\n"
-								"-l DIR\t\tStart left side in directory DIR\n"
-								"-r DIR\t\tStart right side in directory DIR\n"
-								"-view FILE\tStart in viewer mode\n"
-								);
-				exit(0);
-			}
-			else if(strcmp("-v", argv[i]) == 0 || strcmp("--version", argv[i]) == 0)
-			{
-				//fprintf(stderr, "ALFC v%i.%02i/%04i\n", VersionMajor(), VersionMinor(), VersionBuild());
-				exit(0);
-			}
-			else if(strcmp("-view", argv[i]) == 0 && 1+i < argc)
-			{
-				view_file = argv[1+i];
-				i+=1;
-				start_mode = eMode_Viewer;
-			}
-		}
-	}
-
 
 #ifdef MEMWATCH
 	remove("memwatch.log");
 #endif
-
-	LogWrite_Startup(0, LOG_INFO | LOG_DEBUG | LOG_ERROR | LOG_STDERR, 5000);
 
 	gdata = NewGlobalData();
 
@@ -2564,7 +2531,7 @@ int main(int argc, char *argv[])
 		LoadOptions(gdata);
 
 		gdata->screen = malloc(sizeof(uScreenDriver));
-		memmove(gdata->screen, 	&screen_ncurses, sizeof(uScreenDriver));
+		memmove(gdata->screen, 	&screen, sizeof(uScreenDriver));
 
 		gdata->screen->gd = gdata;
 		gdata->screen->init(gdata->screen);
@@ -2579,6 +2546,8 @@ int main(int argc, char *argv[])
 		// screen too small to show nds columns
 		// date coumns waste too much space.
 		// todo - separate the date/time columns??
+		LogInfo("Screen is %i.%i\n", gdata->screen->get_screen_width(), gdata->screen->get_screen_height());
+
 		if(gdata->screen->get_screen_width() <= 80)
 		{
 			if(strlen(gdata->columns) > 2)
@@ -2603,8 +2572,10 @@ int main(int argc, char *argv[])
 
 		// load it, if it fails, try looking in home as a fallback
 		rc = LoadGlobalScript(gdata, INI_get(gdata->optfile, "scripts", "global_funcs"));
-		if(rc != 0)
+		if(rc < 0)
+		{
 			rc = LoadGlobalScript(gdata, "$HOME/.alfc/global.lua");
+		}
 
 		if(rc == 0)
 		{
@@ -2621,8 +2592,8 @@ int main(int argc, char *argv[])
 				exit(1);
 			}
 
-			ALFC_GetUserInfo(gdata);
 
+			ALFC_GetUserInfo(gdata);
 			BuildWindowLayout(gdata);
 
 			if(gdata->mode == eMode_Directory)
@@ -2911,11 +2882,10 @@ int main(int argc, char *argv[])
 			free(gdata->strShell);
 
 		free(gdata);
-
-		LogWrite_Shutdown();
 	}
 
 	ALFC_shutdown();
+	LogWrite_Shutdown();
 
 	return 0;
 }

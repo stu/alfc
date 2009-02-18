@@ -1,8 +1,18 @@
 #include "headers.h"
 
+static char* get_charsep(void)
+{
+	char x[4];
+
+	sprintf(x, "%c", ALFC_pathsep);
+	return strdup(x);
+}
+
 /* register lua funcs */
 void RegisterCommonFuncs(uGlobalData *gd, lua_State *l)
 {
+	char *ps;
+
 /* LUA EXT REF */
 /* LUA END EXT REF */
 
@@ -55,6 +65,9 @@ void RegisterCommonFuncs(uGlobalData *gd, lua_State *l)
 	lua_pushnumber(l, eOp_Move); lua_setglobal(l, "eOp_Move");
 	lua_pushnumber(l, eOp_Delete); lua_setglobal(l, "eOp_Delete");
 
+	ps = get_charsep();
+	lua_pushstring(l, ps); lua_setglobal(l, "pathsep");
+	free(ps);
 
 	lua_settop(l, 0);
 }

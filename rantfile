@@ -4,6 +4,8 @@ import "md5"
 _VER_MAJ = 0
 _VER_MIN = 1
 
+DRIVER="X11"	# NCURSES, X11
+
 
 y = RUBY_PLATFORM.scan(/(mswin32|mingw32|bccwin32|msdosdjgpp|os2|amigaos|cygwin)/)
 case y.to_s
@@ -12,8 +14,14 @@ case y.to_s
 		var[:exec] = "alfc.exe"
 		var[:lua] = "lua.exe"
 		var[:luac] = "luac.exe"
-		var[:libs] = "-lpdcurses -llua -lregex -liberty -lkernel32"
-		PORTABILITY_OBJS = %w( portability_win32.o )
+		if DRIVER=="NCURSES"
+			var[:libs] = "-lpdcurses -llua -lregex -liberty -lkernel32"
+			PORTABILITY_OBJS = %w( portability_win32.o  ncurses_interface.o)
+		else
+			var[:libs] = "-llua -lregex -liberty -lkernel32 -Lrl -lrl -mwindows"
+			PORTABILITY_OBJS = %w( portability_win32.o  x11_interface.o)
+		end
+
 		# mingw has bugs with 64bit stuff (mostly in sprintf etc dropping upper 32bits).
 		# this allows us to use %I64u format...
 		PORT_CFLAGS = "-Wno-format"
@@ -23,15 +31,21 @@ case y.to_s
 		var[:lua] = "lua.exe"
 		var[:luac] = "luac.exe"
 		var[:libs] = "-lpdcurses -llua"
-		PORTABILITY_OBJS = %w( portability_unix.o )
+		PORTABILITY_OBJS = %w( portability_unix.o  ncurses_interface.o)
 		PORT_CFLAGS = ""
 	else
 		@strPlatform = "ALFC_UNIXLIKE"
 		var[:exec] = "alfc"
 		var[:lua] = "lua"
 		var[:luac] = "luac"
-		var[:libs] = "-lncurses -llua5.1"
-		PORTABILITY_OBJS = %w( portability_unix.o )
+		if DRIVER=="NCURSES"
+			var[:libs] = "-lncurses -llua5.1"
+			PORTABILITY_OBJS = %w( portability_unix.o  ncurses_interface.o)
+		else
+			var[:libs] = "-llua5.1 -Lrl -lrl -lX11"
+			PORTABILITY_OBJS = %w( portability_unix.o  x11_interface.o)
+		end
+
 		PORT_CFLAGS=""
 end
 
@@ -124,17 +138,17 @@ LIBS = ""
 
 alfc = %w( dlist.o logwrite.o ini.o
 			version.o main.o memwatch.o lua_helper.o
-			lua_api.o options.o ncurses_interface.o viewer.o
+			lua_api.o options.o viewer.o
 			lua_helper_viewer.o lua_common.o lua_common_api.o
 			operations.o lua_hash.o md5.o rmd160.o sha1.o
 			)
 
 gen Action do
-	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s
+	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s + " -DDRV_" + DRIVER
 end
 
 desc "Build the app"
-task :app => ["auxfiles", "appx"] do
+task :app => ["auxfiles", "rl/librl.a", "appx"] do
 end
 
 task "auxfiles" => ["fixversion", "tools" ] do
@@ -158,6 +172,7 @@ task :tools => %w(bin2c.o) do |t|
 	sys "bin2c startup.lua include_startup_lua >> defaults.h"
 	sys "bin2c shutdown.lua include_shutdown_lua >> defaults.h"
 	sys "bin2c options.ini include_options_ini >> defaults.h"
+	sys "bin2c core_extract.lua core_extract_lua >> defaults.h"
 end
 
 task :appx => alfc + PORTABILITY_OBJS do |t|
@@ -191,8 +206,8 @@ task "docs" do
 end
 
 desc "Cleanup..."
-task :clean do
-	x = Dir["*.{bak,o,obj}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"] + Dir["Makefile"]
+task :clean => "rl/clean" do
+	x = Dir["*.{bak,o,obj,a}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"] + Dir["Makefile"]
 
 	x += Dir["lua_helper.c"]
 	x += Dir["lua_common_api.c"]
@@ -307,3 +322,4 @@ task :make =>  ["clean", "bin2c.o", "auxfiles"] do
 
 end
 
+subdirs "rl"
