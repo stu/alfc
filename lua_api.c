@@ -2317,3 +2317,67 @@ int gme_ClearHistory(lua_State *L)
 
 	return 0;
 }
+
+int gme_AddMenu(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	struct lstr name;
+	uint32_t key;
+	int i;
+
+	key = luaL_checknumber(L, 1);
+	GET_LUA_STRING(name, 2);
+
+	for(i=0; i < MAX_MENU; i++)
+	{
+		if(gd->menu[i] == NULL)
+		{
+			gd->menu[i] = calloc(1, sizeof(uMenu));
+			// FIXME: duplicate names
+			gd->menu[i]->name = strdup(name.data);
+			gd->menu[i]->key = key;
+
+			lua_pushnumber(L, i);
+			return 1;
+		}
+	}
+
+	return luaL_error(L, "Can't create any more menu's.");
+}
+
+int gme_AddMenuItem(lua_State *L)
+{
+	uGlobalData *gd;
+	struct lstr name;
+	struct lstr code;
+	uint32_t key;
+	int idx;
+	int x;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	idx = luaL_checknumber(L, 1);
+	key = luaL_checknumber(L, 2);
+	GET_LUA_STRING(name, 3);
+	GET_LUA_STRING(code, 4);
+
+	if(idx >= MAX_MENU)
+		return luaL_error(L, "incorrect sub menu index");
+
+	gd->menu[idx]->child = realloc(gd->menu[idx]->child, sizeof(uSubMenu*) * (gd->menu[idx]->count + 1));
+	x = gd->menu[idx]->count;
+
+	gd->menu[idx]->child[x] = calloc(1, sizeof(uSubMenu));
+	gd->menu[idx]->child[x]->key = key;
+	gd->menu[idx]->child[x]->name = strdup(name.data);
+	gd->menu[idx]->child[x]->code = strdup(code.data);
+
+	gd->menu[idx]->count += 1;
+	lua_pushnumber(L, x);
+
+	return 1;
+}
+

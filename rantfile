@@ -141,6 +141,7 @@ alfc = %w( dlist.o logwrite.o ini.o
 			lua_api.o options.o viewer.o
 			lua_helper_viewer.o lua_common.o lua_common_api.o
 			operations.o lua_hash.o md5.o rmd160.o sha1.o
+			menu.o
 			)
 
 gen Action do

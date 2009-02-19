@@ -77,14 +77,30 @@ typedef struct udtGlobals uGlobalData;
 typedef struct udtScreenDriver uScreenDriver;
 
 
+typedef struct udtSubMenu
+{
+	char		*name;
+	uint32_t	key;
+	char		*code;
+} uSubMenu;
+
+typedef struct udtMenu
+{
+	char*		name;
+	uint32_t	key;
+
+	int			count;
+	uSubMenu	**child;
+} uMenu;
+
+
 enum eFileOpType
 {
 	eOp_Delete = 1,
 	eOp_Copy,
 	eOp_Move,
 	eOp_MakeDir,
-	eOp_DeleteDir,
-
+	eOp_DeleteDir
 };
 
 typedef struct udtFileOperation
@@ -215,6 +231,7 @@ struct udtScreenDriver
 #define WINDOW_LEFT	0
 #define WINDOW_RIGHT 1
 #define MAX_COMMAND_LENGTH	256
+#define MAX_MENU 16
 
 struct udtGlobals
 {
@@ -293,6 +310,8 @@ struct udtGlobals
 
 	DList		*lstFileOps;
 	DList 		*lstViewerList;
+
+	uMenu		*menu[MAX_MENU];
 };
 
 enum

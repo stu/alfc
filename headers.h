@@ -49,6 +49,8 @@
 #include "lua_hash.h"
 #include "operations.h"
 
+#include "menu.h"
+
 // screen config
 #ifdef DRV_NCURSES
 #include "ncurses_interface.h"

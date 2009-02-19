@@ -14,6 +14,37 @@ char *start_right = NULL;
 
 int intFlag = 0;
 
+static void FreeSubMenu(uSubMenu *m)
+{
+	if(m->code != NULL)
+		free(m->code);
+	if(m->name != NULL)
+		free(m->name);
+
+	free(m);
+}
+
+static void FreeMenus(uGlobalData *gd)
+{
+	int i, j;
+
+	for(i=0; i<MAX_MENU; i++)
+	{
+		if(gd->menu[i]!=NULL)
+		{
+			if(gd->menu[i]->name != NULL)
+				free(gd->menu[i]->name);
+
+			for(j=0; j<gd->menu[i]->count; j++)
+				FreeSubMenu(gd->menu[i]->child[j]);
+
+			free(gd->menu[i]->child);
+
+			free(gd->menu[i]);
+		}
+	}
+}
+
 static char* replace(const char *in, char a,  char b)
 {
 	char *x = malloc(strlen(in) + 4);
@@ -2531,7 +2562,8 @@ int ALFC_main(int start_mode, char *view_file)
 
 
 #ifdef MEMWATCH
-	remove("memwatch.log");
+	//remove("memwatch.log");
+	//mwInit();
 #endif
 
 	gdata = NewGlobalData();
@@ -2630,6 +2662,9 @@ int ALFC_main(int start_mode, char *view_file)
 				ViewFile(gdata, view_file, NULL);
 				intFlag = 1;
 			}
+
+			DrawMenu(gdata);
+			DrawAll(gdata);
 
 			while(intFlag == 0)
 			{
@@ -2775,6 +2810,9 @@ int ALFC_main(int start_mode, char *view_file)
 			SaveOptions(gdata);
 		}
 
+
+		FreeMenus(gdata);
+
 		if(gdata->lstFileOps != NULL)
 		{
 			dlist_destroy(gdata->lstFileOps);
@@ -2874,8 +2912,6 @@ int ALFC_main(int start_mode, char *view_file)
 			free(gdata->lstGlobRight);
 		}
 
-
-
 		if(gdata->win_left != NULL)
 			free(gdata->win_left);
 		if(gdata->win_right != NULL)
@@ -2907,6 +2943,10 @@ int ALFC_main(int start_mode, char *view_file)
 
 	ALFC_shutdown();
 	LogWrite_Shutdown();
+
+#ifdef MEMWATCH
+	//mwTerm();
+#endif
 
 	return 0;
 }

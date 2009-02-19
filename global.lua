@@ -16,10 +16,10 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 	function CreateMenu(key, name, list)
 		local k,v
-		--debug_msg("Create menu " .. name)
+		debug_msg("Create menu " .. name)
 
 		for k,v in pairs(list) do
-			--debug_msg("\t" .. v.name)
+			debug_msg("\t" .. v.name)
 		end
 
 	end
