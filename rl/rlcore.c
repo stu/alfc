@@ -141,43 +141,28 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 
                 switch(keycode)
                 {
-                    case VK_F1:
-                    case VK_F2:
-                    case VK_F3:
-                    case VK_F4:
-                    case VK_F5:
-                    case VK_F6:
-                    case VK_F7:
-                    case VK_F8:
-                    case VK_F9:
-                    case VK_F10:
-                    case VK_F11:
-                    case VK_F12:
-                    case VK_F13:
-                    case VK_F14:
-                    case VK_F15:
-                    case VK_F16:
-                    case VK_F17:
-                    case VK_F18:
-                    case VK_F19:
-                    case VK_F20:
-                    case VK_F21:
-                    case VK_F22:
-                    case VK_F23:
-                    case VK_F24:
-
-                    case VK_LEFT:
-                    case VK_RIGHT:
-                    case VK_UP:
-                    case VK_DOWN:
-                    case VK_INSERT:
-                    case VK_DELETE:
-                    case VK_HOME:
-                    case VK_END:
-                    case VK_PRIOR: // page up
-                    case VK_NEXT: // page down
-                         curkey_k |= 0x800000;
-                         break;
+                    case VK_F1: curkey_k = RLKEY_F1; break;
+                    case VK_F2: curkey_k = RLKEY_F2; break;
+                    case VK_F3: curkey_k = RLKEY_F3; break;
+                    case VK_F4: curkey_k = RLKEY_F4; break;
+                    case VK_F5: curkey_k = RLKEY_F5; break;
+                    case VK_F6: curkey_k = RLKEY_F6; break;
+                    case VK_F7: curkey_k = RLKEY_F7; break;
+                    case VK_F8: curkey_k = RLKEY_F8; break;
+                    case VK_F9: curkey_k = RLKEY_F9; break;
+                    case VK_F10: curkey_k = RLKEY_F10; break;
+                    case VK_F11: curkey_k = RLKEY_F11; break;
+                    case VK_F12: curkey_k = RLKEY_F12; break;
+                    case VK_LEFT: curkey_k = RLKEY_LEFT; break;
+                    case VK_RIGHT: curkey_k = RLKEY_RIGHT; break;
+                    case VK_UP: curkey_k = RLKEY_UP; break;
+                    case VK_DOWN: curkey_k = RLKEY_DOWN; break;
+                    case VK_INSERT: curkey_k = RLKEY_INSERT; break;
+                    case VK_DELETE: curkey_k = RLKEY_DELETE; break;
+                    case VK_HOME: curkey_k = RLKEY_HOME; break;
+                    case VK_END: curkey_k = RLKEY_END; break;
+                    case VK_PRIOR: curkey_k = RLKEY_PRIOR; break;
+                    case VK_NEXT: curkey_k = RLKEY_NEXT; break;
                 }
 
                 if( GetAsyncKeyState(VK_SHIFT) != 0)
@@ -218,13 +203,6 @@ void init_window(int x_size, int y_size, char* title)
     screen_y_size = y_size;
 
 #ifdef xlib
-    screen_display = XOpenDisplay(0);
-    if (!screen_display)
-    {
-        printf("Can't open display.\n");
-        exit(1);
-    }
-    screen_num = DefaultScreen(screen_display);
     screen_win = XCreateSimpleWindow(screen_display, RootWindow(screen_display, screen_num), 0, 0, screen_x_size, screen_y_size, 0, BlackPixel(screen_display, screen_num), BlackPixel(screen_display, screen_num));
     XStoreName(screen_display, screen_win, title);
     XMapWindow(screen_display, screen_win);
@@ -332,11 +310,8 @@ static key key_to_keycode(key k, int kcode)
     key result = k;
 	result.is_numpad = 0;
 
-    if(kcode >= 0x800000)
+    if(kcode >= RLKEY_START_CODE)
         result.c = kcode;
-
-    //if (k.c == 13)
-    //    result.c = '\n';
 
     return result;
 }
@@ -355,6 +330,15 @@ key get_key(void)
         XNextEvent(screen_display, &event);
         switch (event.type)
         {
+			case ConfigureNotify:
+				if (screen_x_size != event.xconfigure.width || screen_y_size != event.xconfigure.height)
+				{
+					screen_x_size = event.xconfigure.width;
+					screen_y_size = event.xconfigure.height;
+					fprintf(stderr, "Size changed to: %d by %d", screen_x_size, screen_y_size);
+				}
+				break;
+
             case Expose:
                 if (event.xexpose.count)
                     break;
@@ -372,6 +356,43 @@ key get_key(void)
 
 					curkey.shift = 0;
 					curkey.ctrl = 0;
+
+                    curkey.c = buffer[0];
+                    curkey_k = key;
+
+					switch(curkey_k)
+					{
+						case XK_F1: 			curkey_k = RLKEY_F1; break;
+						case XK_F2: 			curkey_k = RLKEY_F2; break;
+						case XK_F3: 			curkey_k = RLKEY_F3; break;
+						case XK_F4: 			curkey_k = RLKEY_F4; break;
+						case XK_F5: 			curkey_k = RLKEY_F5; break;
+						case XK_F6: 			curkey_k = RLKEY_F6; break;
+						case XK_F7: 			curkey_k = RLKEY_F7; break;
+						case XK_F8: 			curkey_k = RLKEY_F8; break;
+						case XK_F9: 			curkey_k = RLKEY_F9; break;
+						case XK_F10: 			curkey_k = RLKEY_F10; break;
+						case XK_F11: 			curkey_k = RLKEY_F11; break;
+						case XK_F12: 			curkey_k = RLKEY_F12; break;
+						case XK_Left: 			curkey_k = RLKEY_LEFT; break;
+						case XK_Right: 			curkey_k = RLKEY_RIGHT; break;
+						case XK_Up:				curkey_k = RLKEY_UP; break;
+						case XK_Down: 			curkey_k = RLKEY_DOWN; break;
+						case XK_Insert: 		curkey_k = RLKEY_INSERT; break;
+						case XK_Delete: 		curkey_k = RLKEY_DELETE; break;
+						case XK_Home: 			curkey_k = RLKEY_HOME; break;
+						case XK_End: 			curkey_k = RLKEY_END; break;
+						case XK_Page_Up: 		curkey_k = RLKEY_PRIOR; break;
+						case XK_Page_Down: 		curkey_k = RLKEY_NEXT; break;
+
+						case XK_Escape:
+						case XK_BackSpace:
+						case XK_Tab:
+						case XK_Return:
+							curkey_k = curkey_k & 0xFF;
+							break;
+					}
+
 					if(event.xkey.state & ShiftMask)
 						curkey.shift = 1;
 
@@ -380,51 +401,15 @@ key get_key(void)
 
 					if(event.xkey.state & Mod1Mask)
 						curkey.ctrl |= 0x02;
+					if(event.xkey.state & Mod2Mask)
+						curkey.ctrl |= 0x02;
 
-                    curkey.c = buffer[0];
-                    curkey_k = key;
-
-					switch(curkey_k)
-					{
-						case XK_F1:
-						case XK_F2:
-						case XK_F3:
-						case XK_F4:
-						case XK_F5:
-						case XK_F6:
-						case XK_F7:
-						case XK_F8:
-						case XK_F9:
-						case XK_F10:
-						case XK_F11:
-						case XK_F12:
-						case XK_Left:
-						case XK_Right:
-						case XK_Up:
-						case XK_Down:
-						case XK_Insert:
-						case XK_Delete:
-						case XK_Home:
-						case XK_End:
-						case XK_Page_Up:
-						case XK_Page_Down:
-						//case XK_BackSpace:
-							curkey_k |= 0x800000;
-							break;
-
-						case XK_Escape:
-						case XK_BackSpace:
-						case XK_Tab:
-						case XK_Return:
-							curkey.c = curkey_k & 0xFF;
-							break;
-					}
-
-                    goto gotkey;
+					if(curkey.c != 0)
+						goto gotkey_out;
                 }
         }
     }
-    gotkey:
+    gotkey_out:
 #else
     gotkey = 0;
     curkey.c = 0;
@@ -460,7 +445,33 @@ int main()
 int WINAPI WinMain(HINSTANCE inst, HINSTANCE x, LPSTR y, int z)
 #endif
 {
-#ifndef xlib
+#ifdef xlib
+	Screen *s;
+
+	screen_display = XOpenDisplay(0);
+    if (!screen_display)
+    {
+        printf("Can't open display.\n");
+        exit(1);
+    }
+	screen_num = DefaultScreen(screen_display);
+	s = XDefaultScreenOfDisplay(screen_display);
+
+	screen_x_size = s->width;
+	screen_y_size = s->height;
+#else
+	DEVMODE dvmdOrig;
+	HDC hdc = GetDC(NULL);
+
+	dvmdOrig.dmPelsWidth = GetDeviceCaps(hdc, HORZRES);
+	dvmdOrig.dmPelsHeight = GetDeviceCaps(hdc, VERTRES);
+	dvmdOrig.dmBitsPerPel = GetDeviceCaps(hdc, BITSPIXEL);
+	dvmdOrig.dmDisplayFrequency = GetDeviceCaps(hdc, VREFRESH);
+	ReleaseDC(NULL, hdc);
+
+	screen_y_size = dvmdOrig.dmPelsHeight;
+	screen_x_size = dvmdOrig.dmPelsWidth;
+
     hinst = inst;
 #endif
     return rlmain();

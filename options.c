@@ -401,6 +401,7 @@ void LoadOptions(uGlobalData *gdata)
 		CreateIfNotExist("$HOME/.alfc/shutdown.lua", include_shutdown_lua, include_shutdown_lua_SIZE);
 
 		CreateIfNotExist("$HOME/.alfc/core_extract.lua", core_extract_lua, core_extract_lua_SIZE);
+		CreateIfNotExist("$HOME/.alfc/core_hash.lua", core_hash_lua, core_hash_lua_SIZE);
 
 		gdata->optfile = INI_load(gdata->optfilename);
 	}

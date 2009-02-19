@@ -1278,6 +1278,13 @@ char* ConvertKeyToName(int key)
 		}
 	}
 
+	if(key >= 0x20 && key <= 0x7F)
+	{
+		s = malloc(8);
+		sprintf(s, "%c", key);
+		return s;
+	}
+
 	return strdup("(?)");
 }
 
@@ -1435,7 +1442,7 @@ exec_internal_command(gd, ":q");
 *****
 */
 
-static void DrawCLI(uGlobalData *gd)
+void DrawCLI(uGlobalData *gd)
 {
 	gd->screen->set_style(STYLE_TITLE);
 	gd->screen->set_cursor(gd->screen->get_screen_height()-1, 1);
@@ -1643,6 +1650,8 @@ int scroll_down(uGlobalData *gd)
 void AddHistory(uGlobalData *gd, char *str, ...)
 {
 	char *x;
+	char *skip[] = { "HistoryUp()", "HistoryDown()", NULL };
+	int i;
 
 	x = malloc(8192);
 
@@ -1652,7 +1661,19 @@ void AddHistory(uGlobalData *gd, char *str, ...)
 	va_end(args);
 
 	x = realloc(x, strlen(x) + 1);
+
+	for(i=0; skip[i] != NULL; i++)
+	{
+		int j = strlen(skip[i]);
+		if(strncmp(skip[i], x, j) == 0 && (x[j] == 0 || x[j] == ';'))
+		{
+			free(x);
+			return;
+		}
+	}
+
 	dlist_ins(gd->lstLogHistory, x);
+	gd->hist_idx = dlist_size(gd->lstLogHistory);
 }
 
 int GetFileIndex(DList *lstFiles, char *name)

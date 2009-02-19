@@ -34,6 +34,13 @@ struct udtStyles
 
 };
 
+
+static void GetScreenDimensions(int *w, int *h)
+{
+	*w = window_width_in_pixels();
+	*h = window_height_in_pixels();
+}
+
 static char* driver_name(void)
 {
 	return "x11";
@@ -187,59 +194,33 @@ static uint32_t x11_get_keypress(void)
 		x = ALFC_KEY_ALT + toupper(k.c);
 	else
 	{
-		if(k.c >= 0x800000)
+		if(k.c >= RLKEY_START_CODE)
 		{
-			switch(k.c - 0x800000)
+			switch(k.c)
 			{
-#ifdef __MINGW_H
-				case VK_F1: x = ALFC_KEY_F01; break;
-				case VK_F2: x = ALFC_KEY_F02; break;
-				case VK_F3: x = ALFC_KEY_F03; break;
-				case VK_F4: x = ALFC_KEY_F04; break;
-				case VK_F5: x = ALFC_KEY_F05; break;
-				case VK_F6: x = ALFC_KEY_F06; break;
-				case VK_F7: x = ALFC_KEY_F07; break;
-				case VK_F8: x = ALFC_KEY_F08; break;
-				case VK_F9: x = ALFC_KEY_F09; break;
-				case VK_F10: x = ALFC_KEY_F10; break;
-				case VK_F11: x = ALFC_KEY_F11; break;
-				case VK_F12: x = ALFC_KEY_F12; break;
-				case VK_LEFT: x = ALFC_KEY_LEFT; break;
-				case VK_RIGHT: x = ALFC_KEY_RIGHT; break;
-				case VK_UP: x = ALFC_KEY_UP; break;
-				case VK_DOWN: x = ALFC_KEY_DOWN; break;
-				case VK_INSERT: x = ALFC_KEY_INS; break;
-				case VK_DELETE: x = ALFC_KEY_DEL; break;
-				case VK_HOME: x = ALFC_KEY_HOME; break;
-				case VK_END: x = ALFC_KEY_END; break;
-				case VK_PRIOR: x = ALFC_KEY_PAGE_UP; break;
-				case VK_NEXT: x = ALFC_KEY_PAGE_DOWN; break;
-				case VK_BACK: x = ALFC_KEY_BACKSPACE; break;
-#else
-				case XK_F1: x = ALFC_KEY_F01; break;
-				case XK_F2: x = ALFC_KEY_F02; break;
-				case XK_F3: x = ALFC_KEY_F03; break;
-				case XK_F4: x = ALFC_KEY_F04; break;
-				case XK_F5: x = ALFC_KEY_F05; break;
-				case XK_F6: x = ALFC_KEY_F06; break;
-				case XK_F7: x = ALFC_KEY_F07; break;
-				case XK_F8: x = ALFC_KEY_F08; break;
-				case XK_F9: x = ALFC_KEY_F09; break;
-				case XK_F10: x = ALFC_KEY_F10; break;
-				case XK_F11: x = ALFC_KEY_F11; break;
-				case XK_F12: x = ALFC_KEY_F12; break;
-				case XK_Left: x = ALFC_KEY_LEFT; break;
-				case XK_Right: x = ALFC_KEY_RIGHT; break;
-				case XK_Up: x = ALFC_KEY_UP; break;
-				case XK_Down: x = ALFC_KEY_DOWN; break;
-				case XK_Insert: x = ALFC_KEY_INS; break;
-				case XK_Delete: x = ALFC_KEY_DEL; break;
-				case XK_Home: x = ALFC_KEY_HOME; break;
-				case XK_End: x = ALFC_KEY_END; break;
-				case XK_Page_Up: x = ALFC_KEY_PAGE_UP; break;
-				case XK_Page_Down: x = ALFC_KEY_PAGE_DOWN; break;
-				case XK_BackSpace: x = ALFC_KEY_BACKSPACE; break;
-#endif
+				case RLKEY_F1: x = ALFC_KEY_F01; break;
+				case RLKEY_F2: x = ALFC_KEY_F02; break;
+				case RLKEY_F3: x = ALFC_KEY_F03; break;
+				case RLKEY_F4: x = ALFC_KEY_F04; break;
+				case RLKEY_F5: x = ALFC_KEY_F05; break;
+				case RLKEY_F6: x = ALFC_KEY_F06; break;
+				case RLKEY_F7: x = ALFC_KEY_F07; break;
+				case RLKEY_F8: x = ALFC_KEY_F08; break;
+				case RLKEY_F9: x = ALFC_KEY_F09; break;
+				case RLKEY_F10: x = ALFC_KEY_F10; break;
+				case RLKEY_F11: x = ALFC_KEY_F11; break;
+				case RLKEY_F12: x = ALFC_KEY_F12; break;
+				case RLKEY_LEFT: x = ALFC_KEY_LEFT; break;
+				case RLKEY_RIGHT: x = ALFC_KEY_RIGHT; break;
+				case RLKEY_UP: x = ALFC_KEY_UP; break;
+				case RLKEY_DOWN: x = ALFC_KEY_DOWN; break;
+				case RLKEY_INSERT: x = ALFC_KEY_INS; break;
+				case RLKEY_DELETE: x = ALFC_KEY_DEL; break;
+				case RLKEY_HOME: x = ALFC_KEY_HOME; break;
+				case RLKEY_END: x = ALFC_KEY_END; break;
+				case RLKEY_PRIOR: x = ALFC_KEY_PAGE_UP; break;
+				case RLKEY_NEXT: x = ALFC_KEY_PAGE_DOWN; break;
+				case RLKEY_BACK: x = ALFC_KEY_BACKSPACE; break;
 			}
 		}
 		else
@@ -275,7 +256,7 @@ static int x11_screen_init(uScreenDriver *scr)
 {
 	int w, h;
 
-	ALFC_GetScreenDimensions(&w, &h);
+	GetScreenDimensions(&w, &h);
 
 	LogInfo("Screen dimensions %ix%i\n", w, h);
 

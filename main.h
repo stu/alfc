@@ -383,6 +383,7 @@ extern int TagWithGlob(uGlobalData *gd, char *pattern);
 extern int TagWithFilter(uGlobalData *gd, char *pattern);
 extern DList* GetFiles(char *path);
 extern int ALFC_main(int start_mode, char *view_file);
+extern void DrawCLI(uGlobalData *gd);
 
 extern char *start_left;
 extern char *start_right;

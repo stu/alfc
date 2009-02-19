@@ -188,18 +188,3 @@ char* ALFC_get_last_error(int err)
 {
 	return last_error;
 }
-
-void ALFC_GetScreenDimensions(int *w, int *h)
-{
-	DEVMODE dvmdOrig;
-	HDC hdc = GetDC(NULL);
-
-	dvmdOrig.dmPelsWidth = GetDeviceCaps(hdc, HORZRES);
-	dvmdOrig.dmPelsHeight = GetDeviceCaps(hdc, VERTRES);
-	dvmdOrig.dmBitsPerPel = GetDeviceCaps(hdc, BITSPIXEL);
-	dvmdOrig.dmDisplayFrequency = GetDeviceCaps(hdc, VREFRESH);
-	ReleaseDC(NULL, hdc);
-
-	*h = dvmdOrig.dmPelsHeight;
-	*w = dvmdOrig.dmPelsWidth;
-}

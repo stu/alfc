@@ -8,7 +8,10 @@
 
 if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
-	cmds = {}
+	-- GLOBAL DEF
+	cmds = {}		-- for quick commands
+	ftypes = {}		-- allows colouring of filetypes via plugin
+
 
 
 	function CreateMenu(key, name, list)
@@ -600,16 +603,11 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		local k, v, lstPlugins
 
 		lstPlugins = GetFileListFromPath("$HOME/.alfc");
+		table.sort(lstPlugins, function(a,b) return a.name<b.name end)
 
 		for k, v in pairs(lstPlugins) do
-			--if DoesFileExist("$HOME/.alfc/core_extract.lua") == 0 then
-			--IncludeFile("$HOME/.alfc/core_extract.lua")
-			--end
-
 			-- match 'core_' * '.lua'
 			if string.find(v.name, "^(core_).*([.]lua)$") ~= nil then
-
-
 				IncludeFile(string.gsub(v.path .. pathsep .. v.name, "\\", "/"))
 			end
 		end
@@ -642,7 +640,8 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 	LoadPlugins()
 
-	debug_msg("Global Lua Functions bootstrapped")
+	--------------------------------------------------------------------------
+
 	BindKey(ALFC_KEY_F01, "View", [[ViewFile(GetHighlightedFilename())]])
 
 	--BindKey(ALFC_KEY_F02, "Same", [[:s]])
@@ -653,19 +652,21 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 	BindKey(ALFC_KEY_F12, "Tag", [[TagHighlightedFile()]])
 
+	-- Bind ALT-C, ALT-D, ALT-M for copy/delete/move
 	BindKey(ALFC_KEY_ALT + string.byte("C"), "Copy Tagged", [[:tc]])
 	BindKey(ALFC_KEY_ALT + string.byte("D"), "Del Tagged", [[:td]])
 	BindKey(ALFC_KEY_ALT + string.byte("M"), "Move Tagged", [[:tm]])
 
-	BindKey(ALFC_KEY_ALT + string.byte("A"), "About", [[About()]])
+	BindKey(string.byte("{"), "HBck", [[HistoryUp()]])
+	BindKey(string.byte("}"), "HFwd", [[HistoryDown()]])
+
+
+	-- ALT-H for home directory
 	BindKey(ALFC_KEY_ALT + string.byte("H"), "Home", [[SetCurrentWorkingDirectory("$HOME")]])
 
-	-- Dont bind to common keys you will need to use in the command line bar..
-	--BindKey(ALFC_KEY_DEL, "Del", [[QueueFileOp(eOp_Delete, GetHighlightedFilename()); DoFileOps();]])
-	--BindKey(ALFC_KEY_INS, "Copy", [[QueueFileOp(eOp_Copy, GetHighlightedFilename()); DoFileOps();]])
 
-	-- Sometimes I want a quick view for code files
-	BindKey(ALFC_KEY_F11, "CodeOnly", [[SetFilter("\\.[ch]$"); SetGlob("*.lua")]])
+	-- ALT-A for About
+	BindKey(ALFC_KEY_ALT + string.byte("A"), "About", [[About()]])
 
 	CreateMenu(ALFC_KEY_ALT + string.byte("F"), "File", {
 				{ key = 'X', name = "Exit", code = [[__QuitApp()]]},

@@ -41,7 +41,7 @@ extern rgbcolor black, gray, red, blue, yellow, green, darkgray, darkgreen, ligh
 typedef struct {
   int shift;
   int ctrl;
-  unsigned long c;
+  unsigned short c;
   int is_numpad;
 } key;
 
@@ -112,3 +112,33 @@ void display_char_at_pixel(int char_num, rgbcolor fore, rgbcolor back, int start
 
 extern message_type msg_types[num_msg_types];
 extern message_style msg_styles[num_style_types];
+
+enum
+{
+    RLKEY_START_CODE = 0xC000,
+
+    RLKEY_F1 = RLKEY_START_CODE,
+    RLKEY_F2,
+    RLKEY_F3,
+    RLKEY_F4,
+    RLKEY_F5,
+    RLKEY_F6,
+    RLKEY_F7,
+    RLKEY_F8,
+    RLKEY_F9,
+    RLKEY_F10,
+    RLKEY_F11,
+    RLKEY_F12,
+    RLKEY_LEFT,
+    RLKEY_RIGHT,
+    RLKEY_UP,
+    RLKEY_DOWN,
+    RLKEY_INSERT,
+    RLKEY_DELETE,
+    RLKEY_HOME,
+    RLKEY_END,
+    RLKEY_PRIOR,
+    RLKEY_NEXT,
+    RLKEY_BACK,
+};
+

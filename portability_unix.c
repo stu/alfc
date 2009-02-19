@@ -1,6 +1,11 @@
 #include "headers.h"
 #include <pwd.h>
 
+#ifdef xlib
+#include <X11/Xlib.h>
+#include <X11/Xlibint.h>
+#endif
+
 const char ALFC_pathsep = '/';
 
 char* ALFC_getenv(const char *s)
@@ -87,10 +92,4 @@ int ALFC_unlink(char *s)
 char* ALFC_get_last_error(int err)
 {
 	return strerror(errno);
-}
-
-void ALFC_GetScreenDimensions(int *w, int *h)
-{
-	*w = 0;
-	*h = 0;
 }

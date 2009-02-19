@@ -242,6 +242,7 @@ error = SetCurrentWorkingDirectory("C:/WinNT/system32")
 */
 int gme_SetCurrentWorkingDirectory(lua_State *L)
 {
+	char *dx;
 	struct lstr cdx;
 	uGlobalData *gd;
 	gd = GetGlobalData(L);
@@ -249,7 +250,9 @@ int gme_SetCurrentWorkingDirectory(lua_State *L)
 
 	GET_LUA_STRING(cdx, 1);
 
-	lua_pushnumber(L, change_dir(gd, cdx.data));
+	dx = ConvertDirectoryName(cdx.data);
+	lua_pushnumber(L, change_dir(gd, dx));
+	free(dx);
 
 	return 1;
 }
@@ -2221,3 +2224,96 @@ int gme_About(lua_State *L)
 	return 0;
 }
 
+int gme_HistoryUp(lua_State *L)
+{
+	int i;
+	int j;
+	DLElement *e;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	i = gd->hist_idx;
+	i -= 1;
+	if(i < 0)
+		 i = 0;
+
+	if(i > dlist_size(gd->lstLogHistory))
+		i = dlist_size(gd->lstLogHistory);
+
+	gd->hist_idx = i;
+
+	e = dlist_head(gd->lstLogHistory);
+	j = 0;
+	while(e != NULL)
+	{
+		if(j == i)
+		{
+			char *x = dlist_data(e);
+
+			strncpy(gd->command, x, MAX_COMMAND_LENGTH-1);
+			gd->command[MAX_COMMAND_LENGTH-1] = 0;
+			gd->command_length = strlen(gd->command);
+			DrawCLI(gd);
+			return 0;
+		}
+
+		j++;
+		e = dlist_next(e);
+	}
+
+	return 0;
+}
+
+int gme_HistoryDown(lua_State *L)
+{
+	int i;
+	int j;
+	DLElement *e;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	i = gd->hist_idx;
+	i += 1;
+
+	if(i < 0)
+		 i = 0;
+
+	if(i > dlist_size(gd->lstLogHistory))
+		i = dlist_size(gd->lstLogHistory);
+
+	gd->hist_idx = i;
+
+	e = dlist_head(gd->lstLogHistory);
+	j = 0;
+	while(e != NULL)
+	{
+		if(j == i)
+		{
+			char *x = dlist_data(e);
+
+			strncpy(gd->command, x, MAX_COMMAND_LENGTH-1);
+			gd->command[MAX_COMMAND_LENGTH-1] = 0;
+			gd->command_length = strlen(gd->command);
+			DrawCLI(gd);
+			return 0;
+		}
+
+		j++;
+		e = dlist_next(e);
+	}
+
+	return 0;
+}
+
+int gme_ClearHistory(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	dlist_empty(gd->lstLogHistory);
+
+	return 0;
+}
