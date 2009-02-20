@@ -2381,3 +2381,15 @@ int gme_AddMenuItem(lua_State *L)
 	return 1;
 }
 
+int gme_Menu(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	DrawMenu(gd);
+	DrawAll(gd);
+
+	return 0;
+}
+

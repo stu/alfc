@@ -2662,9 +2662,6 @@ int ALFC_main(int start_mode, char *view_file)
 				intFlag = 1;
 			}
 
-			DrawMenu(gdata);
-			DrawAll(gdata);
-
 			while(intFlag == 0)
 			{
 				uint32_t key;

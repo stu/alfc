@@ -656,6 +656,8 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	BindKey(ALFC_KEY_ALT + string.byte("D"), "Del Tagged", [[:td]])
 	BindKey(ALFC_KEY_ALT + string.byte("M"), "Move Tagged", [[:tm]])
 
+	BindKey(ALFC_KEY_F10, "Menu", [[Menu()]])
+
 	BindKey(string.byte("{"), "HBck", [[HistoryUp()]])
 	BindKey(string.byte("}"), "HFwd", [[HistoryDown()]])
 
@@ -667,19 +669,26 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	-- ALT-A for About
 	BindKey(ALFC_KEY_ALT + string.byte("A"), "About", [[About()]])
 
+
+	CreateMenu(ALFC_KEY_ALT + string.byte("1"), "Left Panel", {
+				{ key = string.byte('S'), name = "make Same as Right", code = [[x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __MakeInactivePaneSame(); SetActivePane(x)]]},
+				{ key = string.byte('C'), name = "Copy to Right", code = [[x = GetActivePane(); SetActivePane(WINDOW_LEFT); __TagCopy(); SetActivePane(x)]]},
+				{ key = string.byte('D'), name = "Delete", code = [[x = GetActivePane(); SetActivePane(WINDOW_LEFT); __TagDelete(); SetActivePane(x)]]},
+				{ key = string.byte('M'), name = "Move to Right", code = [[x = GetActivePane(); SetActivePane(WINDOW_LEFT); __TagMove(); SetActivePane(x)]]},
+			})
+
+
 	CreateMenu(ALFC_KEY_ALT + string.byte("F"), "File", {
 				{ key = string.byte('X'), name = "Exit", code = [[__QuitApp()]]},
 				{ key = string.byte('A'), name = "About", code = [[About()]] },
 				{ key = ALFC_KEY_F1, name = "Help", code = [[ViewFile("help.txt")]] },
 			})
 
-	CreateMenu(ALFC_KEY_ALT + string.byte("1"), "Left Panel", {
-				{ key = string.byte('S'), name = "make Same as Right", code = [[__MakeInactivePaneSame()]]},
-				{ key = string.byte('A'), name = "About", code = [[About()]] },
-			})
-
 	CreateMenu(ALFC_KEY_ALT + string.byte("2"), "Right Panel", {
-				{ key = string.byte('S'), name = "make Same as left", code = [[__MakeInactivePaneSame()]]},
+				{ key = string.byte('S'), name = "make Same as left", code = [[x = GetActivePane(); SetActivePane(WINDOW_LEFT); __MakeInactivePaneSame(); SetActivePane(x)]]},
+				{ key = string.byte('C'), name = "Copy to Left", code = [[x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __TagCopy(); SetActivePane(x)]]},
+				{ key = string.byte('D'), name = "Delete", code = [[x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __TagDelete(); SetActivePane(x)]]},
+				{ key = string.byte('M'), name = "Move to Left", code = [[x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __TagMove(); SetActivePane(x)]]},
 			})
 
 	_G["DIR_BOOTSTRAP"] = 1
