@@ -17,6 +17,7 @@ extern int LoadGlobalScript(uGlobalData *gd, char *sn);
 extern int ExecuteString(uGlobalData *gb, char *sn);
 extern int ExecuteScript(uGlobalData *gb, char *sn);
 extern void RegisterLuaFuncs(uGlobalData *gb, lua_State *l);
+extern int ExecuteGlobalString(uGlobalData *gb, char *sn);
 
 #ifdef __cplusplus
 };

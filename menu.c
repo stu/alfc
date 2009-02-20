@@ -174,18 +174,23 @@ void DrawMenu(uGlobalData *gd)
 				if(menu_idx < 0)
 					menu_idx = mcount-1;
 				update_backscreen(gd);
+				menu_sub_idx = 0;
 				break;
+
 			case ALFC_KEY_RIGHT:
 				menu_idx += 1;
 				if(menu_idx >= mcount)
 					menu_idx = 0;
 				update_backscreen(gd);
+				menu_sub_idx = 0;
 				break;
+
 			case ALFC_KEY_UP:
 				menu_sub_idx -= 1;
 				if(menu_sub_idx < 0)
 					menu_sub_idx = gd->menu[midx]->count-1;
 				break;
+
 			case ALFC_KEY_DOWN:
 				menu_sub_idx += 1;
 				if(menu_sub_idx >= gd->menu[midx]->count)
@@ -193,6 +198,11 @@ void DrawMenu(uGlobalData *gd)
 				break;
 
 			case ALFC_KEY_ESCAPE:
+				return;
+				break;
+
+			case ALFC_KEY_ENTER:
+				ExecuteGlobalString(gd, gd->menu[midx]->child[menu_sub_idx]->code);
 				return;
 				break;
 

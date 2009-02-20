@@ -6,8 +6,8 @@
 
 #include "headers.h"
 
-/* build with lua_helper.lua in tools */
 
+/* build with lua_helper.lua in tools */
 int ExecuteString(uGlobalData *gb, char *sn)
 {
 	char *outbuff;
@@ -173,6 +173,51 @@ int LoadGlobalScript(uGlobalData *gd, char *sn)
 	return 0;
 }
 
+int ExecuteGlobalString(uGlobalData *gb, char *sn)
+{
+	char *outbuff;
+	int maxsize;
+	int rc = 0;
+
+	lua_State *l = gb->_GL;
+	int v;
+
+	maxsize = strlen(sn);
+	outbuff = malloc(256 + maxsize);
+
+
+	if(outbuff == NULL)
+	{
+		LogError("No memory for buffer\n");
+		return -1;
+	}
+
+	sprintf(outbuff, "local function GLOBAL_CALL_TEMPFOO()\n\t%s\nend\nGLOBAL_CALL_TEMPFOO()\n", sn);
+	maxsize = strlen(outbuff);
+	//memmove(outbuff, sn, maxsize + 1);
+
+	v = luaL_loadbuffer(l, (char*)outbuff, maxsize, "BUFFER");
+	if(v != 0)
+	{
+		LogError("cant load buffer, error %s\nBuffer:\n%s\n", lua_tostring(l, -1), outbuff);
+		rc = -1;
+	}
+	else
+	{
+		v = lua_pcall(l, 0, 0, 0);
+		if(v != 0)
+		{
+			LogError("lua error : %s\n", lua_tostring(l, -1));
+			rc = -1;
+		}
+	}
+
+	free(outbuff);
+	lua_gc(l, LUA_GCCOLLECT, 0);
+
+	return rc;
+}
+
 
 /****f* Lua_Helper/CallGlobalFunc
 * FUNCTION
@@ -283,6 +328,7 @@ ret_count = CallGlobalFunc(gd->_GL, "MyFunc", "si,s", "StringParam1", 0x1234, &s
 	}
 
 	va_end(args);
+	lua_gc(GL, LUA_GCCOLLECT, 0);
 
 	return v;
 }
