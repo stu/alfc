@@ -230,6 +230,7 @@ static uint32_t x11_get_keypress(void)
 				case 0x08: x = ALFC_KEY_DEL; break;
 				case 0x09: x = ALFC_KEY_TAB; break;
 				case 0x0D: x = ALFC_KEY_ENTER; break;
+				case 0x1B: x = ALFC_KEY_ESCAPE; break;
 
 				default:
 					x = k.c;

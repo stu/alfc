@@ -1264,7 +1264,6 @@ char* ConvertKeyToName(int key)
 		{ ALFC_KEY_ENTER, "Enter" },
 		{ ALFC_KEY_TAB, "Tab" },
 		{ ALFC_KEY_SPACE, "Space" },
-		{ ALFC_KEY_F00, "F00" },
 		{ ALFC_KEY_F01, "F1" },
 		{ ALFC_KEY_F02, "F2" },
 		{ ALFC_KEY_F03, "F3" },

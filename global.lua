@@ -15,13 +15,12 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 
 	function CreateMenu(key, name, list)
-		local k,v
-		debug_msg("Create menu " .. name)
+		local k,v, idx
+		idx = AddMenu(key, name)
 
 		for k,v in pairs(list) do
-			debug_msg("\t" .. v.name)
+			AddMenuItem(idx, v.key, v.name, v.code)
 		end
-
 	end
 
 	function comma_value(amount)
@@ -669,18 +668,18 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	BindKey(ALFC_KEY_ALT + string.byte("A"), "About", [[About()]])
 
 	CreateMenu(ALFC_KEY_ALT + string.byte("F"), "File", {
-				{ key = 'X', name = "Exit", code = [[__QuitApp()]]},
-				{ key = 'A', name = "About", code = [[About()]] },
-				{ key = 'F1', name = "Help", code = [[ViewFile("help.txt")]] },
+				{ key = string.byte('X'), name = "Exit", code = [[__QuitApp()]]},
+				{ key = string.byte('A'), name = "About", code = [[About()]] },
+				{ key = ALFC_KEY_F1, name = "Help", code = [[ViewFile("help.txt")]] },
 			})
 
 	CreateMenu(ALFC_KEY_ALT + string.byte("1"), "Left Panel", {
-				{ key = 'S', name = "make Same as Right", code = [[__MakeInactivePaneSame()]]},
-				{ key = 'A', name = "About", code = [[About()]] },
+				{ key = string.byte('S'), name = "make Same as Right", code = [[__MakeInactivePaneSame()]]},
+				{ key = string.byte('A'), name = "About", code = [[About()]] },
 			})
 
 	CreateMenu(ALFC_KEY_ALT + string.byte("2"), "Right Panel", {
-				{ key = 'S', name = "make Same as left", code = [[__MakeInactivePaneSame()]]},
+				{ key = string.byte('S'), name = "make Same as left", code = [[__MakeInactivePaneSame()]]},
 			})
 
 	_G["DIR_BOOTSTRAP"] = 1

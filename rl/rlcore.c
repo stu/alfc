@@ -404,7 +404,7 @@ key get_key(void)
 					if(event.xkey.state & Mod2Mask)
 						curkey.ctrl |= 0x02;
 
-					if(curkey.c != 0)
+					//if(curkey.c != 0)
 						goto gotkey_out;
                 }
         }

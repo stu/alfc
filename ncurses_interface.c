@@ -251,6 +251,7 @@ static uint32_t nc_get_keypress(void)
 			case 9:					key = ALFC_KEY_TAB;    		break;
 			case 0x0D:				key = ALFC_KEY_ENTER;		break;
 			case 0x0A:				key = ALFC_KEY_ENTER;		break;
+			case 0x1B:				key = ALFC_KEY_ESCAPE; 		break;
 
 			case KEY_UP:			key = ALFC_KEY_UP;			break;
 			case KEY_DOWN:			key = ALFC_KEY_DOWN;		break;

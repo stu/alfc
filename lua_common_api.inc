@@ -42,7 +42,18 @@ void RegisterCommonFuncs(uGlobalData *gd, lua_State *l)
 	lua_pushnumber(l, ALFC_KEY_ENTER); lua_setglobal(l, "ALFC_KEY_ENTER");
 	lua_pushnumber(l, ALFC_KEY_TAB); lua_setglobal(l, "ALFC_KEY_TAB");
 	lua_pushnumber(l, ALFC_KEY_SPACE); lua_setglobal(l, "ALFC_KEY_SPACE");
-	lua_pushnumber(l, ALFC_KEY_F00); lua_setglobal(l, "ALFC_KEY_F00");
+
+
+	lua_pushnumber(l, ALFC_KEY_F01); lua_setglobal(l, "ALFC_KEY_F1");
+	lua_pushnumber(l, ALFC_KEY_F02); lua_setglobal(l, "ALFC_KEY_F2");
+	lua_pushnumber(l, ALFC_KEY_F03); lua_setglobal(l, "ALFC_KEY_F3");
+	lua_pushnumber(l, ALFC_KEY_F04); lua_setglobal(l, "ALFC_KEY_F4");
+	lua_pushnumber(l, ALFC_KEY_F05); lua_setglobal(l, "ALFC_KEY_F5");
+	lua_pushnumber(l, ALFC_KEY_F06); lua_setglobal(l, "ALFC_KEY_F6");
+	lua_pushnumber(l, ALFC_KEY_F07); lua_setglobal(l, "ALFC_KEY_F7");
+	lua_pushnumber(l, ALFC_KEY_F08); lua_setglobal(l, "ALFC_KEY_F8");
+	lua_pushnumber(l, ALFC_KEY_F09); lua_setglobal(l, "ALFC_KEY_F9");
+
 	lua_pushnumber(l, ALFC_KEY_F01); lua_setglobal(l, "ALFC_KEY_F01");
 	lua_pushnumber(l, ALFC_KEY_F02); lua_setglobal(l, "ALFC_KEY_F02");
 	lua_pushnumber(l, ALFC_KEY_F03); lua_setglobal(l, "ALFC_KEY_F03");
