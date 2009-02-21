@@ -55,7 +55,7 @@ static int GetKeyLength(uint32_t key)
 	return xx;
 }
 
-void DrawMenu(uGlobalData *gd)
+void DrawMenu(uGlobalData *gd, int menu_to_open)
 {
 	char buff[128];
 	int i;
@@ -69,6 +69,16 @@ void DrawMenu(uGlobalData *gd)
 
 	uint32_t key;
 
+	for(i=0, midx = 0; i < MAX_MENU; i++)
+	{
+		if(gd->menu[i] != NULL)
+		{
+			if(midx == menu_to_open)
+				menu_idx = i;
+
+			midx++;
+		}
+	}
 
 	w = gd->screen->get_screen_width();
 
@@ -167,47 +177,60 @@ void DrawMenu(uGlobalData *gd)
 		mcount = mi;
 
 		key = gd->screen->get_keypress();
-		switch(key)
+
+		for(i=0; i<gd->menu[midx]->count;  i++)
 		{
-			case ALFC_KEY_LEFT:
-				menu_idx -= 1;
-				if(menu_idx < 0)
-					menu_idx = mcount-1;
-				update_backscreen(gd);
-				menu_sub_idx = 0;
-				break;
+			if(key == gd->menu[midx]->child[i]->key)
+			{
+				ExecuteGlobalString(gd, gd->menu[midx]->child[i]->code);
+				return;
+			}
+		}
 
-			case ALFC_KEY_RIGHT:
-				menu_idx += 1;
-				if(menu_idx >= mcount)
-					menu_idx = 0;
-				update_backscreen(gd);
-				menu_sub_idx = 0;
-				break;
-
-			case ALFC_KEY_UP:
-				menu_sub_idx -= 1;
-				if(menu_sub_idx < 0)
-					menu_sub_idx = gd->menu[midx]->count-1;
-				break;
-
-			case ALFC_KEY_DOWN:
-				menu_sub_idx += 1;
-				if(menu_sub_idx >= gd->menu[midx]->count)
+		if(key != 0)
+		{
+			switch(key)
+			{
+				case ALFC_KEY_LEFT:
+					menu_idx -= 1;
+					if(menu_idx < 0)
+						menu_idx = mcount-1;
+					update_backscreen(gd);
 					menu_sub_idx = 0;
-				break;
+					break;
 
-			case ALFC_KEY_ESCAPE:
-				return;
-				break;
+				case ALFC_KEY_RIGHT:
+					menu_idx += 1;
+					if(menu_idx >= mcount)
+						menu_idx = 0;
+					update_backscreen(gd);
+					menu_sub_idx = 0;
+					break;
 
-			case ALFC_KEY_ENTER:
-				ExecuteGlobalString(gd, gd->menu[midx]->child[menu_sub_idx]->code);
-				return;
-				break;
+				case ALFC_KEY_UP:
+					menu_sub_idx -= 1;
+					if(menu_sub_idx < 0)
+						menu_sub_idx = gd->menu[midx]->count-1;
+					break;
 
-			default:
-				break;
+				case ALFC_KEY_DOWN:
+					menu_sub_idx += 1;
+					if(menu_sub_idx >= gd->menu[midx]->count)
+						menu_sub_idx = 0;
+					break;
+
+				case ALFC_KEY_ESCAPE:
+					return;
+					break;
+
+				case ALFC_KEY_ENTER:
+					ExecuteGlobalString(gd, gd->menu[midx]->child[menu_sub_idx]->code);
+					return;
+					break;
+
+				default:
+					break;
+			}
 		}
 	}
 }

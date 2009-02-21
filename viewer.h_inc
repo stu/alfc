@@ -25,6 +25,7 @@ typedef struct udtLine
 
 typedef struct udtViewFile
 {
+	char	*ftype;
 	char	*fn;
 	uWindow *w;
 

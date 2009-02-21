@@ -346,10 +346,8 @@ static int DisplayStatus(uViewFile *v)
 	char *p;
 
 	memset(buff, ' ', 4096);
-
 	memmove(buff, " Line: ", 7);
 
-	//sprintf(buff + 40, "%i/%i, %i%%", 1 + v->intTLine + v->intHLine, v->intLineCount, (1 + v->intTLine + v->intHLine) * 100 / v->intLineCount );
 	sprintf(buff + 40, "%i/%i, ", 1 + v->intTLine + v->intHLine, v->intLineCount);
 
 	//(v->nwidth * 2) + 4
@@ -382,9 +380,10 @@ static int DisplayStatus(uViewFile *v)
 		sprintf(p, "MIXED CR/LF");
 
 	p = strchr(buff, 0x0);
-	//p++ = ' ';
-	sprintf(p, ", tab: %-2i", v->tabsize);
+	sprintf(p, " (%s) ", v->ftype);
 
+	p = strchr(buff, 0x0);
+	sprintf(p, ", tab:%2i ", v->tabsize);
 
 	v->w->screen->set_cursor(v->w->offset_row + v->w->height, 1 + v->w->offset_col + v->nwidth + 4);
 	buff[v->w->width - (v->nwidth+2)] = 0;
@@ -884,6 +883,7 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 	v->intTLine = 0;
 	v->intHLine = 0;
 	v->tabsize = 8;
+	v->ftype = strdup("");
 
 	v->lstHotKeys = malloc(sizeof(DList));
 	dlist_init(v->lstHotKeys, FreeKey);
@@ -1067,6 +1067,9 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 	if(v->fn != NULL)
 		free(v->fn);
 
+	if(v->ftype != NULL)
+		free(v->ftype);
+
 	free(v->w);
 	free(v);
 
@@ -1226,4 +1229,96 @@ int gmev_About(lua_State *L)
 	return 0;
 }
 
+int gmev_GetCurrentLineNumber(lua_State *L)
+{
+	uViewFile *v;
+	v = GetViewerData(L);
+	assert(v != NULL);
+
+	lua_pushnumber(L, 1 + v->intTLine + v->intHLine);
+	return 1;
+}
+
+int gmev_GoToLine(lua_State *L)
+{
+	uViewFile *v;
+
+	v = GetViewerData(L);
+	assert(v != NULL);
+
+	int wh = v->w->height - 3;
+	int q;
+	int l;
+
+	l = luaL_checknumber(L, 1);
+	l -= 1;
+
+	if(l < 1 || l >= v->intLineCount)
+		return 0;
+
+	if(l == v->intHLine)
+		return 0;
+
+	if(l > v->intTLine && l < (v->intTLine+wh)-4 )
+	{
+		v->intHLine = l;
+		v->redraw = 1;
+		return 0;
+	}
+
+	// build new topline
+	q = l - (wh / 2);
+
+	if(q < 0)
+	{
+		v->intTLine = 0;
+		v->intHLine = l;
+		v->redraw = 1;
+		return 0;
+	}
+
+	v->intTLine = q;
+	v->intHLine =  (wh / 2);
+	v->redraw = 1;
+
+	return 0;
+}
+
+int gmev_ViewedFilename(lua_State *L)
+{
+	uViewFile *v;
+	v = GetViewerData(L);
+	assert(v != NULL);
+
+	lua_pushstring(L, v->fn);
+
+	return 1;
+}
+
+int gmev_SetFileType(lua_State *L)
+{
+	struct lstr ftype;
+	uViewFile *v;
+	v = GetViewerData(L);
+	assert(v != NULL);
+
+	GET_LUA_STRING(ftype, 1);
+
+	if(v->ftype != NULL)
+		free(v->ftype);
+
+	v->ftype = strdup(ftype.data);
+
+	return 0;
+}
+
+int gmev_GetFileType(lua_State *L)
+{
+	uViewFile *v;
+	v = GetViewerData(L);
+	assert(v != NULL);
+
+	lua_pushstring(L, v->ftype);
+	return 1;
+}
 

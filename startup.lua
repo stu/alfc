@@ -1,5 +1,5 @@
 debug_msg("\n** Welcome to ALFC v" .. GetVersionString() .. " **")
-debug_msg("Using driver : " .. DriverName() .. "")
+debug_msg("Using driver : " .. DriverName() .. " on system type " .. SystemType() .. "\n")
 
 -- check for root and switch frame colours to red!
 if GetUserID() == 0 or GetUserGroup() == 0 then

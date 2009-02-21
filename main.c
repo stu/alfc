@@ -1712,6 +1712,9 @@ int GetFileIndex(DList *lstFiles, char *name)
 	uDirEntry *de;
 	int count;
 
+	if(name == NULL)
+		return -1;
+
 	d = dlist_head(lstFiles);
 	count = 0;
 	while(d != NULL)
@@ -2287,7 +2290,11 @@ void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstGlob, DList *
 		SortList(gd, lstF);
 		assert(lstF != NULL);
 
-		status = GetFileIndex(lstF, deold->name);
+		if(deold != NULL)
+			status = GetFileIndex(lstF, deold->name);
+		else
+			status = GetFileIndex(lstF, NULL);
+
 		if( SetHighlightedFile(gd, status) == -1)
 		{
 			GetActWindow(gd)->top_line = 0;
@@ -2546,6 +2553,22 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 	chdir( gdata->left_dir );
 }
 
+static int ScanMenuOpen(uGlobalData *gd, uint32_t key)
+{
+	int i;
+
+	for(i=0; i < MAX_MENU; i++)
+	{
+		if(gd->menu[i] != NULL)
+		{
+			if(gd->menu[i]->key == key)
+				return i;
+		}
+	}
+
+	return -1;
+}
+
 int ALFC_main(int start_mode, char *view_file)
 {
 	uGlobalData *gdata;
@@ -2666,126 +2689,137 @@ int ALFC_main(int start_mode, char *view_file)
 			{
 				uint32_t key;
 				uKeyBinding *kb;
+				int mnu;
 
 				gdata->screen->set_cursor(gdata->screen->get_screen_height()-1, 4 + strlen(gdata->command));
 				key = gdata->screen->get_keypress();
 
-				kb = ScanKey(gdata->lstHotKeys, key);
-				if(kb != NULL)
+				mnu = ScanMenuOpen(gdata, key);
+				if(mnu != -1)
 				{
-					AddHistory(gdata, kb->sCommand);
-
-					// exec string via lua...
-					if(kb->sCommand[0] == ':')
-						exec_internal_command(gdata, kb->sCommand);
-					else if(kb->sCommand[0] == '@')
-					{
-						char *fn = ConvertDirectoryName(kb->sCommand+1);
-						ExecuteScript(gdata, fn);
-						free(fn);
-					}
-					else
-					{
-						ExecuteString(gdata, kb->sCommand);
-					}
+					DrawMenu(gdata, mnu);
+					DrawAll(gdata);
 				}
 				else
 				{
-					switch(key)
+					kb = ScanKey(gdata->lstHotKeys, key);
+
+					if(kb != NULL)
 					{
+						AddHistory(gdata, kb->sCommand);
 
-						case 0x21B: // ESC-ESC
-							intFlag = 1;
-							break;
+						// exec string via lua...
+						if(kb->sCommand[0] == ':')
+							exec_internal_command(gdata, kb->sCommand);
+						else if(kb->sCommand[0] == '@')
+						{
+							char *fn = ConvertDirectoryName(kb->sCommand+1);
+							ExecuteScript(gdata, fn);
+							free(fn);
+						}
+						else
+						{
+							ExecuteString(gdata, kb->sCommand);
+						}
+					}
+					else
+					{
+						switch(key)
+						{
 
-						case ALFC_KEY_TAB:	// TAB
-							SwitchPanes(gdata);
-							break;
+							case 0x21B: // ESC-ESC
+								intFlag = 1;
+								break;
 
-						case ALFC_KEY_ENTER:
-							if(gdata->command_length > 0)
-							{
-								AddHistory(gdata, gdata->command);
+							case ALFC_KEY_TAB:	// TAB
+								SwitchPanes(gdata);
+								break;
 
-								// exec string via lua...
-								if(gdata->command[0] == ':')
-									exec_internal_command(gdata, gdata->command);
-								else if(gdata->command[0] == '@')
+							case ALFC_KEY_ENTER:
+								if(gdata->command_length > 0)
 								{
-									char *fn = ConvertDirectoryName(gdata->command+1);
-									ExecuteScript(gdata, fn);
-									free(fn);
+									AddHistory(gdata, gdata->command);
+
+									// exec string via lua...
+									if(gdata->command[0] == ':')
+										exec_internal_command(gdata, gdata->command);
+									else if(gdata->command[0] == '@')
+									{
+										char *fn = ConvertDirectoryName(gdata->command+1);
+										ExecuteScript(gdata, fn);
+										free(fn);
+									}
+									else
+									{
+										ExecuteString(gdata, gdata->command);
+									}
+
+									gdata->command_length = 0;
+									gdata->command[gdata->command_length] = 0;
+
+									DrawCLI(gdata);
+								}
+								break;
+
+							case ALFC_KEY_LEFT:
+								updir(gdata);
+								break;
+
+							case ALFC_KEY_RIGHT:
+								downdir(gdata);
+								break;
+
+							case ALFC_KEY_UP:
+								scroll_up(gdata);
+								break;
+
+							case ALFC_KEY_DOWN:
+								scroll_down(gdata);
+								break;
+
+							case ALFC_KEY_HOME:
+								scroll_home(gdata);
+								break;
+
+							case ALFC_KEY_END:
+								scroll_end(gdata);
+								break;
+
+							case ALFC_KEY_PAGE_DOWN:
+								scroll_page_down(gdata);
+								break;
+
+							case ALFC_KEY_PAGE_UP:
+								scroll_page_up(gdata);
+								break;
+
+							default:
+								// terminal could send ^H (0x08) or ASCII DEL (0x7F)
+								if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
+								{
+									if(key == ALFC_KEY_DEL)
+									{
+										if(gdata->command_length > 0)
+										{
+											gdata->command_length -= 1;
+											gdata->command[gdata->command_length] = 0;
+										}
+									}
+									else
+									{
+										if(gdata->command_length < gdata->screen->get_screen_width() - 10)
+										{
+											gdata->command[gdata->command_length++] = key;
+											gdata->command[gdata->command_length] = 0;
+										}
+									}
+
+									DrawCLI(gdata);
 								}
 								else
-								{
-									ExecuteString(gdata, gdata->command);
-								}
-
-								gdata->command_length = 0;
-								gdata->command[gdata->command_length] = 0;
-
-								DrawCLI(gdata);
-							}
-							break;
-
-						case ALFC_KEY_LEFT:
-							updir(gdata);
-							break;
-
-						case ALFC_KEY_RIGHT:
-							downdir(gdata);
-							break;
-
-						case ALFC_KEY_UP:
-							scroll_up(gdata);
-							break;
-
-						case ALFC_KEY_DOWN:
-							scroll_down(gdata);
-							break;
-
-						case ALFC_KEY_HOME:
-							scroll_home(gdata);
-							break;
-
-						case ALFC_KEY_END:
-							scroll_end(gdata);
-							break;
-
-						case ALFC_KEY_PAGE_DOWN:
-							scroll_page_down(gdata);
-							break;
-
-						case ALFC_KEY_PAGE_UP:
-							scroll_page_up(gdata);
-							break;
-
-						default:
-							// terminal could send ^H (0x08) or ASCII DEL (0x7F)
-							if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
-							{
-								if(key == ALFC_KEY_DEL)
-								{
-									if(gdata->command_length > 0)
-									{
-										gdata->command_length -= 1;
-										gdata->command[gdata->command_length] = 0;
-									}
-								}
-								else
-								{
-									if(gdata->command_length < gdata->screen->get_screen_width() - 10)
-									{
-										gdata->command[gdata->command_length++] = key;
-										gdata->command[gdata->command_length] = 0;
-									}
-								}
-
-								DrawCLI(gdata);
-							}
-							else
-								LogInfo("Unknown key 0x%04x\n", key);
-							break;
+									LogInfo("Unknown key 0x%04x\n", key);
+								break;
+						}
 					}
 				}
 			}

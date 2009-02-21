@@ -210,6 +210,12 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	function __ChangeDir(command)
 		local cmd = command
 
+		-- if blank, trigger refresh
+		if #trim(command) == 0 then
+			SetCurrentWorkingDirectory(GetCurrentWorkingDirectory())
+			return
+		end
+
 		-- try to deal with spaces
 		if( SetCurrentWorkingDirectory(command) == -1) then
 			SetCurrentWorkingDirectory(trim(command))
@@ -613,29 +619,41 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		lstPlugins = nil
 	end
 
-		cmds = {}
-		cmds[":q "] = __QuitApp
-		cmds[":f "] = __Filter
-		cmds[":f+ "] = __FilterAdd
-		cmds[":g "] = __Glob
-		cmds[":g+ "] = __GlobAdd
-		cmds[":s "] = __MakeInactivePaneSame
-		cmds[":j "] = __Jump
-		cmds[":c "] = __ChangeDir
-		cmds[":so "] = __SortOrder
+	function __SwapPanels(command)
+		local p1, p2
 
-		cmds[":td "] = __TagDelete
-		cmds[":tc "] = __TagCopy
-		cmds[":tm "] = __TagMove
+		p1 = GetCurrentWorkingDirectory()
+		SwitchPanes()
+		p2 = GetCurrentWorkingDirectory()
+		SetCurrentWorkingDirectory(p1)
+		SwitchPanes()
+		SetCurrentWorkingDirectory(p2)
+	end
 
-		cmds[":tf "] = __TagFilter
-		cmds[":tg "] = __TagGlob
-		cmds[":ta "] = __TagAll
-		cmds[":taf "] = __TagAllFiles
-		cmds[":tad "] = __TagAllDirs
-		cmds[":tu "] = __TagUnTagAll
-		cmds[":t! "] = __TagFlip
+	cmds = {}
+	cmds[":q "] = __QuitApp
+	cmds[":f "] = __Filter
+	cmds[":f+ "] = __FilterAdd
+	cmds[":g "] = __Glob
+	cmds[":g+ "] = __GlobAdd
+	cmds[":s "] = __MakeInactivePaneSame
+	cmds[":j "] = __Jump
+	cmds[":c "] = __ChangeDir
+	cmds[":so "] = __SortOrder
 
+	cmds[":td "] = __TagDelete
+	cmds[":tc "] = __TagCopy
+	cmds[":tm "] = __TagMove
+
+	cmds[":tf "] = __TagFilter
+	cmds[":tg "] = __TagGlob
+	cmds[":ta "] = __TagAll
+	cmds[":taf "] = __TagAllFiles
+	cmds[":tad "] = __TagAllDirs
+	cmds[":tu "] = __TagUnTagAll
+	cmds[":t! "] = __TagFlip
+
+	cmds[":swap "] = __SwapPanels
 
 	LoadPlugins()
 
@@ -671,24 +689,24 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 
 	CreateMenu(ALFC_KEY_ALT + string.byte("1"), "Left Panel", {
-				{ key = string.byte('S'), name = "make Same as Right", code = [[x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __MakeInactivePaneSame(); SetActivePane(x)]]},
-				{ key = string.byte('C'), name = "Copy to Right", code = [[x = GetActivePane(); SetActivePane(WINDOW_LEFT); __TagCopy(); SetActivePane(x)]]},
-				{ key = string.byte('D'), name = "Delete", code = [[x = GetActivePane(); SetActivePane(WINDOW_LEFT); __TagDelete(); SetActivePane(x)]]},
-				{ key = string.byte('M'), name = "Move to Right", code = [[x = GetActivePane(); SetActivePane(WINDOW_LEFT); __TagMove(); SetActivePane(x)]]},
+				{ key = string.byte('s'), name = "make Same as Right", code = [[local x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __MakeInactivePaneSame(); SetActivePane(x)]]},
+				{ key = string.byte('c'), name = "Copy to Right", code = [[local x = GetActivePane(); SetActivePane(WINDOW_LEFT); __TagCopy(); SetActivePane(x)]]},
+				{ key = string.byte('d'), name = "Delete", code = [[local x = GetActivePane(); SetActivePane(WINDOW_LEFT); __TagDelete(); SetActivePane(x)]]},
+				{ key = string.byte('m'), name = "Move to Right", code = [[local x = GetActivePane(); SetActivePane(WINDOW_LEFT); __TagMove(); SetActivePane(x)]]},
 			})
 
 
 	CreateMenu(ALFC_KEY_ALT + string.byte("F"), "File", {
-				{ key = string.byte('X'), name = "Exit", code = [[__QuitApp()]]},
-				{ key = string.byte('A'), name = "About", code = [[About()]] },
+				{ key = string.byte('x'), name = "Exit", code = [[__QuitApp()]]},
+				{ key = string.byte('a'), name = "About", code = [[About()]] },
 				{ key = ALFC_KEY_F1, name = "Help", code = [[ViewFile("help.txt")]] },
 			})
 
 	CreateMenu(ALFC_KEY_ALT + string.byte("2"), "Right Panel", {
-				{ key = string.byte('S'), name = "make Same as left", code = [[x = GetActivePane(); SetActivePane(WINDOW_LEFT); __MakeInactivePaneSame(); SetActivePane(x)]]},
-				{ key = string.byte('C'), name = "Copy to Left", code = [[x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __TagCopy(); SetActivePane(x)]]},
-				{ key = string.byte('D'), name = "Delete", code = [[x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __TagDelete(); SetActivePane(x)]]},
-				{ key = string.byte('M'), name = "Move to Left", code = [[x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __TagMove(); SetActivePane(x)]]},
+				{ key = string.byte('s'), name = "make Same as left", code = [[local x = GetActivePane(); SetActivePane(WINDOW_LEFT); __MakeInactivePaneSame(); SetActivePane(x)]]},
+				{ key = string.byte('c'), name = "Copy to Left", code = [[local x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __TagCopy(); SetActivePane(x)]]},
+				{ key = string.byte('d'), name = "Delete", code = [[local x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __TagDelete(); SetActivePane(x)]]},
+				{ key = string.byte('m'), name = "Move to Left", code = [[local x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __TagMove(); SetActivePane(x)]]},
 			})
 
 	_G["DIR_BOOTSTRAP"] = 1

@@ -434,3 +434,12 @@ int gmec_GetFileListFromPath(lua_State *L)
 	return 1;
 }
 
+int gmec_SystemType(lua_State *L)
+{
+#ifdef __MINGW_H
+	lua_pushstring(L, "WIN32");
+#else
+	lua_pushstring(L, "UNIX");
+#endif
+	return 1;
+}

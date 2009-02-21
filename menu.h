@@ -4,7 +4,7 @@
 extern "C"{
 #endif
 
-extern void DrawMenu(uGlobalData *gd);
+extern void DrawMenu(uGlobalData *gd, int menu_to_open);
 
 #ifdef __cplusplus
 }

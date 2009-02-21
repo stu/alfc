@@ -37,7 +37,7 @@ struct udtStyles
 
 static char* driver_name(void)
 {
-	return "ncurses";
+	return "NCURSES";
 }
 
 // convert internal colours to curses colours

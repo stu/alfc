@@ -43,7 +43,7 @@ static void GetScreenDimensions(int *w, int *h)
 
 static char* driver_name(void)
 {
-	return "x11";
+	return "X11";
 }
 
 

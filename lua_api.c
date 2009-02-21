@@ -2387,7 +2387,7 @@ int gme_Menu(lua_State *L)
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
 
-	DrawMenu(gd);
+	DrawMenu(gd, 0);
 	DrawAll(gd);
 
 	return 0;
