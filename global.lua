@@ -266,12 +266,11 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 		for k,v in ipairs(lstF) do
 			if v.tagged == 1 then
-				if v.directory == 1 then
-
-				else
+				--if v.directory == 1 then
+				--else
 					lstT[1+#lstT] = v
 					QueueFileOp(eOp_SymLink, v.name)
-				end
+				--end
 			end
 		end
 		lstF = nil
@@ -733,6 +732,10 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	BindKey(ALFC_KEY_ALT + string.byte("C"), "Copy Tagged", [[:tc]])
 	BindKey(ALFC_KEY_ALT + string.byte("D"), "Del Tagged", [[:td]])
 	BindKey(ALFC_KEY_ALT + string.byte("M"), "Move Tagged", [[:tm]])
+	if SystemType() == "UNIX" then
+		BindKey(ALFC_KEY_ALT + string.byte("S"), "Symlink Tagged", [[:sym]])
+
+	end
 
 	BindKey(ALFC_KEY_F10, "Menu", [[Menu()]])
 

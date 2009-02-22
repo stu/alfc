@@ -704,10 +704,27 @@ static void SetupStartDirectories(uGlobalData *gdata)
 
 static void FreeListEntry(void *x)
 {
-	struct udtDirEntry *de = x;
+	uDirEntry *de = x;
+
+	if(de->lnk != NULL)
+		free(de->lnk);
 
 	free(de->name);
+
+	memset(de, 0x0, sizeof(uDirEntry));
 	free(de);
+}
+
+static char* ReadLink(char *fn, uint32_t len)
+{
+	char *buff;
+
+	buff = malloc(len + 64);
+	memset(buff, 0x0, len+64);
+
+	readlink(fn, buff, len+63);
+
+	return realloc(buff, strlen(buff)+1);
 }
 
 DList* GetFiles(char *path)
@@ -742,12 +759,23 @@ DList* GetFiles(char *path)
 					memset(de, 0x0, sizeof(uDirEntry));
 
 					de->name = strdup(dr->d_name);
-
 					ALFC_stat(de->name, &buff);
 
 					de->size = ALFC_GetFileSize(de, &buff);
 					de->attrs = ALFC_GetFileAttrs(de, &buff);
 					de->time = ALFC_GetFileTime(de, &buff);
+
+					// test link to see if its a directory...
+					if(S_ISLNK(buff.st_mode) != 0)
+					{
+						de->lnk = ReadLink(de->name, de->size);
+						ALFC_stat(de->lnk, &buff);
+
+						if(S_ISDIR(buff.st_mode) != 0)
+						{
+							de->attrs |= S_IFDIR;
+						}
+					}
 
 					dlist_ins(lstF, de);
 				}
@@ -847,15 +875,22 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 
 	if(HaveColumnSize(win->gd) == 1)
 	{
-
-		if( S_ISDIR(de->attrs) == 0 )
+		if( S_ISDIR(de->attrs&S_IFDIR) == 0 )
 		{
-			if(win->gd->compress_filesize == 0)
+			if( S_ISLNK(de->attrs&S_IFLNK) != 0 )
+			{
+				sprintf(buff + size_off, " f-link");
+				p = strchr(buff + size_off, 0x0);
+				*p = ' ';
+			}
+			else if(win->gd->compress_filesize == 0)
+			{
 #if __WORDSIZE == 64
 				sprintf(buff + size_off, "%10lu", de->size);
 #else
 				sprintf(buff + size_off, "%10llu", de->size);
 #endif
+			}
 			else
 			{
 				int round;
@@ -901,9 +936,18 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 		}
 		else
 		{
-			sprintf(buff + size_off, " <DIR>");
-			p = strchr(buff + size_off, 0x0);
-			*p = ' ';
+			if( S_ISLNK(de->attrs&S_IFLNK) != 0 )
+			{
+				sprintf(buff + size_off, " <D-LNK>");
+				p = strchr(buff + size_off, 0x0);
+				*p = ' ';
+			}
+			else
+			{
+				sprintf(buff + size_off, " <DIR>");
+				p = strchr(buff + size_off, 0x0);
+				*p = ' ';
+			}
 		}
 	}
 
@@ -1121,7 +1165,7 @@ static void DrawFileInfo(uWindow *win)
 
 		// do size : "Size: 1,123,123,123"
 		memmove(buff + size_offset, "Size: ", 6);
-		if( S_ISDIR(de->attrs) == 0)
+		if( S_ISDIR(de->attrs&S_IFDIR) == 0)
 		{
 			// do size : "Size: 1,123,123,123"
 			memmove(buff + size_offset, "Size: ", 6);
@@ -1995,7 +2039,7 @@ int downdir(uGlobalData *gd)
 
 	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
 
-	if( S_ISDIR(de->attrs) == 0 )
+	if( S_ISDIR(de->attrs&S_IFDIR) == 0 )
 		return -1;
 
 	cpath = strdup( GetActDPath(gd) );
@@ -2408,7 +2452,7 @@ static void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DLis
 		{
 			de = dlist_data(e2);
 
-			if( S_ISDIR(de->attrs) == 0)
+			if( S_ISDIR(de->attrs&S_IFDIR) == 0)
 			{
 				status = fnmatch(pattern, de->name, 0);
 				if(status == 0)
@@ -2478,8 +2522,6 @@ void DrawAll(uGlobalData *gd)
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawFileListWindow(GetInActWindow(gd), GetInActList(gd), GetInActDPath(gd));
 
-	//DrawActive(gd);
-
 	gd->screen->set_style(STYLE_TITLE);
 	for(j=GetActWindow(gd)->height + 2; j < gd->screen->get_screen_height(); j++ )
 	{
@@ -2490,10 +2532,6 @@ void DrawAll(uGlobalData *gd)
 
 	DrawMenuLine(gd->screen, gd->lstHotKeys);
 	DrawCLI(gd);
-
-	// covered in switch panes...
-	//DrawFilter(gd);
-	//DrawStatusInfoLine(gd);
 
 	SwitchPanes(gd);
 	SwitchPanes(gd);

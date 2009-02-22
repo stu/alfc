@@ -191,6 +191,8 @@ typedef struct udtDirEntry
 	uint64_t	size;
 	uint32_t	attrs;
 	time_t		time;
+
+	char		*lnk;
 } uDirEntry;
 
 typedef struct udtWindow

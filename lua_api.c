@@ -2046,6 +2046,9 @@ int gme_DoFileOps(lua_State *L)
 		UpdateDir(gd, high2);
 		gd->selected_window = WINDOW_RIGHT;
 	}
+	SwitchPanes(gd);
+	SwitchPanes(gd);
+
 	free(high1);
 	free(high2);
 

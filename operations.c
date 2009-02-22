@@ -28,8 +28,6 @@ int Ops_Symlink(uGlobalData *gd, uFileOperation *x)
 	src = build_fn(x->op.udtSymlink.source_path, x->op.udtSymlink.source_filename);
 	dst = build_fn(x->op.udtSymlink.dest_path, x->op.udtSymlink.dest_filename);
 
-	LogInfo("smy %s --- %s\n", src, dst);
-
 	// make sure we are in the path of the file to copy and its valid
 	if(ALFC_stat(src, &statbuff) == -1)
 	{
@@ -50,6 +48,7 @@ int Ops_Symlink(uGlobalData *gd, uFileOperation *x)
 	}
 #endif
 
+	/*
 	// directory copy
 	if (S_ISDIR(statbuff.st_mode))
 	{
@@ -58,7 +57,9 @@ int Ops_Symlink(uGlobalData *gd, uFileOperation *x)
 		free(src);
 		return x->result_code;
 	}
+	*/
 
+	/*
 	// non-regular copy
 	if (!S_ISREG(statbuff.st_mode))
 	{
@@ -67,10 +68,9 @@ int Ops_Symlink(uGlobalData *gd, uFileOperation *x)
 		free(src);
 		return x->result_code;
 	}
+	*/
 
 	x->op.udtSymlink.source_length = statbuff.st_size;
-
-	LogInfo("sym %s to %s\n", src, dst);
 
 	// GO!
 	if( symlink(src, dst) != 0)
@@ -468,7 +468,7 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 	src = build_fn(x->op.udtDelete.source_path, x->op.udtDelete.source_filename);
 
 	// make sure we are in the path of the file to copy and its valid
-	if(ALFC_stat(src, &statbuff) == -1)
+	if(stat(src, &statbuff) == -1)
 	{
 		x->result_code = -1;
 		x->result_msg = strdup(strerror(errno));

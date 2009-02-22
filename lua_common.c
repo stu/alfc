@@ -374,7 +374,7 @@ void push_file(lua_State *L, uDirEntry *de, int idx, char *path)
 		free(buff_date);
 
 		lua_pushstring(L, "directory");
-		if( S_ISDIR(de->attrs) == 0)
+		if( S_ISDIR(de->attrs&S_IFDIR) == 0)
 			lua_pushnumber(L, 0);
 		else
 			lua_pushnumber(L, 1);
