@@ -879,7 +879,7 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 		{
 			if( S_ISLNK(de->attrs&S_IFLNK) != 0 )
 			{
-				sprintf(buff + size_off, " f-link");
+				sprintf(buff + size_off, " symlink");
 				p = strchr(buff + size_off, 0x0);
 				*p = ' ';
 			}

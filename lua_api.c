@@ -1918,7 +1918,6 @@ int gme_DoFileOps(lua_State *L)
 		if(x->result_code != 0)
 			err_count += 1;
 
-
 		lua_pushnumber(L, i++);
 		lua_newtable(L);
 
@@ -1935,6 +1934,7 @@ int gme_DoFileOps(lua_State *L)
 			lua_pushstring(L, "");
 		else
 			lua_pushstring(L, x->result_msg);
+
 		lua_settable(L, -3);
 
 		switch(x->type)

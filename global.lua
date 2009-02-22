@@ -444,7 +444,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 		for k,v in ipairs(lstF) do
 			if v.tagged == 1 then
-				if v.directory == 1 then
+				if v.directory == 1 and v.link == 0 then
 					local path1
 
 					path1 = GetCurrentWorkingDirectory()
@@ -501,16 +501,14 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	function __TagMove(command)
 		local buff = {}
 		if #GetTaggedFileList() == 0 then TagHighlightedFile() end
-		__TagMoveX(command, buff)
-		if __TagCopyX(command, buff) > 0 or GetOption("copy_move", "display_log") == "true" then
+		if __TagMoveX(command, buff) > 0 or GetOption("copy_move", "display_log") == "true" then
 			ViewLuaTable("MOVE OPERATIONS LOG", buff);
 		end
 	end
 	function __TagDelete(command)
 		local buff = {}
 		if #GetTaggedFileList() == 0 then TagHighlightedFile() end
-		__TagDeleteX(command, buff)
-		if __TagCopyX(command, buff) > 0 or GetOption("delete", "display_log") == "true" then
+		if __TagDeleteX(command, buff) > 0 or GetOption("delete", "display_log") == "true" then
 			ViewLuaTable("DELETE OPERATIONS LOG", buff);
 		end
 	end
