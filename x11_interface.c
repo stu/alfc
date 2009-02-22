@@ -84,7 +84,7 @@ static void x11_init_colours(void)
 
 static void dr_outchar(int s)
 {
-	display_char(s, xc_colors[styles[intStyle].fg], xc_colors[styles[intStyle].bg], intCurCol, intCurRow);
+	display_char(s&0xFF, xc_colors[styles[intStyle].fg], xc_colors[styles[intStyle].bg], intCurCol, intCurRow);
 }
 
 static void x11_print_hline(void)

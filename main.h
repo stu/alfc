@@ -100,7 +100,8 @@ enum eFileOpType
 	eOp_Copy,
 	eOp_Move,
 	eOp_MakeDir,
-	eOp_DeleteDir
+	eOp_DeleteDir,
+	eOp_SymLink
 };
 
 typedef struct udtFileOperation
@@ -130,6 +131,17 @@ typedef struct udtFileOperation
 
 			uint64_t source_length;
 		} udtMove;
+
+		struct
+		{
+			char *source_filename;
+			char *source_path;
+
+			char *dest_filename;
+			char *dest_path;
+
+			uint64_t source_length;
+		} udtSymlink;
 
 		struct
 		{

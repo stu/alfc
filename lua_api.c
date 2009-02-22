@@ -1727,7 +1727,7 @@ int gme_QueueFileOp(lua_State *L)
 	op = luaL_checknumber(L, 1);
 	GET_LUA_STRING(fname, 2);
 
-	if(op == eOp_Copy || op == eOp_Move || op == eOp_Delete)
+	if(op == eOp_Copy || op == eOp_Move || op == eOp_Delete || op == eOp_SymLink)
 	{
 		x = calloc(1, sizeof(uFileOperation));
 
@@ -1737,6 +1737,13 @@ int gme_QueueFileOp(lua_State *L)
 			case eOp_Delete:
 				x->op.udtDelete.source_path = strdup(GetActDPath(gd));
 				x->op.udtDelete.source_filename = strdup(fname.data);
+				break;
+
+			case eOp_SymLink:
+				x->op.udtSymlink.source_path = strdup(GetActDPath(gd));
+				x->op.udtSymlink.source_filename = strdup(fname.data);
+				x->op.udtSymlink.dest_filename = strdup(fname.data);
+				x->op.udtSymlink.dest_path = strdup(GetInActDPath(gd));
 				break;
 
 			case eOp_Copy:
@@ -1902,6 +1909,10 @@ int gme_DoFileOps(lua_State *L)
 			case eOp_Move:
 				Ops_MoveFile(gd, x);
 				break;
+
+			case eOp_SymLink:
+				Ops_Symlink(gd, x);
+				break;
 		}
 
 		if(x->result_code != 0)
@@ -1939,6 +1950,28 @@ int gme_DoFileOps(lua_State *L)
 
 				lua_pushstring(L, "length");
 				lua_pushnumber(L, x->op.udtDelete.source_length);
+				lua_settable(L, -3);
+				break;
+
+			case eOp_SymLink:
+				lua_pushstring(L, "source_filename");
+				lua_pushstring(L, x->op.udtSymlink.source_filename);
+				lua_settable(L, -3);
+
+				lua_pushstring(L, "source_path");
+				lua_pushstring(L, x->op.udtSymlink.source_path);
+				lua_settable(L, -3);
+
+				lua_pushstring(L, "dest_filename");
+				lua_pushstring(L, x->op.udtSymlink.dest_filename);
+				lua_settable(L, -3);
+
+				lua_pushstring(L, "dest_path");
+				lua_pushstring(L, x->op.udtSymlink.dest_path);
+				lua_settable(L, -3);
+
+				lua_pushstring(L, "length");
+				lua_pushnumber(L, x->op.udtSymlink.source_length);
 				lua_settable(L, -3);
 				break;
 

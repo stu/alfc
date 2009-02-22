@@ -246,6 +246,54 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		RedrawWindow()
 	end
 
+
+	function __TagSymlinkX(command, buff)
+		local lstF
+		local lstT
+		local k,v, err, errc
+		local file_size
+		local file_count
+
+		file_size = 0
+		file_count = 0
+
+		local path1, path2
+
+		lstF = GetTaggedFileList()
+		lstT = {}
+
+		err = 0
+
+		for k,v in ipairs(lstF) do
+			if v.tagged == 1 then
+				if v.directory == 1 then
+
+				else
+					lstT[1+#lstT] = v
+					QueueFileOp(eOp_SymLink, v.name)
+				end
+			end
+		end
+		lstF = nil
+
+		if #lstT > 0 then
+			lstF, errc = DoFileOps()
+			err = err + errc
+			lstT = nil
+			for k, v in ipairs(lstF) do
+				if v.result_code == 0 then
+					file_count = file_count + 1
+					file_size = file_size + v.length
+				end
+				buff[1+#buff] = "Symlink " .. v.result_msg ..  " on " .. v.source_path .. "/" .. v.source_filename
+			end
+
+			buff[1 + #buff] = ""
+		end
+
+		return err
+	end
+
 	function __TagCopyX(command, buff)
 		local lstF
 		local lstT
@@ -434,6 +482,14 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		end
 
 		return err
+	end
+
+	function __TagSymlink(command)
+		local buff = {}
+		if #GetTaggedFileList() == 0 then TagHighlightedFile() end
+		if __TagSymlinkX(command, buff) > 0 then
+			ViewLuaTable("SYMLINK OPERATIONS LOG", buff);
+		end
 	end
 
 	function __TagCopy(command)
@@ -654,6 +710,10 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	cmds[":t! "] = __TagFlip
 
 	cmds[":swap "] = __SwapPanels
+
+	if SystemType() ~= "WIN32" then
+		cmds[":sym"] = __TagSymlink
+	end
 
 	LoadPlugins()
 

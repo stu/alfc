@@ -75,6 +75,7 @@ void RegisterCommonFuncs(uGlobalData *gd, lua_State *l)
 	lua_pushnumber(l, eOp_Copy); lua_setglobal(l, "eOp_Copy");
 	lua_pushnumber(l, eOp_Move); lua_setglobal(l, "eOp_Move");
 	lua_pushnumber(l, eOp_Delete); lua_setglobal(l, "eOp_Delete");
+	lua_pushnumber(l, eOp_SymLink); lua_setglobal(l, "eOp_SymLink");
 
 	ps = get_charsep();
 	lua_pushstring(l, ps); lua_setglobal(l, "pathsep");

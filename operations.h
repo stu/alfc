@@ -7,6 +7,7 @@ extern "C"{
 extern int Ops_CopyFile(uGlobalData *gd, uFileOperation *op);
 extern int Ops_MoveFile(uGlobalData *gd, uFileOperation *op);
 extern int Ops_DeleteFile(uGlobalData *gd, uFileOperation *op);
+extern int Ops_Symlink(uGlobalData *gd, uFileOperation *op);
 
 #ifdef __cplusplus
 }

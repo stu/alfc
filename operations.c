@@ -4,6 +4,92 @@
 
 #define BLOCK_SIZE		(1024*16)
 
+static char* build_fn(char *p, char *f)
+{
+	char *z;
+
+	z = malloc( strlen(p) + strlen(f) + 8);
+	assert(z != NULL);
+
+	strcpy(z, p);
+	if(z[strlen(z)] != '/')
+		strcat(z, "/");
+	strcat(z, f);
+
+	return z;
+}
+
+int Ops_Symlink(uGlobalData *gd, uFileOperation *x)
+{
+	struct stat statbuff;
+	char *src;
+	char *dst;
+
+	src = build_fn(x->op.udtSymlink.source_path, x->op.udtSymlink.source_filename);
+	dst = build_fn(x->op.udtSymlink.dest_path, x->op.udtSymlink.dest_filename);
+
+	LogInfo("smy %s --- %s\n", src, dst);
+
+	// make sure we are in the path of the file to copy and its valid
+	if(ALFC_stat(src, &statbuff) == -1)
+	{
+		x->result_code = -1;
+		x->result_msg = strdup(strerror(errno));
+		free(src);
+		return x->result_code;
+	}
+
+#ifndef __MINGW_H
+	// parse through the symlink?
+	if (S_ISLNK(statbuff.st_mode))
+	{
+		x->result_code = -1;
+		x->result_msg = strdup("Symlinks not yet handled.");
+		free(src);
+		return x->result_code;
+	}
+#endif
+
+	// directory copy
+	if (S_ISDIR(statbuff.st_mode))
+	{
+		x->result_code = -1;
+		x->result_msg = strdup("Directory prunes not yet handled.");
+		free(src);
+		return x->result_code;
+	}
+
+	// non-regular copy
+	if (!S_ISREG(statbuff.st_mode))
+	{
+		x->result_code = -1;
+		x->result_msg = strdup("File is not a regular file.");
+		free(src);
+		return x->result_code;
+	}
+
+	x->op.udtSymlink.source_length = statbuff.st_size;
+
+	LogInfo("sym %s to %s\n", src, dst);
+
+	// GO!
+	if( symlink(src, dst) != 0)
+	{
+		x->result_code = -1;
+		x->result_msg = strdup(strerror(errno));
+		free(src);
+		return x->result_code;
+	}
+
+	free(src);
+
+	x->result_code = 0;
+	x->result_msg = strdup("OK");
+
+	return x->result_code;
+}
+
+
 int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 {
 	struct stat statbuff;
@@ -44,19 +130,9 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 		return x->result_code;
 	}
 
-	src = malloc( strlen(x->op.udtCopy.source_path) + strlen(x->op.udtCopy.source_filename) + 8);
-	strcpy(src, x->op.udtCopy.source_path);
-	if(src[strlen(src)] != '/')
-		strcat(src, "/");
-	strcat(src, x->op.udtCopy.source_filename);
+	src = build_fn(x->op.udtCopy.source_path, x->op.udtCopy.source_filename);
+	dst = build_fn(x->op.udtCopy.dest_path, x->op.udtCopy.dest_filename);
 
-
-
-	dst = malloc( strlen(x->op.udtCopy.dest_path) + strlen(x->op.udtCopy.dest_filename) + 8);
-	strcpy(dst, x->op.udtCopy.dest_path);
-	if(dst[strlen(dst)] != '/')
-		strcat(dst, "/");
-	strcat(dst, x->op.udtCopy.dest_filename);
 
 	//LogInfo("Copy %s to %s\n", src, dst);
 
@@ -389,13 +465,7 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 	struct stat statbuff;
 	char *src;
 
-	src = malloc( strlen(x->op.udtDelete.source_path) + strlen(x->op.udtDelete.source_filename) + 8);
-	assert(src != NULL);
-
-	strcpy(src, x->op.udtDelete.source_path);
-	if(src[strlen(src)] != '/')
-		strcat(src, "/");
-	strcat(src, x->op.udtDelete.source_filename);
+	src = build_fn(x->op.udtDelete.source_path, x->op.udtDelete.source_filename);
 
 	// make sure we are in the path of the file to copy and its valid
 	if(ALFC_stat(src, &statbuff) == -1)
