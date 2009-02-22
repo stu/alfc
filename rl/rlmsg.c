@@ -1,9 +1,14 @@
-#include "rllib.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <stdint.h>
+#include <string.h>
 #include <ctype.h>
 #include <stdarg.h>
-#include <stdlib.h>
-#include <stdio.h>
+
+#include "rllib.h"
+
 
 message_type msg_types[num_msg_types];
 message_style msg_styles[num_style_types];
@@ -40,9 +45,9 @@ void print_msg(int type, int style, char* msg, ...) {
     x = msg_types[type].start_x;
     y = msg_types[type].cur_y;
   }
-  
+
   va_start(vl, msg);
-  
+
   while (msg[i]) {
     if (msg[i] == '%') {
       char* m2;
@@ -96,13 +101,13 @@ void clear_msg(int type) {
   int maxx = msg_types[type].end_x-1;
   int maxy = msg_types[type].end_y-1;
   int x, y;
-  
+
   for (y = miny; y < maxy; y++) {
     for (x = minx; x < maxx; x++) {
       display_char(' ', gray, black, x, y);
     }
   }
-  
+
   msg_types[type].cur_y = msg_types[type].start_y;
 }
 

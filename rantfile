@@ -175,6 +175,9 @@ task :tools => %w(bin2c.o) do |t|
 	sys "bin2c options.ini include_options_ini >> defaults.h"
 	sys "bin2c core_extract.lua core_extract_lua >> defaults.h"
 	sys "bin2c core_hash.lua core_hash_lua >> defaults.h"
+
+	sys "bin2c font.rlf x11_data_font > x11_fonts.h"
+	sys "bin2c font_small.rlf x11_data_font_small >> x11_fonts.h"
 end
 
 task :appx => alfc + PORTABILITY_OBJS do |t|

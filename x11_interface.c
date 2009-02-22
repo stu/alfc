@@ -8,6 +8,7 @@
 #include <X11/keysymdef.h>
 #endif
 
+#include "x11_fonts.h"
 
 static int intCurCol;
 static int intCurRow;
@@ -268,9 +269,9 @@ static int x11_screen_init(uScreenDriver *scr)
 	}
 
 	if( w < 100*10 || h < 40*20)
-		create_window(w/8 - 4, h/12 - 5, "Another Linux File Commander", "font_small.rlf");
+		create_window(w/8 - 4, h/12 - 5, "Another Linux File Commander", x11_data_font_small, x11_data_font_small_SIZE);
 	else
-		create_window(w/10 - 4,  h/20 - 5, "Another Linux File Commander", "font.rlf");
+		create_window(w/10 - 4,  h/20 - 5, "Another Linux File Commander", x11_data_font, x11_data_font_SIZE);
 
 	x11_init_colours();
 

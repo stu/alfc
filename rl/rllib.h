@@ -8,7 +8,7 @@
 */
 
 /* Creates a window. You need to call this before using anything else in RLLib. */
-void create_window(int x_size, int y_size, char* title, char* font_file);
+void create_window(int x_size, int y_size, char* title, uint8_t *font_data, uint32_t len);
 
 /* Destroys the window. You should always call this at the end of your program. */
 void destroy_window();
