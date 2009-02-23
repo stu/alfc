@@ -217,7 +217,7 @@ static uint32_t nc_get_keypress(void)
 #endif
 	else if ((ch >= KEY_F0) && (ch <= KEY_F0 + 12))
 	{
-		key = ALFC_KEY_F00 + (ch - KEY_F0);
+		key = ALFC_KEY_F01 + (ch - KEY_F0) - 1;
 	}
 	else if ((ch == '[') || (ch == 27))
 	{  /* start of escape sequence */

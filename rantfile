@@ -4,7 +4,7 @@ import "md5"
 _VER_MAJ = 0
 _VER_MIN = 1
 
-DRIVER="X11"	# NCURSES, X11
+DRIVER="NCURSES"	# NCURSES, X11
 
 
 y = RUBY_PLATFORM.scan(/(mswin32|mingw32|bccwin32|msdosdjgpp|os2|amigaos|cygwin)/)
@@ -148,8 +148,14 @@ gen Action do
 	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s + " -DDRV_" + DRIVER
 end
 
+if DRIVER=="NCURSES"
+desc "Build the app"
+task :app => ["auxfiles", "appx"] do
+end
+else
 desc "Build the app"
 task :app => ["auxfiles", "rl/librl.a", "appx"] do
+end
 end
 
 task "auxfiles" => ["fixversion", "tools" ] do
@@ -175,9 +181,10 @@ task :tools => %w(bin2c.o) do |t|
 	sys "bin2c options.ini include_options_ini >> defaults.h"
 	sys "bin2c core_extract.lua core_extract_lua >> defaults.h"
 	sys "bin2c core_hash.lua core_hash_lua >> defaults.h"
-
+if DRIVER=="X11"
 	sys "bin2c font.rlf x11_data_font > x11_fonts.h"
 	sys "bin2c font_small.rlf x11_data_font_small >> x11_fonts.h"
+end
 end
 
 task :appx => alfc + PORTABILITY_OBJS do |t|
