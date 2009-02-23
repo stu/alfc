@@ -65,7 +65,7 @@ static void x11_set_colour(int c, int r, int g, int b)
 static void x11_init_colours(void)
 {
 	x11_set_colour(CLR_BLACK, 0, 0, 0);
-	x11_set_colour(CLR_GREY, 0xc0, 0xc0, 0xc0);
+	x11_set_colour(CLR_GREY, 0xAA, 0xAA, 0xAA);
 	x11_set_colour(CLR_RED, 0x80, 0, 0);
 	x11_set_colour(CLR_GREEN, 0, 0x80, 0);
 	x11_set_colour(CLR_BROWN, 0xAE, 0xB3, 00);

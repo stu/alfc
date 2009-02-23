@@ -63,6 +63,8 @@ Current speed keyed commands
 :tu - Untag All
 :t! - Flip all tags
 
+:sym - Symlink files or directories. Not available on WIN32 platforms
+
 
 Internal Viewer Commands
 ========================
