@@ -2562,6 +2562,12 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 	if(godir(gdata, gdata->left_dir) == -1)
 		godir(gdata, ConvertDirectoryName("$HOME"));
 
+	if(gdata->lstLeft == NULL)
+	{
+		gdata->left_dir = GetCurrentWorkingDirectory();
+		godir(gdata, gdata->left_dir);
+	}
+
 	assert(gdata->lstLeft != NULL);
 
 	gdata->selected_window = WINDOW_RIGHT;
@@ -2585,6 +2591,11 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 	if(godir(gdata, gdata->right_dir) == -1)
 		godir(gdata, ConvertDirectoryName("$HOME"));
 
+	if(gdata->lstLeft == NULL)
+	{
+		gdata->right_dir = GetCurrentWorkingDirectory();
+		godir(gdata, gdata->right_dir);
+	}
 	assert(gdata->lstRight != NULL);
 
 	gdata->selected_window = WINDOW_LEFT;

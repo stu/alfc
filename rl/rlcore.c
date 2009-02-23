@@ -440,9 +440,9 @@ int colors_different(rgbcolor a, rgbcolor b)
     return a.r != b.r || a.g != b.g || a.b != b.b;
 }
 
-extern int rlmain(void);
+extern int rlmain(int argc, char *argv[]);
 #ifdef xlib
-int main()
+int main(int argc, char *argv[])
 #else
 int WINAPI WinMain(HINSTANCE inst, HINSTANCE x, LPSTR y, int z)
 #endif
@@ -476,5 +476,5 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE x, LPSTR y, int z)
 
     hinst = inst;
 #endif
-    return rlmain();
+    return rlmain(argc, argv);
 }

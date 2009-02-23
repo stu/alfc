@@ -481,7 +481,7 @@ int main(int argc, char *argv[])
 			}
 			else if(strcmp("-v", argv[i]) == 0 || strcmp("--version", argv[i]) == 0)
 			{
-				//fprintf(stderr, "ALFC v%i.%02i/%04i\n", VersionMajor(), VersionMinor(), VersionBuild());
+				fprintf(stderr, "ALFC v%i.%02i/%04i\n", VersionMajor(), VersionMinor(), VersionBuild());
 				exit(0);
 			}
 			else if(strcmp("-view", argv[i]) == 0 && 1+i < argc)
