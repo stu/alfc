@@ -99,6 +99,17 @@ void FreeFileOp(void *x)
 			if(f->op.udtCopy.dest_path != NULL)
 				free(f->op.udtCopy.dest_path);
 			break;
+
+		case eOp_SymLink:
+			if(f->op.udtSymlink.source_filename != NULL)
+				free(f->op.udtSymlink.source_filename);
+			if(f->op.udtSymlink.source_path != NULL)
+				free(f->op.udtSymlink.source_path);
+			if(f->op.udtSymlink.dest_filename != NULL)
+				free(f->op.udtSymlink.dest_filename);
+			if(f->op.udtSymlink.dest_path != NULL)
+				free(f->op.udtSymlink.dest_path);
+			break;
 	}
 
 	if(f->result_msg != NULL)
@@ -286,6 +297,7 @@ void about_window(uGlobalData *gd)
 	key = gd->screen->get_keypress();
 
 	free(w);
+	free(buff);
 
 	gd->screen->set_style(STYLE_TITLE);
 }

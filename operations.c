@@ -82,6 +82,7 @@ int Ops_Symlink(uGlobalData *gd, uFileOperation *x)
 	}
 
 	free(src);
+	free(dst);
 
 	x->result_code = 0;
 	x->result_msg = strdup("OK");
