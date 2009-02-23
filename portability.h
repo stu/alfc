@@ -6,7 +6,7 @@ extern "C"{
 
 extern char* ALFC_getenv(const char *s);
 extern void ALFC_GetUserInfo(uGlobalData *gd);
-extern uint64_t ALFC_GetFileSize(uDirEntry *de, struct stat *buff);
+extern uint64_t ALFC_GetFileSize(char *name, struct stat *buff);
 extern uint32_t ALFC_GetFileAttrs(uDirEntry *de, struct stat *buff);
 extern time_t ALFC_GetFileTime(uDirEntry *de, struct stat *buff);
 extern int ALFC_stat(char *fn, struct stat *buff);

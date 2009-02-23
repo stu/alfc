@@ -193,6 +193,7 @@ typedef struct udtDirEntry
 	time_t		time;
 
 	char		*lnk;
+	uint64_t	lnk_size;
 } uDirEntry;
 
 typedef struct udtWindow

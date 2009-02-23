@@ -4,7 +4,7 @@ import "md5"
 _VER_MAJ = 0
 _VER_MIN = 1
 
-DRIVER="NCURSES"	# NCURSES, X11
+DRIVER="X11"	# NCURSES, X11
 
 
 y = RUBY_PLATFORM.scan(/(mswin32|mingw32|bccwin32|msdosdjgpp|os2|amigaos|cygwin)/)

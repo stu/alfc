@@ -44,7 +44,7 @@ void ALFC_GetUserInfo(uGlobalData *gd)
 }
 
 
-uint64_t ALFC_GetFileSize(uDirEntry *de, struct stat *buff)
+uint64_t ALFC_GetFileSize(char *name, struct stat *buff)
 {
 	return buff->st_size;
 }

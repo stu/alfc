@@ -761,7 +761,7 @@ DList* GetFiles(char *path)
 					de->name = strdup(dr->d_name);
 					ALFC_stat(de->name, &buff);
 
-					de->size = ALFC_GetFileSize(de, &buff);
+					de->size = ALFC_GetFileSize(de->name, &buff);
 					de->attrs = ALFC_GetFileAttrs(de, &buff);
 					de->time = ALFC_GetFileTime(de, &buff);
 
@@ -769,7 +769,9 @@ DList* GetFiles(char *path)
 					if(S_ISLNK(buff.st_mode) != 0)
 					{
 						de->lnk = ReadLink(de->name, de->size);
+
 						ALFC_stat(de->lnk, &buff);
+						de->lnk_size = ALFC_GetFileSize(de->lnk, &buff);
 
 						if(S_ISDIR(buff.st_mode) != 0)
 						{
@@ -850,6 +852,7 @@ static int CalcDateOff(uWindow *w, int end)
 static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, int size_off, int date_off)
 {
 	char buff[1024];
+	char *buff2;
 	char *p;
 
 	if(i == win->highlight_line)
@@ -865,36 +868,59 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 	if(de->tagged == 1)
 		buff[0]='+';
 
-	if(strlen(de->name) > max_namelen)
+	if(de->lnk != NULL)
 	{
-		memmove(buff + 1, de->name, max_namelen);
+		buff2 = malloc(strlen(de->name) + strlen(de->lnk) + 16);
+		strcpy(buff2, de->name);
+		strcat(buff2, " -> ");
+		strcat(buff2, de->lnk);
+	}
+	else
+	{
+		buff2 = malloc(strlen(de->name) + 4);
+		strcpy(buff2, de->name);
+	}
+
+	if(strlen(buff2) > max_namelen)
+	{
+		memmove(buff + 1, buff2, max_namelen);
 		memmove(buff + 1 + max_namelen - 3, "...", 3);
 	}
 	else
-		memmove(buff + 1, de->name, strlen(de->name));
+		memmove(buff + 1, buff2, strlen(buff2));
 
 	if(HaveColumnSize(win->gd) == 1)
 	{
 		if( S_ISDIR(de->attrs&S_IFDIR) == 0 )
 		{
+			/*
 			if( S_ISLNK(de->attrs&S_IFLNK) != 0 )
 			{
 				sprintf(buff + size_off, " symlink");
 				p = strchr(buff + size_off, 0x0);
 				*p = ' ';
 			}
-			else if(win->gd->compress_filesize == 0)
+			else */
+			if(win->gd->compress_filesize == 0)
 			{
+				uint64_t xx = de->size;
+
+				if(S_ISLNK(de->attrs&S_IFLNK) != 0)
+					xx = de->lnk_size;
+
 #if __WORDSIZE == 64
-				sprintf(buff + size_off, "%10lu", de->size);
+				sprintf(buff + size_off, "%10lu", xx);
 #else
-				sprintf(buff + size_off, "%10llu", de->size);
+				sprintf(buff + size_off, "%10llu", xx);
 #endif
 			}
 			else
 			{
 				int round;
 				uint64_t xx = de->size;
+
+				if(S_ISLNK(de->attrs&S_IFLNK) != 0)
+					xx = de->lnk_size;
 
 				if(xx < 1024)
 				{
@@ -978,6 +1004,8 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 	win->screen->print(buff);
 
 	win->screen->set_style(STYLE_NORMAL);
+
+	free(buff2);
 }
 
 void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)

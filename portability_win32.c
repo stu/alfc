@@ -65,7 +65,7 @@ void ALFC_GetUserInfo(uGlobalData *gd)
 	gd->gid = INT_MAX;
 }
 
-uint64_t ALFC_GetFileSize(uDirEntry *de, struct stat *buff)
+uint64_t ALFC_GetFileSize(char *file, struct stat *buff)
 {
 	WIN32_FIND_DATA fd;
 	HANDLE hFind;
@@ -74,7 +74,7 @@ uint64_t ALFC_GetFileSize(uDirEntry *de, struct stat *buff)
 	if( S_ISDIR(buff->st_mode) != 0)
 		return 0;
 
-	hFind = FindFirstFile(de->name, &fd);
+	hFind = FindFirstFile(file, &fd);
 
 	if(hFind == INVALID_HANDLE_VALUE)
 		return 0L;
