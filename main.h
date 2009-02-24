@@ -53,6 +53,14 @@ enum
 
 	STYLE_EDIT_EOL,
 
+	STYLE_EXEC,
+	STYLE_LINK,
+
+	STYLE_IMAGE,
+	STYLE_DIR,
+	STYLE_DOCUMENT,
+	STYLE_ARCHIVE,
+
 	CLR_BLACK,
 	CLR_RED,
 	CLR_GREEN,
@@ -71,7 +79,7 @@ enum
 	CLR_WHITE
 };
 
-#define MAX_STYLES	4
+#define MAX_STYLES	16
 
 typedef struct udtGlobals uGlobalData;
 typedef struct udtScreenDriver uScreenDriver;

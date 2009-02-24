@@ -189,8 +189,13 @@ char* ALFC_get_last_error(int err)
 	return last_error;
 }
 
-
-int ALFC_IsHidden(char *fn, struct stat *buff)
+int ALFC_IsHidden(char *fn, uint32_t attrs)
 {
 	return -1;
 }
+
+int ALFC_IsExec(char *fn, uint32_t attrs)
+{
+	return -1;
+}
+

@@ -395,6 +395,9 @@ static void AddMRU(uGlobalData *gd, DList *lstMRU, char *p)
 	else
 		c = atoi(v);
 
+	if(c < 0)
+		c = 4;
+
 	if(dlist_size(lstMRU) > c)
 	{
 		dlist_remove(lstMRU, dlist_tail(lstMRU), (void*)&v);
@@ -769,7 +772,7 @@ DList* GetFiles(char *path, int hidden)
 				{
 					ALFC_stat(dr->d_name, &buff);
 
-					if( hidden == 0 || ALFC_IsHidden(dr->d_name, &buff) != 0)
+					if( hidden == 0 || ALFC_IsHidden(dr->d_name, buff.st_mode) != 0)
 					{
 						de = malloc(sizeof(uDirEntry));
 						memset(de, 0x0, sizeof(uDirEntry));
@@ -871,10 +874,9 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 	char *buff2;
 	char *p;
 
-	if(i == win->highlight_line)
-		win->screen->set_style(STYLE_HIGHLIGHT);
-	else
-		win->screen->set_style(STYLE_NORMAL);
+	int style;
+
+	style = STYLE_NORMAL;
 
 	memset(buff, ' ', 1024);
 
@@ -886,15 +888,35 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 
 	if(de->lnk != NULL)
 	{
-		buff2 = malloc(strlen(de->name) + strlen(de->lnk) + 16);
-		strcpy(buff2, de->name);
+		buff2 = calloc(1, strlen(de->name) + strlen(de->lnk) + 16);
+		p = buff2;
+
+		style = STYLE_LINK;
+		// exec status overrides link status
+		if(ALFC_IsExec(de->name, de->attrs) == 0 && (de->attrs&S_IFDIR) == 0)
+		{
+			*p++='*';
+			style = STYLE_EXEC;
+		}
+		else
+			*p++ = '@';
+
+		strcat(buff2+1, de->name);
 		strcat(buff2, " -> ");
 		strcat(buff2, de->lnk);
 	}
 	else
 	{
-		buff2 = malloc(strlen(de->name) + 4);
-		strcpy(buff2, de->name);
+		buff2 = calloc(1, strlen(de->name) + 16);
+		p = buff2;
+
+		if(ALFC_IsExec(de->name, de->attrs) == 0 && (de->attrs&S_IFDIR) == 0)
+		{
+			*p++ = '*';
+			style = STYLE_EXEC;
+		}
+
+		strcat(p, de->name);
 	}
 
 	if(strlen(buff2) > max_namelen)
@@ -978,11 +1000,13 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 		}
 		else
 		{
+			style = STYLE_DIR;
 			if( S_ISLNK(de->attrs&S_IFLNK) != 0 )
 			{
 				sprintf(buff + size_off, " <D-LNK>");
 				p = strchr(buff + size_off, 0x0);
 				*p = ' ';
+				style = STYLE_LINK;
 			}
 			else
 			{
@@ -992,6 +1016,14 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 			}
 		}
 	}
+
+	//buff[date_off] = 0;
+	if(i == win->highlight_line)
+		style = STYLE_HIGHLIGHT;
+
+	win->screen->set_style(style);
+	//win->screen->set_cursor( 2 + i + win->offset_row, 2 + win->offset_col );
+	//win->screen->print_abs(buff);
 
 	if(HaveColumnDate(win->gd) == 1)
 	{
@@ -1016,8 +1048,12 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 
 	buff[ win->width - 2] = 0;
 
+	//win->screen->set_style(STYLE_NORMAL);
+	//win->screen->set_cursor( 2 + i + win->offset_row, 2 + win->offset_col + date_off );
+	//win->screen->print(buff+date_off);
+
 	win->screen->set_cursor( 2 + i + win->offset_row, 2 + win->offset_col );
-	win->screen->print(buff);
+	win->screen->print_abs(buff);
 
 	win->screen->set_style(STYLE_NORMAL);
 
@@ -1209,7 +1245,10 @@ static void DrawFileInfo(uWindow *win)
 			strcat(buff2, de->lnk);
 		}
 		else
-			buff2 = strdup(de->name);
+		{
+			buff2 = malloc(strlen(de->name) + 16);
+			strcpy(buff2, de->name);
+		}
 
 		if(strlen(buff2) > max_namelen)
 		{
@@ -1782,7 +1821,7 @@ int scroll_down(uGlobalData *gd)
 void AddHistory(uGlobalData *gd, char *str, ...)
 {
 	char *x;
-	char *skip[] = { "HistoryUp()", "HistoryDown()", NULL };
+	char *skip[] = { "HistoryUp()", "HistoryDown()", ":q", NULL };
 	int i;
 
 	x = malloc(8192);
@@ -1806,6 +1845,21 @@ void AddHistory(uGlobalData *gd, char *str, ...)
 
 	dlist_ins(gd->lstLogHistory, x);
 	gd->hist_idx = dlist_size(gd->lstLogHistory);
+
+	x = INI_get(gd->optfile, "options", "history_count");
+	if(x == NULL)
+		i = 16;
+	else
+		i = atoi(x);
+
+	if(i < 0)
+		i = 32;
+
+	if(dlist_size(gd->lstLogHistory) > i)
+	{
+		dlist_remove(gd->lstLogHistory, dlist_tail(gd->lstLogHistory), (void*)&x);
+		free(x);
+	}
 }
 
 int GetFileIndex(DList *lstFiles, char *name)

@@ -615,24 +615,24 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		-- name ascending
 		dsortfunc = function(a,b) return a.data.name<b.data.name end
 		if opt_sort_order == "name_desc" then
-			sortfunc = function(a,b) return string.lower(a.data.name)>string.lower(b.data.name) end
+			sortfunc = function(a,b) return string.lower(a.data.name) > string.lower(b.data.name) end
 			dsortfunc = sortfunc
 		elseif opt_sort_order == "name_asc" then
-			sortfunc = function(a,b) return string.lower(a.data.name)<string.lower(b.data.name) end
+			sortfunc = function(a,b) return string.lower(a.data.name) < string.lower(b.data.name) end
 			dsortfunc = sortfunc
 		elseif opt_sort_order == "size_desc" then
-			sortfunc = function(a,b) return a.data.size>b.data.size end
+			sortfunc = function(a,b) return a.data.size > b.data.size end
 		elseif opt_sort_order == "size_asc" then
-			sortfunc = function(a,b) return a.data.size<b.data.size end
+			sortfunc = function(a,b) return a.data.size < b.data.size end
 		elseif opt_sort_order == "date_asc" then
-			sortfunc = function(a,b) return a.data.date<b.data.date end
+			sortfunc = function(a,b) return a.data.date < b.data.date end
 			dsortfunc = sortfunc
 		elseif opt_sort_order == "date_desc" then
-			sortfunc = function(a,b) return a.data.date>b.data.date end
+			sortfunc = function(a,b) return a.data.date > b.data.date end
 			dsortfunc = sortfunc
 		else
 			-- default use name ascending...
-			sortfunc = function(a,b) return a.data.name<b.data.name end
+			sortfunc = function(a,b) return string.lower(a.data.name) < string.lower(b.data.name) end
 		end
 
 		if opt_dirs_first == "true" then

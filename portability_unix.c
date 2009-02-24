@@ -94,10 +94,19 @@ char* ALFC_get_last_error(int err)
 	return strerror(errno);
 }
 
-int ALFC_IsHidden(char *fn, struct stat *buff)
+int ALFC_IsHidden(char *fn, uint32_t attrs)
 {
 	if(fn[0] == '.' && fn[1] != 0)
 		return 0;
 	else
 		return -1;
 }
+
+int ALFC_IsExec(char *fn, uint32_t attrs)
+{
+	if( (attrs & (S_IXUSR | S_IXOTH | S_IXGRP)) != 0)
+		return 0;
+	else
+		return -1;
+}
+

@@ -31,7 +31,13 @@ struct udtStyles
 	{ STYLE_TITLE, 0, 0, 0, 0},
 	{ STYLE_NORMAL, 0, 0, 0, 0 },
 	{ STYLE_HIGHLIGHT, 0, 0, 0, 0 },
-	{ STYLE_EDIT_EOL, 0, 0, 0, 0 }
+	{ STYLE_EDIT_EOL, 0, 0, 0, 0 },
+
+	{ STYLE_IMAGE, 0, 0, 0, 0 },
+	{ STYLE_DIR, 0, 0, 0, 0 },
+	{ STYLE_DOCUMENT, 0, 0, 0, 0 },
+	{ STYLE_ARCHIVE, 0, 0, 0, 0 },
+
 
 };
 
@@ -284,7 +290,17 @@ static int x11_screen_init(uScreenDriver *scr)
 	init_style(STYLE_NORMAL, scr->gd->clr_foreground, scr->gd->clr_background);				// default
 	init_style(STYLE_HIGHLIGHT, scr->gd->clr_hi_foreground, scr->gd->clr_hi_background);	// highlight line
 
-	init_style(STYLE_EDIT_EOL, CLR_BR_GREEN, scr->gd->clr_background);	// highlight line
+	init_style(STYLE_EDIT_EOL, CLR_BR_GREEN, scr->gd->clr_background);	// end of line marker in viewer...
+
+	init_style(STYLE_EXEC, 		CLR_BR_GREEN, CLR_BLACK);				// exec
+	init_style(STYLE_LINK, 		CLR_YELLOW, CLR_BLACK);				// link
+
+	init_style(STYLE_IMAGE, 	CLR_BR_BLUE, CLR_BLACK);				// image
+	init_style(STYLE_DIR, 		CLR_BR_BLUE, CLR_BLACK);				// dir
+	init_style(STYLE_DOCUMENT, 	CLR_BR_BLUE, CLR_BLACK);				// document
+	init_style(STYLE_ARCHIVE, 	CLR_BR_BLUE, CLR_BLACK);				// archive
+
+
 
 	scr->set_style(STYLE_NORMAL);
 	scr->cls();
@@ -352,6 +368,14 @@ static void x11_set_style(int style)
 		case STYLE_TITLE:
 		case STYLE_HIGHLIGHT:
 		case STYLE_EDIT_EOL:
+
+		case STYLE_ARCHIVE:
+		case STYLE_DOCUMENT:
+		case STYLE_DIR:
+		case STYLE_IMAGE:
+		case STYLE_LINK:
+		case STYLE_EXEC:
+
 			intStyle = style;
 			break;
 	}
