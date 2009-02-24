@@ -4,6 +4,7 @@ doc
 *.bak
 *.o
 *.a
+.*.marks
 .rant.meta
 alfc
 alfc.exe

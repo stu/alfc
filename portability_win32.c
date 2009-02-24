@@ -8,7 +8,7 @@ const char ALFC_pathsep = '\\';
 
 static void GetWindowsErrorMsg(char *func)
 {
-    LPVOID lpMsgBuf;
+	LPVOID lpMsgBuf;
 	DWORD dw;
 
 	dw = GetLastError();
@@ -187,4 +187,10 @@ int ALFC_shutdown(void)
 char* ALFC_get_last_error(int err)
 {
 	return last_error;
+}
+
+
+int ALFC_IsHidden(char *fn, struct stat *buff)
+{
+	return -1;
 }

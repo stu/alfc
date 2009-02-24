@@ -739,7 +739,7 @@ static char* ReadLink(char *fn, uint32_t len)
 	return realloc(buff, strlen(buff)+1);
 }
 
-DList* GetFiles(char *path)
+DList* GetFiles(char *path, int hidden)
 {
 	DList *lstF;
 	DIR *d;
@@ -767,31 +767,35 @@ DList* GetFiles(char *path)
 			{
 				if( ( strcmp(dr->d_name, ".") != 0 && strcmp(dr->d_name, "..") != 0))
 				{
-					de = malloc(sizeof(uDirEntry));
-					memset(de, 0x0, sizeof(uDirEntry));
+					ALFC_stat(dr->d_name, &buff);
 
-					de->name = strdup(dr->d_name);
-					ALFC_stat(de->name, &buff);
-
-					de->size = ALFC_GetFileSize(de->name, &buff);
-					de->attrs = ALFC_GetFileAttrs(de, &buff);
-					de->time = ALFC_GetFileTime(de, &buff);
-
-					// test link to see if its a directory...
-					if(S_ISLNK(buff.st_mode) != 0)
+					if( hidden == 0 || ALFC_IsHidden(dr->d_name, &buff) != 0)
 					{
-						de->lnk = ReadLink(de->name, de->size);
+						de = malloc(sizeof(uDirEntry));
+						memset(de, 0x0, sizeof(uDirEntry));
 
-						ALFC_stat(de->lnk, &buff);
-						de->lnk_size = ALFC_GetFileSize(de->lnk, &buff);
+						de->name = strdup(dr->d_name);
 
-						if(S_ISDIR(buff.st_mode) != 0)
+						de->size = ALFC_GetFileSize(de->name, &buff);
+						de->attrs = ALFC_GetFileAttrs(de, &buff);
+						de->time = ALFC_GetFileTime(de, &buff);
+
+						// test link to see if its a directory...
+						if(S_ISLNK(buff.st_mode) != 0)
 						{
-							de->attrs |= S_IFDIR;
-						}
-					}
+							de->lnk = ReadLink(de->name, de->size);
 
-					dlist_ins(lstF, de);
+							ALFC_stat(de->lnk, &buff);
+							de->lnk_size = ALFC_GetFileSize(de->lnk, &buff);
+
+							if(S_ISDIR(buff.st_mode) != 0)
+							{
+								de->attrs |= S_IFDIR;
+							}
+						}
+
+						dlist_ins(lstF, de);
+					}
 				}
 
 				dr = readdir(d);
@@ -1195,13 +1199,27 @@ static void DrawFileInfo(uWindow *win)
 	memmove(buff, "File: ", 6);
 	if(de != NULL)
 	{
-		if(strlen(de->name) > max_namelen)
+		char *buff2;
+
+		if(de->lnk != NULL)
 		{
-			memmove(buff + 6, de->name, max_namelen);
+			buff2 = malloc(strlen(de->name) + strlen(de->lnk) + 16);
+			strcpy(buff2, de->name);
+			strcat(buff2, " -> ");
+			strcat(buff2, de->lnk);
+		}
+		else
+			buff2 = strdup(de->name);
+
+		if(strlen(buff2) > max_namelen)
+		{
+			memmove(buff + 6, buff2, max_namelen);
 			memmove(buff + 6 + max_namelen - 3, "...", 3);
 		}
 		else
-			memmove(buff + 6, de->name, strlen(de->name));
+			memmove(buff + 6, buff2, strlen(buff2));
+
+		free(buff2);
 
 		// do size : "Size: 1,123,123,123"
 		memmove(buff + size_offset, "Size: ", 6);
@@ -1919,7 +1937,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 			dlist_destroy(gd->lstFullLeft);
 			free(gd->lstFullLeft);
 		}
-		gd->lstFullLeft = GetFiles(gd->left_dir);
+		gd->lstFullLeft = GetFiles(gd->left_dir, IsTrue(INI_get(gd->optfile, "options", "show_hidden")));
 
 		if(gd->lstLeft != NULL)
 		{
@@ -1946,7 +1964,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 			dlist_destroy(gd->lstFullRight);
 			free(gd->lstFullRight);
 		}
-		gd->lstFullRight = GetFiles(gd->right_dir);
+		gd->lstFullRight = GetFiles(gd->right_dir, IsTrue(INI_get(gd->optfile, "options", "show_hidden")));
 
 		if(gd->lstRight != NULL)
 		{

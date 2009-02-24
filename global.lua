@@ -615,10 +615,10 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		-- name ascending
 		dsortfunc = function(a,b) return a.data.name<b.data.name end
 		if opt_sort_order == "name_desc" then
-			sortfunc = function(a,b) return a.data.name>b.data.name end
+			sortfunc = function(a,b) return string.lower(a.data.name)>string.lower(b.data.name) end
 			dsortfunc = sortfunc
 		elseif opt_sort_order == "name_asc" then
-			sortfunc = function(a,b) return a.data.name<b.data.name end
+			sortfunc = function(a,b) return string.lower(a.data.name)<string.lower(b.data.name) end
 			dsortfunc = sortfunc
 		elseif opt_sort_order == "size_desc" then
 			sortfunc = function(a,b) return a.data.size>b.data.size end
