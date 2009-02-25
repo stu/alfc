@@ -4,6 +4,12 @@
 extern "C"{
 #endif
 
+#define FILETYPE_DEFAULT	0
+#define FILETYPE_IMAGE 		1
+#define FILETYPE_ARCHIVE 	2
+#define FILETYPE_DOC 		3
+#define FILETYPE_BACKUP 	4
+
 enum
 {
 	ALFC_KEY_DOWN = 0x1000,
@@ -51,17 +57,28 @@ enum
 	STYLE_NORMAL,
 	STYLE_HIGHLIGHT,
 
-	STYLE_EDIT_EOL,
+	STYLE_00,
+	STYLE_01,
+	STYLE_02,
+	STYLE_03,
+	STYLE_04,
+	STYLE_05,
+	STYLE_06,
+	STYLE_07,
 
-	STYLE_EXEC,
-	STYLE_LINK,
+	STYLE_VIEW_EDIT_EOL = STYLE_00,
 
-	STYLE_IMAGE,
-	STYLE_DIR,
-	STYLE_DOCUMENT,
-	STYLE_ARCHIVE,
 
-	CLR_BLACK,
+	STYLE_DIR_EXEC = STYLE_00,
+	STYLE_DIR_LINK,
+	STYLE_DIR_IMAGE,
+	STYLE_DIR_DIR,
+	STYLE_DIR_DOCUMENT,
+	STYLE_DIR_ARCHIVE,
+	STYLE_DIR_BACKUP,
+	STYLE_DIR_07,
+
+	CLR_BLACK = STYLE_07 + 1,
 	CLR_RED,
 	CLR_GREEN,
 	CLR_BROWN,
@@ -202,6 +219,8 @@ typedef struct udtDirEntry
 
 	char		*lnk;
 	uint64_t	lnk_size;
+
+	int			type;
 } uDirEntry;
 
 typedef struct udtWindow
@@ -249,6 +268,9 @@ struct udtScreenDriver
 	void (*init_style)(int style, uint32_t fg, uint32_t bg);
 	void (*print_hline)(void);
 	void (*print_vline)(void);
+
+	void (*init_dir_styles)(uScreenDriver *scr);
+	void (*init_view_styles)(uScreenDriver *scr);
 };
 
 #define WINDOW_LEFT	0

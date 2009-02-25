@@ -332,7 +332,7 @@ static void PrintLine(uViewFile *v, int ln, int i)
 	if(v->intHLine == i)
 		v->w->screen->set_style(STYLE_HIGHLIGHT);
 	else if(ln == v->intLineCount)
-		v->w->screen->set_style(STYLE_EDIT_EOL);
+		v->w->screen->set_style(STYLE_VIEW_EDIT_EOL);
 	else
 		v->w->screen->set_style(STYLE_NORMAL);
 
@@ -866,6 +866,8 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 	struct stat stats;
 	int rc;
 	int old_mode;
+
+	gd->screen->init_view_styles(gd->screen);
 
 	if(LoadLine != NULL)
 		AddHistory(gd, "View buffer : %s\n", fn);

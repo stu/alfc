@@ -5,27 +5,27 @@ function DecomposeFiletypes()
 
 	filetypes.images = {}
 	filetypes.images.extensions = { "*.gif", "*.png", "*.jpg" }
-	filetypes.images.colour = "blue"
+	filetypes.images.type = FILETYPE_IMAGE
 
 	filetypes.archives = {}
 	filetypes.archives.extensions = { "*.tar", "*.taz", "*.tar.gz", "*.tar.bz", "*.tar.bz2", "*.tgz", "*.tbz", "*.zip", "*.lha", "*.rar", "*.arc" }
-	filetypes.archives.colour = "light red"
+	filetypes.archives.type = FILETYPE_ARCHIVE
 
 	filetypes.docs = {}
 	filetypes.docs.extensions = { "README", "INSTALL", "*.txt", "*.doc" }
-	filetypes.docs.colour = "green"
+	filetypes.docs.type = FILETYPE_DOC
 
 	filetypes.backup = {}
 	filetypes.backup.extensions = { "*.bak", "*.backup", "*~" }
-	filetypes.backup.colour = "dark grey"
-
+	filetypes.backup.type = FILETYPE_BACKUP
 
 	local k, v
 	local kk, vv
 
 	for k,v in pairs(filetypes) do
 		for kk, vv in pairs(v.extensions) do
-			ftypes[vv] = v.colour
+			ftypes[vv] = {}
+			ftypes[vv].type = v.type
 		end
 	end
 end

@@ -13,6 +13,15 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	ftypes = {}		-- allows colouring of filetypes via plugin
 
 
+	function findpattern(text, pattern, start)
+		local p
+		p = string.find(text, pattern, start)
+		if p ~= nil then
+			return string.sub(text, p, #text)
+		else
+			return ""
+		end
+	end
 
 	function CreateMenu(key, name, list)
 		local k,v, idx
@@ -651,10 +660,17 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 		ClearSortList()
 		for k,v in ipairs(lstSF) do
-			--debug_msg(v.data.name)
+			local kk,vv
 			AddToSortList(v.data.name)
-		end
+			SetFileType(v.data.name, 0)
 
+			for kk,vv in pairs(ftypes) do
+				if globmatch(string.lower(v.data.name), string.lower(kk)) == 0 then
+					SetFileType(v.data.name, vv.type)
+					break
+				end
+			end
+		end
 	end
 
 	function LoadPlugins()

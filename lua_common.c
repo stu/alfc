@@ -450,3 +450,24 @@ int gmec_SystemType(lua_State *L)
 #endif
 	return 1;
 }
+
+
+int gmec_globmatch(lua_State *L)
+{
+	struct lstr name;
+	struct lstr pattern;
+	uGlobalData *gd;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(name, 1);
+	GET_LUA_STRING(pattern, 2);
+
+	if( fnmatch(pattern.data, name.data, 0) == 0)
+		lua_pushnumber(L, 0);
+	else
+		lua_pushnumber(L, -1);
+
+	return 1;
+}

@@ -876,7 +876,16 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 
 	int style;
 
-	style = STYLE_NORMAL;
+	switch(de->type)
+	{
+		default:
+		case FILETYPE_DEFAULT: style = STYLE_NORMAL; break;
+		case FILETYPE_IMAGE: style = STYLE_DIR_IMAGE; break;
+		case FILETYPE_ARCHIVE: style = STYLE_DIR_ARCHIVE; break;
+		case FILETYPE_DOC: style = STYLE_DIR_DOCUMENT; break;
+		case FILETYPE_BACKUP: style = STYLE_DIR_BACKUP; break;
+	}
+
 
 	memset(buff, ' ', 1024);
 
@@ -891,12 +900,12 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 		buff2 = calloc(1, strlen(de->name) + strlen(de->lnk) + 16);
 		p = buff2;
 
-		style = STYLE_LINK;
+		style = STYLE_DIR_LINK;
 		// exec status overrides link status
 		if(ALFC_IsExec(de->name, de->attrs) == 0 && (de->attrs&S_IFDIR) == 0)
 		{
 			*p++='*';
-			style = STYLE_EXEC;
+			style = STYLE_DIR_EXEC;
 		}
 		else
 			*p++ = '@';
@@ -913,7 +922,7 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 		if(ALFC_IsExec(de->name, de->attrs) == 0 && (de->attrs&S_IFDIR) == 0)
 		{
 			*p++ = '*';
-			style = STYLE_EXEC;
+			style = STYLE_DIR_EXEC;
 		}
 
 		strcat(p, de->name);
@@ -1000,13 +1009,13 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 		}
 		else
 		{
-			style = STYLE_DIR;
+			style = STYLE_DIR_DIR;
 			if( S_ISLNK(de->attrs&S_IFLNK) != 0 )
 			{
 				sprintf(buff + size_off, " <D-LNK>");
 				p = strchr(buff + size_off, 0x0);
 				*p = ' ';
-				style = STYLE_LINK;
+				style = STYLE_DIR_LINK;
 			}
 			else
 			{
@@ -2843,6 +2852,7 @@ int ALFC_main(int start_mode, char *view_file)
 			if(gdata->mode == eMode_Viewer && view_file != NULL)
 			{
 				ViewFile(gdata, view_file, NULL);
+				gdata->screen->init_dir_styles(gdata->screen);
 				intFlag = 1;
 			}
 

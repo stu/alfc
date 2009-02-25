@@ -1711,6 +1711,7 @@ int gme_ViewFile(lua_State *L)
 
 	ViewFile(gd, name.data, NULL);
 	DrawAll(gd);
+	gd->screen->init_dir_styles(gd->screen);
 
 	return 0;
 }
@@ -2429,3 +2430,23 @@ int gme_Menu(lua_State *L)
 	return 0;
 }
 
+int gme_SetFileType(lua_State *L)
+{
+	uDirEntry *de;
+	int t;
+	struct lstr name;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(name, 1);
+	t = luaL_checknumber(L, 2);
+
+	de = GetFileByName(GetActFullList(gd), name.data);
+	if(de != NULL)
+	{
+		de->type = t;
+	}
+
+	return 0;
+}

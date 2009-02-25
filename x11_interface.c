@@ -25,22 +25,17 @@ struct udtStyles
 	int s_off;
 	int fg;
 	int bg;
-} styles[1 + MAX_STYLES] =
+} styles[16] =
 {
 	{ 0,0,0, 0, 0},
 	{ STYLE_TITLE, 0, 0, 0, 0},
 	{ STYLE_NORMAL, 0, 0, 0, 0 },
 	{ STYLE_HIGHLIGHT, 0, 0, 0, 0 },
-	{ STYLE_EDIT_EOL, 0, 0, 0, 0 },
-
-	{ STYLE_IMAGE, 0, 0, 0, 0 },
-	{ STYLE_DIR, 0, 0, 0, 0 },
-	{ STYLE_DOCUMENT, 0, 0, 0, 0 },
-	{ STYLE_ARCHIVE, 0, 0, 0, 0 },
-
 
 };
 
+
+rgbcolor xc_colors[32];
 
 static void GetScreenDimensions(int *w, int *h)
 {
@@ -52,10 +47,6 @@ static char* driver_name(void)
 {
 	return "X11";
 }
-
-
-rgbcolor xc_colors[32];
-
 
 static int convert_colour(int c)
 {
@@ -260,6 +251,23 @@ static void x11_init_style(int style, uint32_t fg, uint32_t bg)
 	init_style(style, fg, bg);
 }
 
+static void init_dir_styles(uScreenDriver *scr)
+{
+	init_style(STYLE_DIR_EXEC, 		CLR_BR_GREEN, CLR_BLACK);				// exec
+	init_style(STYLE_DIR_LINK, 		CLR_YELLOW, CLR_BLACK);				// link
+
+	init_style(STYLE_DIR_IMAGE, 	CLR_BR_BLUE, CLR_BLACK);				// image
+	init_style(STYLE_DIR_DIR, 		CLR_BR_BLUE, CLR_BLACK);				// dir
+	init_style(STYLE_DIR_DOCUMENT, 	CLR_BR_BLUE, CLR_BLACK);				// document
+	init_style(STYLE_DIR_ARCHIVE, 	CLR_BR_BLUE, CLR_BLACK);				// archive
+	init_style(STYLE_DIR_BACKUP, 	CLR_DK_GREY, CLR_BLACK);				// archive
+}
+
+static void init_view_styles(uScreenDriver *scr)
+{
+	init_style(STYLE_VIEW_EDIT_EOL, CLR_BR_GREEN, CLR_BLACK);	// end of line marker in viewer...
+}
+
 static int x11_screen_init(uScreenDriver *scr)
 {
 	int w, h;
@@ -284,23 +292,12 @@ static int x11_screen_init(uScreenDriver *scr)
 	init_style(STYLE_NORMAL,	CLR_GREY, 		CLR_BLACK);
 	init_style(STYLE_TITLE,  	CLR_WHITE, 		CLR_RED);
 	init_style(STYLE_HIGHLIGHT, CLR_GREY, 		CLR_BLUE);
-	init_style(STYLE_EDIT_EOL, 	CLR_BR_BLUE, 	CLR_BLACK);
 
 	init_style(STYLE_TITLE, scr->gd->clr_title_fg, scr->gd->clr_title_bg);					// title bar
 	init_style(STYLE_NORMAL, scr->gd->clr_foreground, scr->gd->clr_background);				// default
 	init_style(STYLE_HIGHLIGHT, scr->gd->clr_hi_foreground, scr->gd->clr_hi_background);	// highlight line
 
-	init_style(STYLE_EDIT_EOL, CLR_BR_GREEN, scr->gd->clr_background);	// end of line marker in viewer...
-
-	init_style(STYLE_EXEC, 		CLR_BR_GREEN, CLR_BLACK);				// exec
-	init_style(STYLE_LINK, 		CLR_YELLOW, CLR_BLACK);				// link
-
-	init_style(STYLE_IMAGE, 	CLR_BR_BLUE, CLR_BLACK);				// image
-	init_style(STYLE_DIR, 		CLR_BR_BLUE, CLR_BLACK);				// dir
-	init_style(STYLE_DOCUMENT, 	CLR_BR_BLUE, CLR_BLACK);				// document
-	init_style(STYLE_ARCHIVE, 	CLR_BR_BLUE, CLR_BLACK);				// archive
-
-
+	init_dir_styles(scr);
 
 	scr->set_style(STYLE_NORMAL);
 	scr->cls();
@@ -362,23 +359,7 @@ static void x11_cls(void)
 
 static void x11_set_style(int style)
 {
-	switch(style)
-	{
-		case STYLE_NORMAL:
-		case STYLE_TITLE:
-		case STYLE_HIGHLIGHT:
-		case STYLE_EDIT_EOL:
-
-		case STYLE_ARCHIVE:
-		case STYLE_DOCUMENT:
-		case STYLE_DIR:
-		case STYLE_IMAGE:
-		case STYLE_LINK:
-		case STYLE_EXEC:
-
-			intStyle = style;
-			break;
-	}
+	intStyle = style;
 }
 
 
@@ -448,4 +429,7 @@ uScreenDriver screen =
 	x11_init_style,
 	x11_print_hline,
 	x11_print_vline,
+
+	init_dir_styles,
+	init_view_styles
 };
