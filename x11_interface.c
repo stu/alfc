@@ -279,12 +279,11 @@ static int x11_screen_init(uScreenDriver *scr)
 
 	if(w == 0 || h == 0)
 	{
-		w = 1600;
-		h = 1000;
+		w = 1024;
+		h = 768;
 	}
 
-
-	if( w < 100*10 || h < 40*20)
+	if( w < 100*10 || h < 25*20)
 		//create_window(w/8 - 4, h/12 - 5, "Another Linux File Commander", x11_data_font_small, x11_data_font_small_SIZE);
 		create_window(100, 25, "Another Linux File Commander", x11_data_font_small, x11_data_font_small_SIZE);
 	else
@@ -307,7 +306,9 @@ static int x11_screen_init(uScreenDriver *scr)
 	x11_cls();
 	//x11_print_string("Another Linux File Commander");
 
+	update_window();
 
+	maximise_window();
 
 	return 0;
 }
@@ -349,6 +350,8 @@ static int x11_get_screen_width(void)
 static void x11_cls(void)
 {
 	int i;
+
+	clear();
 
 	for(i=0; i < window_height_in_chars(); i++)
 	{

@@ -2814,7 +2814,7 @@ int ALFC_main(int start_mode, char *view_file)
 				strcpy(gdata->columns, "ns");
 			}
 		}
-		else if(gdata->screen->get_screen_width() > 80 && gdata->screen->get_screen_width() <= 100)
+		else if(gdata->screen->get_screen_width() > 80 && gdata->screen->get_screen_width() < 100)
 		{
 			if(strlen(gdata->columns) >= 3)
 			{
@@ -2878,6 +2878,7 @@ int ALFC_main(int start_mode, char *view_file)
 				key = 0;
 				if( gdata->screen->screen_resized() != 0)
 				{
+					gdata->screen->cls();
 					BuildWindowLayoutLeft(gdata->win_left);
 					BuildWindowLayoutRight(gdata->win_right);
 					gdata->screen->set_style(STYLE_NORMAL);

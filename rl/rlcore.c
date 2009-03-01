@@ -398,6 +398,9 @@ void init_window(int x_size, int y_size, char* title)
 	screen_gc = XCreateGC(screen_display, screen_win, GCForeground, &screen_gc_values);
 	XSelectInput(screen_display, screen_win, ExposureMask | KeyPressMask | StructureNotifyMask);
 	XFlush(screen_display);
+	XSync(screen_display, False);
+
+	XSynchronize(screen_display, True);
 
 	while (1)
 	{
@@ -405,31 +408,17 @@ void init_window(int x_size, int y_size, char* title)
 
 		if (event.type == Expose)
 		{
+			XSync(screen_display, False);
 			screen_image = XGetImage(screen_display, screen_win, 0, 0, screen_x_size, screen_y_size, AllPlanes, ZPixmap);
+			XSync(screen_display, False);
 			break;
 		}
-		else if(event.type == ConfigureNotify)
-		{
-			screen_x_size = event.xconfigure.width;
-			screen_y_size = event.xconfigure.height;
-			screen_image = XGetImage(screen_display, screen_win, 0, 0, screen_x_size, screen_y_size, AllPlanes, ZPixmap);
-		}
-		else if(event.type == ReparentNotify)
-		{
-			// we dont care about this...
-		}
-		else if(event.type == MapNotify)
-		{
-			// dont care
-		}
-		else
-		{
-			fprintf(stderr, "unparsed event %i\n", event.type);
-			fflush(stderr);
-		}
-
 	}
+
+	XSynchronize(screen_display, False);
+
 	XFlush(screen_display);
+	XSync(screen_display, False);
 #else
 	real_x_size = screen_x_size + GetSystemMetrics(SM_CXFIXEDFRAME)*2;
 	real_y_size = screen_y_size + GetSystemMetrics(SM_CYFIXEDFRAME)*2 + GetSystemMetrics(SM_CYCAPTION);
@@ -734,7 +723,6 @@ void maximise_window(void)
 	XEvent xev;
 	Atom wm_state = XInternAtom(screen_display, "_NET_WM_STATE", False);
 	//Atom fullscreen = XInternAtom(screen_display, "_NET_WM_STATE_FULLSCREEN", False);
-
 	Atom fv = XInternAtom(screen_display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
 	Atom fh = XInternAtom(screen_display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
 
@@ -746,9 +734,8 @@ void maximise_window(void)
 	xev.xclient.data.l[0] = 2;
 	//xev.xclient.data.l[1] = fullscreen;
 	//xev.xclient.data.l[2] = 0;
-
-	xev.xclient.data.l[1] = fv;
-	xev.xclient.data.l[2] = fh;
+	xev.xclient.data.l[1] = fh;
+	xev.xclient.data.l[2] = fv;
 	xev.xclient.data.l[3] = 0;
 
 	XSendEvent(screen_display, DefaultRootWindow(screen_display), False, SubstructureNotifyMask, &xev);
