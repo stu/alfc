@@ -13,7 +13,7 @@ function DecomposeFiletypes()
 	filetypes.archives.type = FILETYPE_ARCHIVE
 
 	filetypes.docs = {}
-	filetypes.docs.extensions = { "README", "INSTALL", "*.txt", "*.doc", "*.me" }
+	filetypes.docs.extensions = { "README", "INSTALL", "*.txt", "*.doc", "*.me", "*.log" }
 	filetypes.docs.type = FILETYPE_DOC
 
 	filetypes.backup = {}

@@ -13,6 +13,7 @@
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
 #include <X11/keysymdef.h>
+#include <signal.h>
 #else
 #include <windows.h>
 #endif
@@ -24,17 +25,6 @@
 #include <string.h>
 
 #include "rllib.h"
-
-static int screen_x_size;
-static int screen_y_size;
-
-int window_width_in_pixels() {
-  return screen_x_size;
-}
-
-int window_height_in_pixels() {
-  return screen_y_size;
-}
 
 #ifdef xlib
 static Display* screen_display;
@@ -59,7 +49,200 @@ static char* bmpinfo;
 static key curkey;
 static int curkey_k;
 static int gotkey;
+#endif
 
+static int screen_x_size;
+static int screen_y_size;
+static int driver_redraw;
+
+static char* font_data[256];
+static int cur_byte;
+static int cur_bit;
+static int char_width;
+static int char_height;
+
+typedef struct
+{
+	char c;
+	rgbcolor f, b;
+} displayed_char;
+
+displayed_char* stored_display;
+
+int displayed_chars_different(displayed_char d, int char_num, rgbcolor fore, rgbcolor back)
+{
+	return d.c != char_num || colors_different(d.f, fore) || colors_different(d.b, back);
+}
+
+displayed_char get_displayed_char(int char_num, rgbcolor fore, rgbcolor back)
+{
+	displayed_char d;
+
+	d.c = char_num;
+	d.f = fore;
+	d.b = back;
+
+	return d;
+}
+
+int font_width_in_pixels()
+{
+	return char_width;
+}
+
+int font_height_in_pixels()
+{
+	return char_height;
+}
+
+int window_width_in_chars()
+{
+	return window_width_in_pixels() / font_width_in_pixels();
+	//return window_width_in_chars();
+}
+
+int window_height_in_chars()
+{
+	return window_height_in_pixels() / font_height_in_pixels();
+	//return window_height_in_chars();
+}
+
+static void read_font(int* cwidth, int* cheight, uint8_t *fdata, uint32_t flen)
+{
+	int char_num;
+	int x;
+	int y;
+
+	int offs;
+
+	cur_byte = 0;
+	cur_bit = 0;
+
+	if(! (memcmp(fdata+2, "RLF", 3) == 0 && (fdata[0] = 0xF3 && fdata[1] == 0x9E)))
+	{
+		printf("Error loading font: not RLF file.\n");
+		exit(3);
+	}
+
+	offs = 5;
+
+	char_width = fdata[offs++];
+	char_height = fdata[offs++];
+
+	for (char_num = 0; char_num < 256; char_num++)
+	{
+		font_data[char_num] = (char*) malloc(char_width*char_height);
+		for (y = 0; y < char_height; y++)
+		{
+			for (x = 0; x < char_width; x++)
+			{
+				int color;
+
+				if (cur_bit == 0)
+					cur_byte = fdata[offs++];
+
+				color = cur_byte & (1 << cur_bit);
+				cur_bit++;
+
+				if (cur_bit == 8)
+					cur_bit = 0;
+
+				if (color != 0)
+					font_data[char_num][y*char_width+x] = 1;
+				else
+					font_data[char_num][y*char_width+x] = 0;
+			}
+		}
+	}
+
+	(*cwidth) = char_width;
+	(*cheight) = char_height;
+}
+
+void create_window(int x_size, int y_size, char* title, uint8_t *fdata, uint32_t flen)
+{
+	int char_width, char_height, i, total_size;
+
+	read_font(&char_width, &char_height, fdata, flen);
+	init_window(x_size*char_width+4, y_size*char_height+4, title);
+
+	total_size = x_size * y_size * 4;
+	stored_display = (displayed_char*) malloc(total_size * sizeof(displayed_char));
+
+	for (i = 0; i < total_size; i++)
+		stored_display[i].c = 0;
+}
+
+void display_char_at_pixel(int char_num, rgbcolor fore, rgbcolor back, int start_x, int start_y)
+{
+	int x, y;
+
+	for (y = 0; y < char_height; y++)
+	{
+		for (x = 0; x < char_width; x++)
+		{
+			if (font_data[char_num][y*char_width+x])
+				set_pixel(x+start_x, y+start_y, fore);
+			else
+				set_pixel(x+start_x, y+start_y, back);
+		}
+	}
+}
+
+void display_char(int char_num, rgbcolor fore, rgbcolor back, int x, int y)
+{
+	if (displayed_chars_different(stored_display[(y * window_width_in_chars() + x)*4], char_num, fore, back))
+	{
+		display_char_at_pixel(char_num, fore, back, x * char_width + 2, y * char_height + 2);
+		stored_display[(y * window_width_in_chars() + x)*4] = get_displayed_char(char_num, fore, back);
+	}
+}
+
+void display_char_offset_x(int char_num, rgbcolor fore, rgbcolor back, int x, int y)
+{
+	if (displayed_chars_different(stored_display[(y * window_width_in_chars() + x)*4+1], char_num, fore, back))
+	{
+		display_char_at_pixel(char_num, fore, back, x * char_width + 2 + char_width/2, y * char_height + 2);
+		stored_display[(y * window_width_in_chars() + x)*4+1] = get_displayed_char(char_num, fore, back);
+	}
+}
+
+void display_char_offset_y(int char_num, rgbcolor fore, rgbcolor back, int x, int y)
+{
+	if (displayed_chars_different(stored_display[(y * window_width_in_chars() + x)*4+2], char_num, fore, back))
+	{
+		display_char_at_pixel(char_num, fore, back, x * char_width + 2, y * char_height + 2 + char_height/2);
+		stored_display[(y * window_width_in_chars() + x)*4+2] = get_displayed_char(char_num, fore, back);
+	}
+}
+
+void display_char_offset_both(int char_num, rgbcolor fore, rgbcolor back, int x, int y)
+{
+	if (displayed_chars_different(stored_display[(y * window_width_in_chars() + x)*4+3], char_num, fore, back))
+	{
+		display_char_at_pixel(char_num, fore, back, x * char_width + 2 + char_width/2, y * char_height + 2 + char_height/2);
+		stored_display[(y * window_width_in_chars() + x)*4+3] = get_displayed_char(char_num, fore, back);
+	}
+}
+
+
+int window_resized(void)
+{
+	int x = driver_redraw;
+	driver_redraw = 0;
+	return x;
+}
+
+int window_width_in_pixels(void) {
+	return screen_x_size;
+}
+
+int window_height_in_pixels(void) {
+	return screen_y_size;
+}
+
+
+#ifndef xlib
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message)
@@ -194,42 +377,29 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 }
 #endif
 
-#ifdef xlib
-void resize(Display *dpy, int mainW, int mainH, Window button)
-{
-	int buttonW, buttonH;
-	XWindowAttributes attr;
-
-	// fetch button size
-	XGetWindowAttributes( dpy, button, &attr );
-	buttonW = attr.width;
-	buttonH = attr.height;
-	// place button in middle
-	XMoveWindow( dpy, button, (mainW - buttonW) /2, (mainH - buttonH)/2 );
-}
-#endif
-
 void init_window(int x_size, int y_size, char* title)
 {
 #ifndef xlib
 	int real_x_size;
 	int real_y_size;
 	WNDCLASS wndcls;
+#else
+	//XWindowAttributes xwa;
 #endif
 	screen_x_size = x_size;
 	screen_y_size = y_size;
-
 #ifdef xlib
+
 	screen_win = XCreateSimpleWindow(screen_display, RootWindow(screen_display, screen_num), 0, 0, screen_x_size, screen_y_size, 0, BlackPixel(screen_display, screen_num), BlackPixel(screen_display, screen_num));
 	XStoreName(screen_display, screen_win, title);
 	XMapWindow(screen_display, screen_win);
 
 	screen_gc_values.foreground = WhitePixel(screen_display, screen_num);
-
 	screen_gc = XCreateGC(screen_display, screen_win, GCForeground, &screen_gc_values);
-	XSelectInput(screen_display, screen_win, ExposureMask | KeyPressMask);
-
+	XSelectInput(screen_display, screen_win, ExposureMask | KeyPressMask | StructureNotifyMask);
 	XFlush(screen_display);
+
+	//maximise_window();
 
 	while (1)
 	{
@@ -238,6 +408,15 @@ void init_window(int x_size, int y_size, char* title)
 		{
 			screen_image = XGetImage(screen_display, screen_win, 0, 0, screen_x_size, screen_y_size, AllPlanes, ZPixmap);
 			break;
+		}
+		else if(event.type == ConfigureNotify)
+		{
+			screen_x_size = event.xconfigure.width;
+			screen_y_size = event.xconfigure.height;
+
+			//screen_image = XGetImage(screen_display, screen_win, 0, 0, screen_x_size, screen_y_size, AllPlanes, ZPixmap);
+			//stored_display = (displayed_char*) realloc(stored_display, (screen_x_size*screen_y_size*4) * sizeof(displayed_char));
+			screen_image = XGetImage(screen_display, screen_win, 0, 0, screen_x_size, screen_y_size, AllPlanes, ZPixmap);
 		}
 	}
 	XFlush(screen_display);
@@ -262,11 +441,10 @@ void init_window(int x_size, int y_size, char* title)
 
 	ShowWindow(hwnd, SW_SHOW);
 #endif
-	init_colors();
 	update_window();
 }
 
-void destroy_window()
+void destroy_window(void)
 {
 #ifdef xlib
 	XDestroyImage(screen_image);
@@ -276,7 +454,7 @@ void destroy_window()
 #endif
 }
 
-void update_window()
+void update_window(void)
 {
 #ifdef xlib
 	XPutImage(screen_display, screen_win, screen_gc, screen_image, 0, 0, 0, 0, screen_x_size, screen_y_size);
@@ -310,8 +488,29 @@ rgbcolor get_pixel(int x, int y)
 	return r;
 }
 
+void clear(void)
+{
+	int i, j;
+	rgbcolor c;
+
+	c.r = 0;
+	c.g = 0;
+	c.b = 0;
+
+	for(i=0; i < screen_y_size; i++)
+	{
+		for(j=0; j<screen_x_size; j++)
+		{
+			set_pixel(i, j, c);
+		}
+	}
+}
+
 void set_pixel(int x, int y, rgbcolor color)
 {
+	if(x < 0 || x >= screen_x_size) return;
+	if(y < 0 || y >= screen_y_size) return;
+
 #ifdef xlib
 	char* ptr = screen_image->data + (y * screen_image->bytes_per_line + 4 * x);
 #else
@@ -340,25 +539,40 @@ key get_key(void)
 	MSG msg;
 #endif
 	update_window();
-	restart:
+	//restart:
 #ifdef xlib
 	while (1)
 	{
 		XNextEvent(screen_display, &event);
 		switch (event.type)
 		{
+			default:
+				goto gotkey_out;
+				break;
+
 			case ConfigureNotify:
-				if (screen_x_size != event.xconfigure.width || screen_y_size != event.xconfigure.height)
+				if (screen_x_size / font_width_in_pixels() != event.xconfigure.width/font_width_in_pixels() || screen_y_size/ font_height_in_pixels() != event.xconfigure.height/font_height_in_pixels())
 				{
 					screen_x_size = event.xconfigure.width;
 					screen_y_size = event.xconfigure.height;
-					fprintf(stderr, "Size changed to: %d by %d", screen_x_size, screen_y_size);
+
+					screen_image = XGetImage(screen_display, screen_win, 0, 0, screen_x_size, screen_y_size, AllPlanes, ZPixmap);
+					stored_display = (displayed_char*) realloc(stored_display, (screen_x_size*screen_y_size*4) * sizeof(displayed_char));
+					update_window();
+
+					driver_redraw = 1;
+					memset(&result, 0x0, sizeof(key));
+					return result;
 				}
+				else
+					update_window();
 				break;
 
 			case Expose:
 				if (event.xexpose.count)
 					break;
+
+				screen_image = XGetImage(screen_display, screen_win, 0, 0, screen_x_size, screen_y_size, AllPlanes, ZPixmap);
 				update_window();
 				break;
 
@@ -442,10 +656,10 @@ key get_key(void)
 	}
 #endif
 	result = key_to_keycode(curkey, curkey_k);
-	if (result.c == 0)
+	/*if (result.c == 0)
 	{
 		goto restart;
-	}
+	}*/
 
 	return result;
 }
@@ -454,6 +668,14 @@ int colors_different(rgbcolor a, rgbcolor b)
 {
 	return a.r != b.r || a.g != b.g || a.b != b.b;
 }
+
+
+#ifdef xlib
+void sig_abrt(int x)
+{
+	destroy_window();
+}
+#endif
 
 extern int rlmain(int argc, char *argv[]);
 #ifdef xlib
@@ -476,6 +698,8 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE x, LPSTR y, int z)
 
 	screen_x_size = s->width;
 	screen_y_size = s->height;
+
+	signal(SIGABRT, sig_abrt);
 #else
 	DEVMODE dvmdOrig;
 	HDC hdc = GetDC(NULL);
@@ -491,5 +715,34 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE x, LPSTR y, int z)
 
 	hinst = inst;
 #endif
+	driver_redraw = 0;
 	return rlmain(argc, argv);
 }
+
+void maximise_window(void)
+{
+	XEvent xev;
+	Atom wm_state = XInternAtom(screen_display, "_NET_WM_STATE", False);
+	//Atom fullscreen = XInternAtom(screen_display, "_NET_WM_STATE_FULLSCREEN", False);
+
+	Atom fv = XInternAtom(screen_display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+	Atom fh = XInternAtom(screen_display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+
+	memset(&xev, 0, sizeof(xev));
+	xev.type = ClientMessage;
+	xev.xclient.window = screen_win;
+	xev.xclient.message_type = wm_state;
+	xev.xclient.format = 32;
+	xev.xclient.data.l[0] = 2;
+	//xev.xclient.data.l[1] = fullscreen;
+	//xev.xclient.data.l[2] = 0;
+
+	xev.xclient.data.l[1] = fv;
+	xev.xclient.data.l[2] = fh;
+	xev.xclient.data.l[3] = 0;
+
+	XSendEvent(screen_display, DefaultRootWindow(screen_display), False, SubstructureNotifyMask, &xev);
+
+	driver_redraw = 1;
+}
+

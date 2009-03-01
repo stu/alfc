@@ -271,6 +271,7 @@ struct udtScreenDriver
 
 	void (*init_dir_styles)(uScreenDriver *scr);
 	void (*init_view_styles)(uScreenDriver *scr);
+	int (*screen_resized)(void);
 };
 
 #define WINDOW_LEFT	0

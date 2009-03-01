@@ -1349,11 +1349,34 @@ void DrawActive(uGlobalData *gd)
 	gd->screen->set_cursor(gd->screen->get_screen_height(), gd->screen->get_screen_width());
 }
 
+static void BuildWindowLayoutLeft(uWindow *w)
+{
+	int mw = w->gd->screen->get_screen_width() - 0;
+
+	w->offset_row = 0;
+	w->offset_col = (w->gd->screen->get_screen_width() - mw) / 2;
+	w->width = mw/2;
+	w->height = w->gd->screen->get_screen_height() - 5;
+
+	w->top_line = 0;
+	w->highlight_line = 0;
+}
+
+static void BuildWindowLayoutRight(uWindow *w)
+{
+	w->offset_row = 0;
+	w->offset_col = w->gd->screen->get_screen_width() / 2;
+	w->width = w->gd->screen->get_screen_width() - w->gd->win_left->width;
+	w->height = w->gd->screen->get_screen_height() - 5;
+
+	w->top_line = 0;
+	w->highlight_line = 0;
+}
+
+
 static void BuildWindowLayout(uGlobalData *gd)
 {
 	uWindow *w;
-
-	int mw = gd->screen->get_screen_width() - 0;
 
 	if(gd->win_left == NULL)
 		w = calloc(1, sizeof(uWindow));
@@ -1362,11 +1385,7 @@ static void BuildWindowLayout(uGlobalData *gd)
 
 	w->gd = gd;
 	w->screen = gd->screen;
-
-	w->offset_row = 0;
-	w->offset_col = (gd->screen->get_screen_width() - mw) / 2;
-	w->width = mw/2;
-	w->height = gd->screen->get_screen_height() - 5;
+	BuildWindowLayoutLeft(w);
 	gd->win_left = w;
 
 
@@ -1378,16 +1397,8 @@ static void BuildWindowLayout(uGlobalData *gd)
 	w->gd = gd;
 	w->screen = gd->screen;
 
-	w->offset_row = 0;
-	w->offset_col = gd->screen->get_screen_width() / 2;
-	w->width = gd->screen->get_screen_width() - gd->win_left->width;
-	w->height = gd->screen->get_screen_height() - 5;
+	BuildWindowLayoutRight(w);
 	gd->win_right = w;
-
-	gd->win_left->top_line = 0;
-	gd->win_right->top_line = 0;
-	gd->win_left->highlight_line = 0; //8 + w->height/2;
-	gd->win_right->highlight_line = 0;
 }
 
 char* ConvertKeyToName(int key)
@@ -1488,10 +1499,10 @@ void DrawMenuLine(uScreenDriver *screen, DList *lstHotKeys)
 		uKeyBinding *kb;
 		char *keyname;
 
-		kb = dlist_data(e);
-
 		if(e != dlist_head(lstHotKeys))
-			q+= 1;
+			q += 1;
+
+		kb = dlist_data(e);
 
 		keyname = ConvertKeyToName(kb->key);
 		if((q-buff) + strlen(keyname) + strlen(kb->sTitle) + 3 < screen->get_screen_width())
@@ -2640,6 +2651,8 @@ void DrawAll(uGlobalData *gd)
 {
 	int j;
 
+	assert(gd != NULL);
+
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawFileListWindow(GetInActWindow(gd), GetInActList(gd), GetInActDPath(gd));
 
@@ -2791,7 +2804,7 @@ int ALFC_main(int start_mode, char *view_file)
 		// screen too small to show nds columns
 		// date coumns waste too much space.
 		// todo - separate the date/time columns??
-		LogInfo("Screen is %i.%i\n", gdata->screen->get_screen_width(), gdata->screen->get_screen_height());
+		//LogInfo("Screen is %i.%i\n", gdata->screen->get_screen_width(), gdata->screen->get_screen_height());
 
 		if(gdata->screen->get_screen_width() <= 80)
 		{
@@ -2862,134 +2875,150 @@ int ALFC_main(int start_mode, char *view_file)
 				uKeyBinding *kb;
 				int mnu;
 
-				gdata->screen->set_cursor(gdata->screen->get_screen_height()-1, 4 + strlen(gdata->command));
-				key = gdata->screen->get_keypress();
-
-				mnu = ScanMenuOpen(gdata, key);
-				if(mnu != -1)
+				key = 0;
+				if( gdata->screen->screen_resized() != 0)
 				{
-					DrawMenu(gdata, mnu);
+					BuildWindowLayoutLeft(gdata->win_left);
+					BuildWindowLayoutRight(gdata->win_right);
+					gdata->screen->set_style(STYLE_NORMAL);
+					gdata->screen->cls();
 					DrawAll(gdata);
+					continue;
 				}
 				else
 				{
-					kb = ScanKey(gdata->lstHotKeys, key);
+					gdata->screen->set_cursor(gdata->screen->get_screen_height()-1, 4 + strlen(gdata->command));
+					key = gdata->screen->get_keypress();
+				}
 
-					if(kb != NULL)
+				if(key != 0)
+				{
+					mnu = ScanMenuOpen(gdata, key);
+					if(mnu != -1)
 					{
-						AddHistory(gdata, kb->sCommand);
-
-						// exec string via lua...
-						if(kb->sCommand[0] == ':')
-							exec_internal_command(gdata, kb->sCommand);
-						else if(kb->sCommand[0] == '@')
-						{
-							char *fn = ConvertDirectoryName(kb->sCommand+1);
-							ExecuteScript(gdata, fn);
-							free(fn);
-						}
-						else
-						{
-							ExecuteString(gdata, kb->sCommand);
-						}
+						DrawMenu(gdata, mnu);
+						DrawAll(gdata);
 					}
 					else
 					{
-						switch(key)
+						kb = ScanKey(gdata->lstHotKeys, key);
+
+						if(kb != NULL)
 						{
+							AddHistory(gdata, kb->sCommand);
 
-							case 0x21B: // ESC-ESC
-								intFlag = 1;
-								break;
+							// exec string via lua...
+							if(kb->sCommand[0] == ':')
+								exec_internal_command(gdata, kb->sCommand);
+							else if(kb->sCommand[0] == '@')
+							{
+								char *fn = ConvertDirectoryName(kb->sCommand+1);
+								ExecuteScript(gdata, fn);
+								free(fn);
+							}
+							else
+							{
+								ExecuteString(gdata, kb->sCommand);
+							}
+						}
+						else
+						{
+							switch(key)
+							{
 
-							case ALFC_KEY_TAB:	// TAB
-								SwitchPanes(gdata);
-								break;
+								case 0x21B: // ESC-ESC
+									intFlag = 1;
+									break;
 
-							case ALFC_KEY_ENTER:
-								if(gdata->command_length > 0)
-								{
-									AddHistory(gdata, gdata->command);
+								case ALFC_KEY_TAB:	// TAB
+									SwitchPanes(gdata);
+									break;
 
-									// exec string via lua...
-									if(gdata->command[0] == ':')
-										exec_internal_command(gdata, gdata->command);
-									else if(gdata->command[0] == '@')
+								case ALFC_KEY_ENTER:
+									if(gdata->command_length > 0)
 									{
-										char *fn = ConvertDirectoryName(gdata->command+1);
-										ExecuteScript(gdata, fn);
-										free(fn);
+										AddHistory(gdata, gdata->command);
+
+										// exec string via lua...
+										if(gdata->command[0] == ':')
+											exec_internal_command(gdata, gdata->command);
+										else if(gdata->command[0] == '@')
+										{
+											char *fn = ConvertDirectoryName(gdata->command+1);
+											ExecuteScript(gdata, fn);
+											free(fn);
+										}
+										else
+										{
+											ExecuteString(gdata, gdata->command);
+										}
+
+										gdata->command_length = 0;
+										gdata->command[gdata->command_length] = 0;
+
+										DrawCLI(gdata);
+									}
+									break;
+
+								case ALFC_KEY_LEFT:
+									updir(gdata);
+									break;
+
+								case ALFC_KEY_RIGHT:
+									downdir(gdata);
+									break;
+
+								case ALFC_KEY_UP:
+									scroll_up(gdata);
+									break;
+
+								case ALFC_KEY_DOWN:
+									scroll_down(gdata);
+									break;
+
+								case ALFC_KEY_HOME:
+									scroll_home(gdata);
+									break;
+
+								case ALFC_KEY_END:
+									scroll_end(gdata);
+									break;
+
+								case ALFC_KEY_PAGE_DOWN:
+									scroll_page_down(gdata);
+									break;
+
+								case ALFC_KEY_PAGE_UP:
+									scroll_page_up(gdata);
+									break;
+
+								default:
+									// terminal could send ^H (0x08) or ASCII DEL (0x7F)
+									if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
+									{
+										if(key == ALFC_KEY_DEL)
+										{
+											if(gdata->command_length > 0)
+											{
+												gdata->command_length -= 1;
+												gdata->command[gdata->command_length] = 0;
+											}
+										}
+										else
+										{
+											if(gdata->command_length < gdata->screen->get_screen_width() - 10)
+											{
+												gdata->command[gdata->command_length++] = key;
+												gdata->command[gdata->command_length] = 0;
+											}
+										}
+
+										DrawCLI(gdata);
 									}
 									else
-									{
-										ExecuteString(gdata, gdata->command);
-									}
-
-									gdata->command_length = 0;
-									gdata->command[gdata->command_length] = 0;
-
-									DrawCLI(gdata);
-								}
-								break;
-
-							case ALFC_KEY_LEFT:
-								updir(gdata);
-								break;
-
-							case ALFC_KEY_RIGHT:
-								downdir(gdata);
-								break;
-
-							case ALFC_KEY_UP:
-								scroll_up(gdata);
-								break;
-
-							case ALFC_KEY_DOWN:
-								scroll_down(gdata);
-								break;
-
-							case ALFC_KEY_HOME:
-								scroll_home(gdata);
-								break;
-
-							case ALFC_KEY_END:
-								scroll_end(gdata);
-								break;
-
-							case ALFC_KEY_PAGE_DOWN:
-								scroll_page_down(gdata);
-								break;
-
-							case ALFC_KEY_PAGE_UP:
-								scroll_page_up(gdata);
-								break;
-
-							default:
-								// terminal could send ^H (0x08) or ASCII DEL (0x7F)
-								if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
-								{
-									if(key == ALFC_KEY_DEL)
-									{
-										if(gdata->command_length > 0)
-										{
-											gdata->command_length -= 1;
-											gdata->command[gdata->command_length] = 0;
-										}
-									}
-									else
-									{
-										if(gdata->command_length < gdata->screen->get_screen_width() - 10)
-										{
-											gdata->command[gdata->command_length++] = key;
-											gdata->command[gdata->command_length] = 0;
-										}
-									}
-
-									DrawCLI(gdata);
-								}
-								else
-									LogInfo("Unknown key 0x%04x\n", key);
-								break;
+										LogInfo("Unknown key 0x%04x\n", key);
+									break;
+							}
 						}
 					}
 				}

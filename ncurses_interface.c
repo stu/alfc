@@ -25,14 +25,12 @@ struct udtStyles
 	int style;
 	int s_on;
 	int s_off;
-} styles[1 + MAX_STYLES] =
+} styles[16] =
 {
 	{ 0,0,0},
 	{ STYLE_TITLE, A_NORMAL, A_NORMAL },
 	{ STYLE_NORMAL, A_NORMAL, A_NORMAL },
 	{ STYLE_HIGHLIGHT, A_NORMAL, A_NORMAL },
-	{ STYLE_EDIT_EOL, A_NORMAL, A_NORMAL }
-
 };
 
 static char* driver_name(void)
@@ -298,6 +296,23 @@ static void nc_init_style(int style, uint32_t fg, uint32_t bg)
 	init_style(style, fg, bg);
 }
 
+static void init_dir_styles(uScreenDriver *scr)
+{
+	init_style(STYLE_DIR_EXEC, 		CLR_BR_GREEN, CLR_BLACK);				// exec
+	init_style(STYLE_DIR_LINK, 		CLR_YELLOW, CLR_BLACK);					// link
+
+	init_style(STYLE_DIR_IMAGE, 	CLR_BR_BLUE, CLR_BLACK);				// image
+	init_style(STYLE_DIR_DIR, 		CLR_BR_BLUE, CLR_BLACK);				// dir
+	init_style(STYLE_DIR_DOCUMENT, 	CLR_BR_BLUE, CLR_BLACK);				// document
+	init_style(STYLE_DIR_ARCHIVE, 	CLR_BR_BLUE, CLR_BLACK);				// archive
+	init_style(STYLE_DIR_BACKUP, 	CLR_DK_GREY, CLR_BLACK);				// archive
+}
+
+static void init_view_styles(uScreenDriver *scr)
+{
+	init_style(STYLE_VIEW_EDIT_EOL, CLR_BR_GREEN, CLR_BLACK);	// end of line marker in viewer...
+}
+
 static int nc_screen_init(uScreenDriver *scr)
 {
 	int i;
@@ -356,12 +371,10 @@ static int nc_screen_init(uScreenDriver *scr)
 	init_style(STYLE_NORMAL, scr->gd->clr_foreground, scr->gd->clr_background);				// default
 	init_style(STYLE_HIGHLIGHT, scr->gd->clr_hi_foreground, scr->gd->clr_hi_background);	// highlight line
 
-	init_style(STYLE_EDIT_EOL, CLR_BR_GREEN, scr->gd->clr_background);	// highlight line
+	init_dir_styles(scr);
 
 	scr->set_style(STYLE_NORMAL);
 	scr->cls();
-
-	//LogInfo("Screen is %ix%i\n", LINES, COLS);
 
 	return 0;
 }
@@ -431,16 +444,8 @@ static void nc_cls(void)
 
 static void nc_set_style(int style)
 {
-	switch(style)
-	{
-		case STYLE_NORMAL:
-		case STYLE_TITLE:
-		case STYLE_HIGHLIGHT:
-		case STYLE_EDIT_EOL:
-			intStyle = style;
-			setcolour(style, styles[style].s_on);
-			break;
-	}
+	intStyle = style;
+	setcolour(style, styles[style].s_on);
 }
 
 #ifndef __MINGW_H
@@ -450,6 +455,11 @@ static void terminate_signal(int a)
 	exit(-1);
 }
 #endif
+
+static int nc_resized(void)
+{
+	return 0;
+}
 
 int main(int argc, char *argv[])
 {
@@ -517,4 +527,8 @@ uScreenDriver screen =
 	nc_init_style,
 	nc_print_hline,
 	nc_print_vline,
+
+	init_dir_styles,
+	init_view_styles,
+	nc_resized
 };

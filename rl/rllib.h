@@ -11,11 +11,14 @@
 void create_window(int x_size, int y_size, char* title, uint8_t *font_data, uint32_t len);
 
 /* Destroys the window. You should always call this at the end of your program. */
-void destroy_window();
+void destroy_window(void);
 
 /* Get the window width and height. */
-int window_width_in_chars();
-int window_height_in_chars();
+int window_width_in_chars(void);
+int window_height_in_chars(void);
+int font_width_in_pixels(void);
+int font_height_in_pixels(void);
+int window_resized(void);
 
 /*
   Color functions.
@@ -30,9 +33,6 @@ typedef struct {
 
 /* Converts red, green, and blue components into a color. */
 rgbcolor rgb(int r, int g, int b);
-
-/* A list of predefined colors you can use. Note that this list is not complete, and you can create your own colors with the rgb function. */
-extern rgbcolor black, gray, red, blue, yellow, green, darkgray, darkgreen, lightblue, white;
 
 /*
   Keyboard input functions.
@@ -57,38 +57,11 @@ key get_key();
 
 /* Display a character */
 void display_char(int char_num, rgbcolor fore, rgbcolor back, int x, int y);
-
 void display_char_offset_x(int char_num, rgbcolor fore, rgbcolor back, int x, int y);
-
 void display_char_offset_y(int char_num, rgbcolor fore, rgbcolor back, int x, int y);
-
 void display_char_offset_both(int char_num, rgbcolor fore, rgbcolor back, int x, int y);
 
-/*
-  Messages.
-*/
 
-typedef struct {
-  int start_x;
-  int start_y;
-  int end_x;
-  int end_y;
-  int cur_y;
-} message_type;
-
-typedef struct {
-  rgbcolor fore;
-  rgbcolor back;
-} message_style;
-
-enum message_types {msg_normal, num_msg_types};
-enum message_styles {style_normal, num_style_types};
-
-void set_msg_type(int type, int start_x, int start_y, int end_x, int end_y);
-void set_msg_style(int style, rgbcolor fore, rgbcolor back);
-
-void clear_msg(int type);
-void print_msg(int type, int style, char* msg, ...);
 
 /*
   Low-level functions. You shouldn't need to use these at all.
@@ -109,9 +82,6 @@ void update_window();
 int colors_different(rgbcolor a, rgbcolor b);
 
 void display_char_at_pixel(int char_num, rgbcolor fore, rgbcolor back, int start_x, int start_y);
-
-extern message_type msg_types[num_msg_types];
-extern message_style msg_styles[num_style_types];
 
 enum
 {
@@ -142,3 +112,4 @@ enum
     RLKEY_BACK,
 };
 
+void maximise_window(void);

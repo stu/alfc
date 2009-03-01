@@ -12,18 +12,21 @@ lang.python.extensions = { ".py", ".pyc" }
 lang.lua = {}
 lang.lua.name = "Lua"
 lang.lua.tab = 4
+lang.python.tabs_to_spaces = false
 lang.lua.extensions = { ".lua" }
 
 -- Ruby
 lang.ruby = {}
 lang.ruby.name = "Ruby"
 lang.ruby.tab = 4
+lang.python.tabs_to_spaces = false
 lang.ruby.extensions = { ".rb" }
 
 -- C / C++
 lang.c = {}
 lang.c.name = "C/C++"
 lang.c.tab = 4
+lang.python.tabs_to_spaces = false
 lang.c.extensions = { ".c", ".h", ".cc", ".cpp", ".hh", ".hpp" }
 
 
@@ -31,6 +34,7 @@ lang.c.extensions = { ".c", ".h", ".cc", ".cpp", ".hh", ".hpp" }
 lang.text = {}
 lang.text.name = "Text"
 lang.text.tab = 8
-lang.text.extensions = { ".txt", ".doc", ".me" }
+lang.python.tabs_to_spaces = false
+lang.text.extensions = { ".txt", ".doc", ".me", ".log" }
 
 

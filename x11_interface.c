@@ -177,14 +177,17 @@ static void x11_print_string_abs(const char *s)
 	}
 }
 
+static int x11_resized(void)
+{
+	return window_resized();
+}
+
 static uint32_t x11_get_keypress(void)
 {
 	key k;
 	uint32_t x = 0;
 
 	k = get_key();
-
-	//LogInfo("key = %04X, %04X, %02X\n", k.ctrl, k.shift, k.c);
 
 	if((k.ctrl & 1) == 1)
 		x = ALFC_KEY_CTRL + k.c + 'A' - 1;
@@ -254,7 +257,7 @@ static void x11_init_style(int style, uint32_t fg, uint32_t bg)
 static void init_dir_styles(uScreenDriver *scr)
 {
 	init_style(STYLE_DIR_EXEC, 		CLR_BR_GREEN, CLR_BLACK);				// exec
-	init_style(STYLE_DIR_LINK, 		CLR_YELLOW, CLR_BLACK);				// link
+	init_style(STYLE_DIR_LINK, 		CLR_YELLOW, CLR_BLACK);					// link
 
 	init_style(STYLE_DIR_IMAGE, 	CLR_BR_BLUE, CLR_BLACK);				// image
 	init_style(STYLE_DIR_DIR, 		CLR_BR_BLUE, CLR_BLACK);				// dir
@@ -274,18 +277,19 @@ static int x11_screen_init(uScreenDriver *scr)
 
 	GetScreenDimensions(&w, &h);
 
-	LogInfo("Screen dimensions %ix%i\n", w, h);
-
 	if(w == 0 || h == 0)
 	{
 		w = 1600;
 		h = 1000;
 	}
 
+
 	if( w < 100*10 || h < 40*20)
-		create_window(w/8 - 4, h/12 - 5, "Another Linux File Commander", x11_data_font_small, x11_data_font_small_SIZE);
+		//create_window(w/8 - 4, h/12 - 5, "Another Linux File Commander", x11_data_font_small, x11_data_font_small_SIZE);
+		create_window(100, 25, "Another Linux File Commander", x11_data_font_small, x11_data_font_small_SIZE);
 	else
-		create_window(w/10 - 4,  h/20 - 5, "Another Linux File Commander", x11_data_font, x11_data_font_SIZE);
+		//create_window(w/10 - 4,  h/20 - 5, "Another Linux File Commander", x11_data_font, x11_data_font_SIZE);
+		create_window(100, 25, "Another Linux File Commander", x11_data_font, x11_data_font_SIZE);
 
 	x11_init_colours();
 
@@ -300,12 +304,10 @@ static int x11_screen_init(uScreenDriver *scr)
 	init_dir_styles(scr);
 
 	scr->set_style(STYLE_NORMAL);
-	scr->cls();
-
 	x11_cls();
-	x11_print_string("Another Linux File Commander");
+	//x11_print_string("Another Linux File Commander");
 
-	//x11_get_keypress();
+
 
 	return 0;
 }
@@ -355,6 +357,7 @@ static void x11_cls(void)
 	}
 
 	x11_setcursor(1,1);
+	update_window();
 }
 
 static void x11_set_style(int style)
@@ -431,5 +434,6 @@ uScreenDriver screen =
 	x11_print_vline,
 
 	init_dir_styles,
-	init_view_styles
+	init_view_styles,
+	x11_resized
 };

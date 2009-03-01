@@ -1,5 +1,5 @@
 
-rll_objs = %w(rlcore.o rltext.o rlmsg.o rlcolor.o)
+rll_objs = %w(rlcore.o)
 
 desc "lib file"
 task "librl.a" => rll_objs do |t|
