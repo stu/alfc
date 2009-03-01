@@ -399,11 +399,10 @@ void init_window(int x_size, int y_size, char* title)
 	XSelectInput(screen_display, screen_win, ExposureMask | KeyPressMask | StructureNotifyMask);
 	XFlush(screen_display);
 
-	//maximise_window();
-
 	while (1)
 	{
 		XNextEvent(screen_display, &event);
+
 		if (event.type == Expose)
 		{
 			screen_image = XGetImage(screen_display, screen_win, 0, 0, screen_x_size, screen_y_size, AllPlanes, ZPixmap);
@@ -413,11 +412,22 @@ void init_window(int x_size, int y_size, char* title)
 		{
 			screen_x_size = event.xconfigure.width;
 			screen_y_size = event.xconfigure.height;
-
-			//screen_image = XGetImage(screen_display, screen_win, 0, 0, screen_x_size, screen_y_size, AllPlanes, ZPixmap);
-			//stored_display = (displayed_char*) realloc(stored_display, (screen_x_size*screen_y_size*4) * sizeof(displayed_char));
 			screen_image = XGetImage(screen_display, screen_win, 0, 0, screen_x_size, screen_y_size, AllPlanes, ZPixmap);
 		}
+		else if(event.type == ReparentNotify)
+		{
+			// we dont care about this...
+		}
+		else if(event.type == MapNotify)
+		{
+			// dont care
+		}
+		else
+		{
+			fprintf(stderr, "unparsed event %i\n", event.type);
+			fflush(stderr);
+		}
+
 	}
 	XFlush(screen_display);
 #else
@@ -572,7 +582,7 @@ key get_key(void)
 				if (event.xexpose.count)
 					break;
 
-				screen_image = XGetImage(screen_display, screen_win, 0, 0, screen_x_size, screen_y_size, AllPlanes, ZPixmap);
+				//screen_image = XGetImage(screen_display, screen_win, 0, 0, screen_x_size, screen_y_size, AllPlanes, ZPixmap);
 				update_window();
 				break;
 

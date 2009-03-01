@@ -380,7 +380,7 @@ static int DisplayStatus(uViewFile *v)
 		sprintf(p, "MIXED CR/LF");
 
 	p = strchr(buff, 0x0);
-	sprintf(p, " (%s) ", v->ftype);
+	sprintf(p, " (%s)", v->ftype);
 
 	p = strchr(buff, 0x0);
 	sprintf(p, ", tab:%2i ", v->tabsize);
