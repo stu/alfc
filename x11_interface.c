@@ -373,6 +373,7 @@ int rlmain(int argc, char *argv[])
 	int start_mode = eMode_Directory;
 	char *view_file = NULL;
 
+
 	for(i=1; i<argc; i++)
 	{
 		if(argv[i][0] == '-')
@@ -409,7 +410,7 @@ int rlmain(int argc, char *argv[])
 		}
 	}
 
-	return ALFC_main(eMode_Directory, NULL);
+	return ALFC_main(start_mode, view_file);
 }
 
 uScreenDriver screen =
