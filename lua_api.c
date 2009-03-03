@@ -251,6 +251,7 @@ int gme_SetCurrentWorkingDirectory(lua_State *L)
 	GET_LUA_STRING(cdx, 1);
 
 	dx = ConvertDirectoryName(cdx.data);
+
 	lua_pushnumber(L, change_dir(gd, dx));
 	free(dx);
 

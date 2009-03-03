@@ -876,6 +876,8 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 
 	int style;
 
+	assert(de != NULL);
+
 	switch(de->type)
 	{
 		default:
@@ -1192,6 +1194,7 @@ uDirEntry* GetHighlightedFile(DList *lstFiles, int idx, int tr)
 {
 	DLElement *e;
 	e = dlist_head(lstFiles);
+
 	while(tr > 0 && e != NULL)
 	{
 		tr -= 1;
@@ -1565,10 +1568,14 @@ void SwitchPanes(uGlobalData *gd)
 	date_off = CalcDateOff(w, size_off);
 	max_namelen = date_off - 2;
 	de = GetHighlightedFile(GetActList(gd), w->highlight_line, w->top_line);
-	j = w->highlight_line;
-	w->highlight_line = -1;
-	PrintFileLine(de, j, w, max_namelen, size_off, date_off);
-	w->highlight_line = j;
+	// no files in directory....
+	if(de != NULL)
+	{
+		j = w->highlight_line;
+		w->highlight_line = -1;
+		PrintFileLine(de, j, w, max_namelen, size_off, date_off);
+		w->highlight_line = j;
+	}
 
 	if(gd->selected_window == WINDOW_RIGHT)
 	{
@@ -1579,13 +1586,13 @@ void SwitchPanes(uGlobalData *gd)
 		gd->selected_window = WINDOW_RIGHT;
 	}
 
-
 	w = GetActWindow(gd);
 	size_off = CalcSizeOff(w, w->width-3);
 	date_off = CalcDateOff(w, size_off);
 	max_namelen = date_off - 2;
 	de = GetHighlightedFile(GetActList(gd), w->highlight_line, w->top_line);
-	PrintFileLine(de, w->highlight_line, w, max_namelen, size_off, date_off);
+	if(de != NULL)
+		PrintFileLine(de, w->highlight_line, w, max_namelen, size_off, date_off);
 
 	DrawActive(gd);
 	DrawStatusInfoLine(gd);

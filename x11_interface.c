@@ -308,8 +308,6 @@ static int x11_screen_init(uScreenDriver *scr)
 
 	update_window();
 
-	maximise_window();
-
 	return 0;
 }
 
