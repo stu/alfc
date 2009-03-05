@@ -239,6 +239,8 @@ typedef struct udtWindow
 	uScreenDriver *screen;
 
 	int		tagged_count;
+	uint64_t tagged_size;
+
 } uWindow;
 
 struct udtScreenDriver

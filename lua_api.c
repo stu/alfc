@@ -1011,9 +1011,15 @@ int gme_TagFile(lua_State *L)
 		{
 			de->tagged ^= 1;
 			if(de->tagged == 1)
+			{
 				GetActWindow(gd)->tagged_count += 1;
+				GetActWindow(gd)->tagged_size += de->size;
+			}
 			else
+			{
 				GetActWindow(gd)->tagged_count -= 1;
+				GetActWindow(gd)->tagged_size -= de->size;
+			}
 
 			// test if its visible
 			if( IsVisible(gd, count) == 1)
@@ -2113,6 +2119,7 @@ int gme_ClearAllTags(lua_State *L)
 	}
 
 	GetActWindow(gd)->tagged_count = 0;
+	GetActWindow(gd)->tagged_size = 0;
 
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
@@ -2130,16 +2137,20 @@ int gme_TagAll(lua_State *L)
 	DLElement *e;
 	uDirEntry *de;
 
+	GetActWindow(gd)->tagged_size = 0;
+	GetActWindow(gd)->tagged_count = 0;
+
 	e = dlist_head(GetActList(gd));
 	while(e != NULL)
 	{
 		de = dlist_data(e);
 		de->tagged = 1;
 
+		GetActWindow(gd)->tagged_size += de->size;
+		GetActWindow(gd)->tagged_count += 1;
+
 		e = dlist_next(e);
 	}
-
-	GetActWindow(gd)->tagged_count = dlist_size(GetActList(gd));
 
 	DrawActive(gd);
 	DrawStatusInfoLine(gd);
@@ -2161,6 +2172,9 @@ int gme_TagFlip(lua_State *L)
 	int count = 0;
 
 	e = dlist_head(GetActList(gd));
+
+	GetActWindow(gd)->tagged_size = 0;
+
 	while(e != NULL)
 	{
 		de = dlist_data(e);
@@ -2170,6 +2184,10 @@ int gme_TagFlip(lua_State *L)
 			count += 1;
 
 		de->tagged ^= 1;
+		if(de->tagged == 1)
+		{
+			GetActWindow(gd)->tagged_size += de->size;
+		}
 	}
 
 	GetActWindow(gd)->tagged_count = count;

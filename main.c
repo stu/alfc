@@ -867,12 +867,51 @@ static int CalcDateOff(uWindow *w, int end)
 	return (end - (w->gd->date_fmt_len + w->gd->time_fmt_len + 2));
 }
 
+static void compress_size(char *buff, uint64_t xx)
+{
+	int round;
+
+	if(xx < 1024)
+	{
+		sprintf(buff, "%6uby", (uint32_t)xx);
+	}
+	else
+	{
+		round = ((xx*10)/1024)%10;
+		xx /= 1024;
+		if(xx < 1024)
+		{
+			sprintf(buff, "%4u.%ikb", (uint32_t)xx, round);
+		}
+		else
+		{
+			round = ((xx*10)/1024)%10;
+			xx /= 1024;
+			if(xx < 1024)
+			{
+				sprintf(buff, "%4u.%imb", (uint32_t)xx, round);
+			}
+			else
+			{
+				round = ((xx*10)/1024)%10;
+				xx /= 1024;
+				if(xx < 1024)
+					sprintf(buff, "%4u.%igb", (uint32_t)xx, round);
+				else
+				{
+					sprintf(buff, "%4u.%itb", (uint32_t)(xx/(1024*1024)), round);
+				}
+			}
+		}
+	}
+}
 
 static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, int size_off, int date_off)
 {
 	char buff[1024];
 	char *buff2;
 	char *p;
+	uint64_t xx;
 
 	int style;
 
@@ -965,45 +1004,10 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 			}
 			else
 			{
-				int round;
-				uint64_t xx = de->size;
-
 				if(S_ISLNK(de->attrs&S_IFLNK) != 0)
 					xx = de->lnk_size;
 
-				if(xx < 1024)
-				{
-					sprintf(buff + size_off, "%6uby", (uint32_t)xx);
-				}
-				else
-				{
-					round = ((xx*10)/1024)%10;
-					xx /= 1024;
-					if(xx < 1024)
-					{
-						sprintf(buff + size_off, "%4u.%ikb", (uint32_t)xx, round);
-					}
-					else
-					{
-						round = ((xx*10)/1024)%10;
-						xx /= 1024;
-						if(xx < 1024)
-						{
-							sprintf(buff + size_off, "%4u.%imb", (uint32_t)xx, round);
-						}
-						else
-						{
-							round = ((xx*10)/1024)%10;
-							xx /= 1024;
-							if(xx < 1024)
-								sprintf(buff + size_off, "%4u.%igb", (uint32_t)xx, round);
-							else
-							{
-								sprintf(buff + size_off, "%4u.%itb", (uint32_t)(xx/(1024*1024)), round);
-							}
-						}
-					}
-				}
+				compress_size(buff+size_off, de->size);
 			}
 
 			p = strchr(buff + size_off, 0x0);
@@ -1537,12 +1541,18 @@ void DrawStatusInfoLine(uGlobalData *gd)
 	char *buff;
 	int m = gd->screen->get_screen_width();
 	char *p;
+	char ssize[64];
 
 	buff = malloc(4 + m);
 
 	memset(buff, ' ', m);
 
-	sprintf(buff, "Tagged : %i file%c", GetActWindow(gd)->tagged_count, GetActWindow(gd)->tagged_count == 1 ? 0 : 's' );
+    compress_size(ssize, GetActWindow(gd)->tagged_size);
+
+	while(ssize[0] == ' ')
+		memmove(ssize, ssize +1, strlen(ssize)+1);
+
+	sprintf(buff, "Tagged : %i file%c (%s)", GetActWindow(gd)->tagged_count, GetActWindow(gd)->tagged_count == 1 ? 0 : 's', ssize );
 	p = strchr(buff, 0x0);
 	*p = ' ';
 	buff[m] = 0;
@@ -2028,6 +2038,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		gd->lstLeft = ResetFilteredFileList(gd->lstFilterLeft, gd->lstFullLeft);
 
 		gd->win_left->tagged_count = 0;
+		gd->win_left->tagged_size = 0;
 		assert(gd->lstFilterLeft != NULL);
 		assert(gd->lstFullLeft != NULL);
 		assert(gd->lstLeft != NULL);
@@ -2055,6 +2066,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		gd->lstRight = ResetFilteredFileList(gd->lstFilterRight, gd->lstFullRight);
 
 		gd->win_right->tagged_count = 0;
+		gd->win_right->tagged_size = 0;
 		assert(gd->lstFilterRight != NULL);
 		assert(gd->lstFullRight != NULL);
 		assert(gd->lstRight != NULL);
@@ -2211,9 +2223,15 @@ void tag(uGlobalData *gd)
 	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
 	de->tagged ^= 1;
 	if(de->tagged == 1)
+	{
 		GetActWindow(gd)->tagged_count += 1;
+		GetActWindow(gd)->tagged_size += de->size;
+	}
 	else
+	{
 		GetActWindow(gd)->tagged_count -= 1;
+		GetActWindow(gd)->tagged_size -= de->size;
+	}
 
 	gd->screen->set_style(STYLE_HIGHLIGHT);
 	gd->screen->set_cursor(GetActWindow(gd)->offset_row + GetActWindow(gd)->highlight_line + 2, GetActWindow(gd)->offset_col + 2 );
@@ -2506,6 +2524,7 @@ int TagWithGlob(uGlobalData *gd, char *pattern)
 			{
 				de->tagged = 1;
 				GetActWindow(gd)->tagged_count += 1;
+				GetActWindow(gd)->tagged_size += de->size;
 
 				count += 1;
 			}
@@ -2541,6 +2560,7 @@ int TagWithFilter(uGlobalData *gd, char *pattern)
 				{
 					de->tagged = 1;
 					GetActWindow(gd)->tagged_count += 1;
+					GetActWindow(gd)->tagged_size += de->size;
 
 					count += 1;
 				}
