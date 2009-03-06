@@ -439,6 +439,8 @@ DList* GetInActList(uGlobalData *gd)
 
 uWindow* GetActWindow(uGlobalData *gd)
 {
+	assert(gd->win_left != NULL);
+	assert(gd->win_right != NULL);
 	if(gd->selected_window == WINDOW_RIGHT)
 		return gd->win_right;
 	else
@@ -545,22 +547,25 @@ char* ConvertDirectoryName(const char *x)
 			c = *z;
 			*z = 0;
 
-			if(p[0] != 0 && p[strlen(p)-1] != '/')
-				strcat(p, "/");
-
 			env = ALFC_getenv(q);
 			*z = c;
 
 			if(env != NULL)
 			{
+				if(p[0] != 0 && p[strlen(p)-1] != '/')
+					strcat(p, "/");
+
 				if(p[0] != 0 && *env == '/')
 					env += 1;
 
 				strcat(p, env);
+				q = z;
 			}
-
-
-			q = z;
+			else
+			{
+				strcat(p, "$");
+				q = idx + 1;
+			}
 		}
 		else
 		{
@@ -742,7 +747,7 @@ static char* ReadLink(char *fn, uint32_t len)
 	return realloc(buff, strlen(buff)+1);
 }
 
-DList* GetFiles(char *path, int hidden)
+DList* GetFiles(uGlobalData *gd, char *path, int hidden)
 {
 	DList *lstF;
 	DIR *d;
@@ -759,65 +764,72 @@ DList* GetFiles(char *path, int hidden)
 
 	cpath = replace(path, '\\', '/');
 
-	//if( chdir(cpath) == 0)
-	//{
-		d = opendir(cpath);
-		if(d != NULL)
+	assert(gd != NULL);
+	assert(GetActWindow(gd) != NULL);
+
+	GetActWindow(gd)->hidden_count = 0;
+	GetActWindow(gd)->total_size = 0;
+
+	d = opendir(cpath);
+	if(d != NULL)
+	{
+		dr = readdir(d);
+
+		while(dr != NULL)
 		{
-			dr = readdir(d);
-
-			while(dr != NULL)
+			if( ( strcmp(dr->d_name, ".") != 0 && strcmp(dr->d_name, "..") != 0))
 			{
-				if( ( strcmp(dr->d_name, ".") != 0 && strcmp(dr->d_name, "..") != 0))
+				ALFC_stat(dr->d_name, &buff);
+
+				de = malloc(sizeof(uDirEntry));
+				memset(de, 0x0, sizeof(uDirEntry));
+
+				if(ALFC_IsHidden(dr->d_name, buff.st_mode) == 0)
+					GetActWindow(gd)->hidden_count += 1;
+
+				de->size = ALFC_GetFileSize(de->name, &buff);
+
+				if( hidden == 0 || ALFC_IsHidden(dr->d_name, buff.st_mode) != 0)
 				{
-					ALFC_stat(dr->d_name, &buff);
+					de->name = strdup(dr->d_name);
+					de->attrs = ALFC_GetFileAttrs(de, &buff);
+					de->time = ALFC_GetFileTime(de, &buff);
 
-					if( hidden == 0 || ALFC_IsHidden(dr->d_name, buff.st_mode) != 0)
+					// test link to see if its a directory...
+					if(S_ISLNK(buff.st_mode) != 0)
 					{
-						de = malloc(sizeof(uDirEntry));
-						memset(de, 0x0, sizeof(uDirEntry));
+						de->lnk = ReadLink(de->name, de->size);
 
-						de->name = strdup(dr->d_name);
+						ALFC_stat(de->lnk, &buff);
+						de->lnk_size = ALFC_GetFileSize(de->lnk, &buff);
+						GetActWindow(gd)->total_size += de->lnk_size;
 
-						de->size = ALFC_GetFileSize(de->name, &buff);
-						de->attrs = ALFC_GetFileAttrs(de, &buff);
-						de->time = ALFC_GetFileTime(de, &buff);
-
-						// test link to see if its a directory...
-						if(S_ISLNK(buff.st_mode) != 0)
+						if(S_ISDIR(buff.st_mode) != 0)
 						{
-							de->lnk = ReadLink(de->name, de->size);
-
-							ALFC_stat(de->lnk, &buff);
-							de->lnk_size = ALFC_GetFileSize(de->lnk, &buff);
-
-							if(S_ISDIR(buff.st_mode) != 0)
-							{
-								de->attrs |= S_IFDIR;
-							}
+							de->attrs |= S_IFDIR;
 						}
-
-						dlist_ins(lstF, de);
 					}
-				}
+					else
+						GetActWindow(gd)->total_size += de->size;
 
-				dr = readdir(d);
+					dlist_ins(lstF, de);
+				}
+				else
+				{
+                	GetActWindow(gd)->total_size += de->size;
+					free(de);
+				}
 			}
 
-			closedir(d);
-		}
-		else
-		{
-			LogError("Unable to opendir %s\nerror (%i) %s\n", cpath, errno, strerror(errno));
+			dr = readdir(d);
 		}
 
-		//chdir(dirx);
-		//free(dirx);
-	//}
-	//else
-	//{
-	//	LogError("Unable to cd to %s\nerror (%i) %s\n", cpath, errno, strerror(errno));
-	//}
+		closedir(d);
+	}
+	else
+	{
+		LogError("Unable to opendir %s\nerror (%i) %s\n", cpath, errno, strerror(errno));
+	}
 
 	free(cpath);
 
@@ -870,6 +882,8 @@ static int CalcDateOff(uWindow *w, int end)
 static void compress_size(char *buff, uint64_t xx)
 {
 	int round;
+
+	buff[0] = 0;
 
 	if(xx < 1024)
 	{
@@ -1542,17 +1556,27 @@ void DrawStatusInfoLine(uGlobalData *gd)
 	int m = gd->screen->get_screen_width();
 	char *p;
 	char ssize[64];
+	char ssize2[64];
+
+	char *x1, *x2;
 
 	buff = malloc(4 + m);
 
 	memset(buff, ' ', m);
 
     compress_size(ssize, GetActWindow(gd)->tagged_size);
-
 	while(ssize[0] == ' ')
 		memmove(ssize, ssize +1, strlen(ssize)+1);
 
-	sprintf(buff, "Tagged : %i file%c (%s)", GetActWindow(gd)->tagged_count, GetActWindow(gd)->tagged_count == 1 ? 0 : 's', ssize );
+	compress_size(ssize2, GetActWindow(gd)->total_size);
+	while(ssize2[0] == ' ')
+		memmove(ssize2, ssize2 +1, strlen(ssize2)+1);
+
+	x1 = PrintNumber(dlist_size(GetActFullList(gd)));
+	x2 = PrintNumber(GetActWindow(gd)->hidden_count);
+
+
+	sprintf(buff, "Tagged : %i file%c (%s) : Total Dir Size (%s), Total Files (%s), Hidden Files (%s)", GetActWindow(gd)->tagged_count, GetActWindow(gd)->tagged_count == 1 ? 0 : 's', ssize, ssize2, x1, x2 );
 	p = strchr(buff, 0x0);
 	*p = ' ';
 	buff[m] = 0;
@@ -1560,6 +1584,9 @@ void DrawStatusInfoLine(uGlobalData *gd)
 	gd->screen->set_style(STYLE_TITLE);
 	gd->screen->set_cursor(gd->screen->get_screen_height()-2, 1);
 	gd->screen->print(buff);
+
+	free(x1);
+	free(x2);
 
 	free(buff);
 }
@@ -2020,6 +2047,11 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 {
 	if(gd->selected_window == WINDOW_LEFT)
 	{
+		gd->win_left->total_size = 0;
+		gd->win_left->hidden_count = 0;
+		gd->win_left->tagged_count = 0;
+		gd->win_left->tagged_size = 0;
+
 		free(gd->left_dir);
 		gd->left_dir = GetCurrentWorkingDirectory();
 		AddMRU(gd, gd->lstMRULeft, gd->left_dir);
@@ -2028,7 +2060,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 			dlist_destroy(gd->lstFullLeft);
 			free(gd->lstFullLeft);
 		}
-		gd->lstFullLeft = GetFiles(gd->left_dir, IsTrue(INI_get(gd->optfile, "options", "show_hidden")));
+		gd->lstFullLeft = GetFiles(gd, gd->left_dir, IsTrue(INI_get(gd->optfile, "options", "show_hidden")));
 
 		if(gd->lstLeft != NULL)
 		{
@@ -2037,8 +2069,6 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		}
 		gd->lstLeft = ResetFilteredFileList(gd->lstFilterLeft, gd->lstFullLeft);
 
-		gd->win_left->tagged_count = 0;
-		gd->win_left->tagged_size = 0;
 		assert(gd->lstFilterLeft != NULL);
 		assert(gd->lstFullLeft != NULL);
 		assert(gd->lstLeft != NULL);
@@ -2048,6 +2078,11 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 	}
 	else
 	{
+		gd->win_right->tagged_count = 0;
+		gd->win_right->tagged_size = 0;
+		gd->win_right->total_size = 0;
+		gd->win_right->hidden_count = 0;
+
 		free(gd->right_dir);
 		gd->right_dir = GetCurrentWorkingDirectory();
 		AddMRU(gd, gd->lstMRURight, gd->right_dir);
@@ -2056,7 +2091,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 			dlist_destroy(gd->lstFullRight);
 			free(gd->lstFullRight);
 		}
-		gd->lstFullRight = GetFiles(gd->right_dir, IsTrue(INI_get(gd->optfile, "options", "show_hidden")));
+		gd->lstFullRight = GetFiles(gd, gd->right_dir, IsTrue(INI_get(gd->optfile, "options", "show_hidden")));
 
 		if(gd->lstRight != NULL)
 		{
@@ -2065,8 +2100,6 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 		}
 		gd->lstRight = ResetFilteredFileList(gd->lstFilterRight, gd->lstFullRight);
 
-		gd->win_right->tagged_count = 0;
-		gd->win_right->tagged_size = 0;
 		assert(gd->lstFilterRight != NULL);
 		assert(gd->lstFullRight != NULL);
 		assert(gd->lstRight != NULL);
@@ -2828,6 +2861,8 @@ int ALFC_main(int start_mode, char *view_file)
 		gdata->screen->set_cursor(1, ((gdata->screen->get_screen_width() - (strlen(" Welcome to Another Linux File Commander ") - 8))/2));
 		gdata->screen->print(" Welcome to Another Linux File Commander ");
 
+		BuildWindowLayout(gdata);
+
 		// screen too small to show nds columns
 		// date coumns waste too much space.
 		// todo - separate the date/time columns??
@@ -2877,9 +2912,7 @@ int ALFC_main(int start_mode, char *view_file)
 				exit(1);
 			}
 
-
 			ALFC_GetUserInfo(gdata);
-			BuildWindowLayout(gdata);
 
 			if(gdata->mode == eMode_Directory)
 			{

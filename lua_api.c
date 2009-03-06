@@ -2244,8 +2244,7 @@ int gme_RemoveDirectory(lua_State *L)
 
 	GET_LUA_STRING(g, 1);
 
-	lua_pushnumber(L, ALFC_rmdir(g.data));
-
+    lua_pushnumber(L, ALFC_rmdir(g.data));
 	return 1;
 }
 

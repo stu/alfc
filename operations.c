@@ -488,17 +488,6 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 	}
 #endif
 
-	/*
-	// directory copy
-	if (S_ISDIR(statbuff.st_mode) != 0)
-	{
-		x->result_code = -1;
-		x->result_msg = strdup("Directory prunes not yet handled.");
-		free(src);
-		return x->result_code;
-	}
-	*/
-
 	// non-regular copy
 	if (!S_ISREG(statbuff.st_mode) != 0 && S_ISDIR(statbuff.st_mode) == 0)
 	{

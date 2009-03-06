@@ -241,6 +241,10 @@ typedef struct udtWindow
 	int		tagged_count;
 	uint64_t tagged_size;
 
+	uint64_t	total_size;
+
+	uint64_t	hidden_count;
+
 } uWindow;
 
 struct udtScreenDriver
@@ -448,7 +452,7 @@ extern void about_window(uGlobalData *gd);
 extern void UpdateDir(uGlobalData *gd, char *set_to_highlight);
 extern int TagWithGlob(uGlobalData *gd, char *pattern);
 extern int TagWithFilter(uGlobalData *gd, char *pattern);
-extern DList* GetFiles(char *path, int hidden);
+extern DList* GetFiles(uGlobalData *gd, char *path, int hidden);
 extern int ALFC_main(int start_mode, char *view_file);
 extern void DrawCLI(uGlobalData *gd);
 

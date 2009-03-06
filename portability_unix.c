@@ -96,7 +96,7 @@ char* ALFC_get_last_error(int err)
 
 int ALFC_IsHidden(char *fn, uint32_t attrs)
 {
-	if(fn[0] == '.' && fn[1] != 0)
+	if(fn[0] == '.' && (fn[1] != 0 && fn[1] != '.'))
 		return 0;
 	else
 		return -1;

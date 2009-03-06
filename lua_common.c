@@ -413,7 +413,7 @@ int gmec_GetFileListFromPath(lua_State *L)
 	GET_LUA_STRING(d, 1);
 
 	dir = ConvertDirectoryName(d.data);
-	lst = GetFiles(dir, IsTrue(INI_get(gd->optfile, "options", "show_hidden")));
+	lst = GetFiles(gd, dir, IsTrue(INI_get(gd->optfile, "options", "show_hidden")));
 
 	if(lst != NULL)
 	{
