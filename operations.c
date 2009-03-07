@@ -464,9 +464,12 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 {
 	struct stat statbuff;
+	struct stat dbuff;
 	char *src;
 
 	src = build_fn(x->op.udtDelete.source_path, x->op.udtDelete.source_filename);
+
+	stat(x->op.udtDelete.source_path, &dbuff);
 
 	// make sure we are in the path of the file to copy and its valid
 	if(stat(src, &statbuff) == -1)
@@ -499,14 +502,25 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 
 	x->op.udtDelete.source_length = statbuff.st_size;
 
+#ifndef __MINGW_H
+	chmod(x->op.udtDelete.source_path, dbuff.st_mode | S_IWUSR | S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH | S_IRUSR);
+	chmod(src, statbuff.st_mode | S_IWUSR | S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH | S_IRUSR);
+#endif
+
 	// GO!
 	if( ALFC_unlink(src) != 0)
 	{
+#ifndef __MINGW_H
+		chmod(x->op.udtDelete.source_path, dbuff.st_mode);
+		chmod(src, statbuff.st_mode);
+#endif
 		x->result_code = -1;
 		x->result_msg = strdup(ALFC_get_last_error(errno));
 		free(src);
 		return x->result_code;
 	}
+
+	chmod(x->op.udtDelete.source_path, dbuff.st_mode);
 
 	free(src);
 

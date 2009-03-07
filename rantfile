@@ -134,7 +134,7 @@ end
 cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
 
 CC = "gcc"
-CFLAGSX = "-O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH " + PORT_CFLAGS
+CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH " + PORT_CFLAGS
 LIBS = ""
 
 alfc = %w( dlist.o logwrite.o ini.o

@@ -71,7 +71,53 @@ int ALFC_mkdir(char *s)
 
 int ALFC_rmdir(char *s)
 {
-	return rmdir(s);
+	char *x;
+	char *z;
+	struct stat dbuff;
+	struct stat pbuff;
+	int rc;
+	char *p;
+
+
+	p = strchr(s, '/');
+	if(p == NULL)
+	{
+		z = calloc(1, 1024);
+		getcwd(z, 1023);
+		strcat(z, "/");
+		strcat(z, s);
+	}
+	else
+		z = s;
+
+	x = strdup(z);
+
+	p = strchr(x, 0);
+	while(p != x && *p != '/')
+		p--;
+
+	if(p > x)
+		*p = 0;
+
+	stat(x, &pbuff);
+	stat(s, &dbuff);
+
+	chmod(x, pbuff.st_mode | S_IWUSR | S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH | S_IRUSR);
+	chmod(s, dbuff.st_mode | S_IWUSR | S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH | S_IRUSR);
+
+	rc = rmdir(s);
+
+	chmod(x, pbuff.st_mode);
+
+	if(rc != 0)
+		chmod(s, dbuff.st_mode);
+
+	free(x);
+
+	if(z != s)
+		free(z);
+
+	return rc;
 }
 
 int ALFC_startup(void)
