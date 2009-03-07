@@ -37,7 +37,7 @@ int Ops_Symlink(uGlobalData *gd, uFileOperation *x)
 		return x->result_code;
 	}
 
-#ifndef __MINGW_H
+#ifndef __WIN32__
 	// parse through the symlink?
 	if (S_ISLNK(statbuff.st_mode))
 	{
@@ -103,7 +103,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 	char *src;
 	char *dst;
 
-#ifndef __MINGW_H
+#ifndef __WIN32__
 	int ifd;
 	int ofd;
 #else
@@ -161,7 +161,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 		return x->result_code;
 	}
 
-#ifndef __MINGW_H
+#ifndef __WIN32__
 	// parse through the symlink?
 	if (S_ISLNK(statbuff.st_mode))
 	{
@@ -247,7 +247,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 		}
 	}
 
-#ifdef __MINGW_H
+#ifdef __WIN32__
 	if((ifp = fopen(src, "rb")) == NULL)
 #else
 	if((ifd = open(src, O_RDONLY)) < 0)
@@ -262,7 +262,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 		return x->result_code;
 	}
 
-#ifdef __MINGW_H
+#ifdef __WIN32__
 	if((ofp = fopen(dst, "wb+")) == NULL)
 #else
 	if((ofd = open(dst, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | statbuff.st_mode)) < 0)
@@ -270,7 +270,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 	{
 		x->result_code = -1;
 		x->result_msg = strdup(strerror(errno));
-#ifdef __MINGW_H
+#ifdef __WIN32__
 		fclose(ifp);
 #else
 		close(ifd);
@@ -303,7 +303,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 		memset(buff, 0x0, BLOCK_SIZE);
 		memset(cbuff, 0x0, BLOCK_SIZE);
 
-#ifdef __MINGW_H
+#ifdef __WIN32__
 		//fseek(ifp, offset, SEEK_SET);
 		lseek64(ifp->_file, offset, SEEK_SET);
 		if( (size2 = fread(buff, 1, size, ifp)) != size )
@@ -315,7 +315,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 			x->result_code = -1;
 			x->result_msg = strdup("Error in reading input file");
 
-#ifdef __MINGW_H
+#ifdef __WIN32__
 			fclose(ifp);
 			fclose(ofp);
 #else
@@ -332,7 +332,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 		}
 		size = size2;
 
-#ifdef __MINGW_H
+#ifdef __WIN32__
 		fseek(ofp, offset, SEEK_SET);
 		if((size2 = fwrite(buff, 1, size, ofp)) != size)
 #else
@@ -343,7 +343,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 			x->result_code = -1;
 			x->result_msg = strdup("Error in writing to output file");
 
-#ifdef __MINGW_H
+#ifdef __WIN32__
 			fclose(ifp);
 			fclose(ofp);
 #else
@@ -359,7 +359,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 		}
 		size = size2;
 
-#ifdef __MINGW_H
+#ifdef __WIN32__
 		fseek(ofp, offset, SEEK_SET);
 		if((size2 = fread(cbuff, 1, size, ofp)) != size)
 #else
@@ -370,7 +370,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 			x->result_code = -1;
 			x->result_msg = strdup("Error in writing to output file");
 
-#ifdef __MINGW_H
+#ifdef __WIN32__
 			fclose(ifp);
 			fclose(ofp);
 #else
@@ -397,7 +397,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 			x->result_code = -1;
 			x->result_msg = strdup("Failed CRC Match");
 
-#ifdef __MINGW_H
+#ifdef __WIN32__
 			fclose(ifp);
 			fclose(ofp);
 #else
@@ -429,7 +429,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 
 
 
-#ifndef __MINGW_H
+#ifndef __WIN32__
 	close(ifd);
 	fchmod(ofd, statbuff.st_mode);
 	fchown(ofd, statbuff.st_uid, statbuff.st_gid);
@@ -440,7 +440,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 #endif
 
 
-#ifdef __MINGW_H
+#ifdef __WIN32__
 	// mingw does not have fchmod (which I'd prefer over chmod).
 	// also does not have any chown variants.
 	chmod(dst, statbuff.st_mode);
@@ -480,7 +480,7 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 		return x->result_code;
 	}
 
-#ifndef __MINGW_H
+#ifndef __WIN32__
 	// parse through the symlink?
 	if(S_ISLNK(statbuff.st_mode) != 0)
 	{
@@ -502,7 +502,7 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 
 	x->op.udtDelete.source_length = statbuff.st_size;
 
-#ifndef __MINGW_H
+#ifndef __WIN32__
 	chmod(x->op.udtDelete.source_path, dbuff.st_mode | S_IWUSR | S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH | S_IRUSR);
 	chmod(src, statbuff.st_mode | S_IWUSR | S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH | S_IRUSR);
 #endif
@@ -510,7 +510,7 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 	// GO!
 	if( ALFC_unlink(src) != 0)
 	{
-#ifndef __MINGW_H
+#ifndef __WIN32__
 		chmod(x->op.udtDelete.source_path, dbuff.st_mode);
 		chmod(src, statbuff.st_mode);
 #endif

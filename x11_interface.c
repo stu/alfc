@@ -1,7 +1,7 @@
 #include "headers.h"
 #include "rl/rllib.h"
 
-#ifdef __MINGW_H
+#ifdef __WIN32__
 #include <windows.h>
 #else
 #include <X11/keysym.h>

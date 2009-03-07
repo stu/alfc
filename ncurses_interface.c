@@ -1,5 +1,5 @@
 #include "headers.h"
-#ifndef __MINGW_H
+#ifndef __WIN32__
 #include <signal.h>
 #endif
 #include <curses.h>
@@ -13,7 +13,7 @@ static int intMaxWidth;
 static int intMaxColourPairs;
 static int intStyle;
 
-#ifndef __MINGW_H
+#ifndef __WIN32__
 static void terminate_signal(int a);
 #endif
 
@@ -196,7 +196,7 @@ static uint32_t nc_get_keypress(void)
 	{
 		key = ch;
 	}
-#ifdef __MINGW_H
+#ifdef __WIN32__
 	// mingw uses wgetch for getch.....
 	// PDCurses has ALT_0 ...
 	else if ((ch >= ALT_0) && (toupper(ch) <= ALT_Z)) // for mingw this is ALT-A to ALT-Z
@@ -317,7 +317,7 @@ static int nc_screen_init(uScreenDriver *scr)
 {
 	int i;
 
-#ifndef __MINGW_H
+#ifndef __WIN32__
 	signal(SIGKILL, terminate_signal ); /*setting SIGKILL signal handler*/
 	signal(SIGQUIT, terminate_signal ); /*setting SIGQUIT signal handler*/
 	signal(SIGSEGV, terminate_signal ); /*setting SIGSEGV signal handler*/
@@ -448,7 +448,7 @@ static void nc_set_style(int style)
 	setcolour(style, styles[style].s_on);
 }
 
-#ifndef __MINGW_H
+#ifndef __WIN32__
 static void terminate_signal(int a)
 {
 	nc_screen_deinit();

@@ -498,6 +498,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		if __TagSymlinkX(command, buff) > 0 then
 			ViewLuaTable("SYMLINK OPERATIONS LOG", buff);
 		end
+		RedrawWindow()
 	end
 
 	function __TagCopy(command)
@@ -506,6 +507,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		if __TagCopyX(command, buff) > 0 or GetOption("copy_move", "display_log") == "true" then
 			ViewLuaTable("COPY OPERATIONS LOG", buff);
 		end
+		RedrawWindow()
 	end
 	function __TagMove(command)
 		local buff = {}
@@ -513,6 +515,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		if __TagMoveX(command, buff) > 0 or GetOption("copy_move", "display_log") == "true" then
 			ViewLuaTable("MOVE OPERATIONS LOG", buff);
 		end
+		RedrawWindow()
 	end
 	function __TagDelete(command)
 		local buff = {}
@@ -520,6 +523,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		if __TagDeleteX(command, buff) > 0 or GetOption("delete", "display_log") == "true" then
 			ViewLuaTable("DELETE OPERATIONS LOG", buff);
 		end
+		RedrawWindow()
 	end
 
 	function __TagFilter(command)

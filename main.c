@@ -1174,7 +1174,7 @@ static char* PrintNumber(uint64_t num)
 #if __WORDSIZE == 64
 	sprintf(x, "%lu", num);
 #else
-#ifdef __MINGW_H
+#ifdef __WIN32__
 	sprintf(x, "%I64u", num);
 #else
 	sprintf(x, "%llu", num);
@@ -1304,7 +1304,7 @@ static void DrawFileInfo(uWindow *win)
 		// do attributes :: "Attr: rwxrwxrwx"
 		memmove(buff + attr_offset, "Attr: ---------", 15);
 
-#ifndef __MINGW_H
+#ifndef __WIN32__
 		if( (de->attrs & S_IRUSR) == S_IRUSR) buff[attr_offset + 6] = 'r';
 		if( (de->attrs & S_IWUSR) == S_IWUSR) buff[attr_offset + 7] = 'w';
 		if( (de->attrs & S_IXUSR) == S_IXUSR) buff[attr_offset + 8] = 'x';
@@ -2821,7 +2821,7 @@ int ALFC_main(int start_mode, char *view_file)
 
 	ALFC_startup();
 
-#ifndef __MINGW_H
+#ifndef __WIN32__
 	setenv("ALFC", "$HOME/.alfc/scripts", 0);
 #endif
 

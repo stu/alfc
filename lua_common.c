@@ -443,7 +443,7 @@ int gmec_GetFileListFromPath(lua_State *L)
 
 int gmec_SystemType(lua_State *L)
 {
-#ifdef __MINGW_H
+#ifdef __WIN32__
 	lua_pushstring(L, "WIN32");
 #else
 	lua_pushstring(L, "UNIX");

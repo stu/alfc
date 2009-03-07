@@ -2040,18 +2040,22 @@ int gme_DoFileOps(lua_State *L)
 	{
 		chdir(GetActDPath(gd));
 		UpdateDir(gd, high1);
+
 		gd->selected_window = WINDOW_RIGHT;
 		chdir( GetActDPath(gd));
 		UpdateDir(gd, high2);
+
 		gd->selected_window = WINDOW_LEFT;
 	}
 	else
 	{
 		chdir(GetActDPath(gd));
 		UpdateDir(gd, high1);
+
 		gd->selected_window = WINDOW_LEFT;
 		chdir(GetActDPath(gd));
 		UpdateDir(gd, high2);
+
 		gd->selected_window = WINDOW_RIGHT;
 	}
 	SwitchPanes(gd);
