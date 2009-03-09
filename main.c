@@ -950,6 +950,7 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 	if(de->tagged == 1)
 		buff[0]='+';
 
+#ifndef __WIN32__
 	if(de->lnk != NULL)
 	{
 		buff2 = calloc(1, strlen(de->name) + strlen(de->lnk) + 16);
@@ -970,6 +971,7 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 		strcat(buff2, de->lnk);
 	}
 	else
+#endif
 	{
 		buff2 = calloc(1, strlen(de->name) + 16);
 		p = buff2;
@@ -1007,8 +1009,10 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 			{
 				uint64_t xx = de->size;
 
+#ifndef __WIN32__
 				if(S_ISLNK(de->attrs&S_IFLNK) != 0)
 					xx = de->lnk_size;
+#endif
 
 #if __WORDSIZE == 64
 				sprintf(buff + size_off, "%10lu", xx);
@@ -1018,10 +1022,13 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 			}
 			else
 			{
+				xx = de->size;
+#ifndef __WIN32__
 				if(S_ISLNK(de->attrs&S_IFLNK) != 0)
 					xx = de->lnk_size;
+#endif
 
-				compress_size(buff+size_off, de->size);
+				compress_size(buff+size_off, xx);
 			}
 
 			p = strchr(buff + size_off, 0x0);
@@ -1030,6 +1037,7 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 		else
 		{
 			style = STYLE_DIR_DIR;
+#ifndef __WIN32__
 			if( S_ISLNK(de->attrs&S_IFLNK) != 0 )
 			{
 				sprintf(buff + size_off, " <D-LNK>");
@@ -1038,6 +1046,7 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 				style = STYLE_DIR_LINK;
 			}
 			else
+#endif
 			{
 				sprintf(buff + size_off, " <DIR>");
 				p = strchr(buff + size_off, 0x0);

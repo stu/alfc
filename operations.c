@@ -46,29 +46,6 @@ int Ops_Symlink(uGlobalData *gd, uFileOperation *x)
 		free(src);
 		return x->result_code;
 	}
-#endif
-
-	/*
-	// directory copy
-	if (S_ISDIR(statbuff.st_mode))
-	{
-		x->result_code = -1;
-		x->result_msg = strdup("Directory prunes not yet handled.");
-		free(src);
-		return x->result_code;
-	}
-	*/
-
-	/*
-	// non-regular copy
-	if (!S_ISREG(statbuff.st_mode))
-	{
-		x->result_code = -1;
-		x->result_msg = strdup("File is not a regular file.");
-		free(src);
-		return x->result_code;
-	}
-	*/
 
 	x->op.udtSymlink.source_length = statbuff.st_size;
 
@@ -81,11 +58,15 @@ int Ops_Symlink(uGlobalData *gd, uFileOperation *x)
 		return x->result_code;
 	}
 
-	free(src);
-	free(dst);
-
 	x->result_code = 0;
 	x->result_msg = strdup("OK");
+#else
+	x->result_code = -1;
+	x->result_msg = strdup("UNSUPPORTED ON WIN32");
+#endif
+
+	free(src);
+	free(dst);
 
 	return x->result_code;
 }
