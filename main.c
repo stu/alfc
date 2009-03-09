@@ -1640,11 +1640,11 @@ void SwitchPanes(uGlobalData *gd)
 	if(de != NULL)
 		PrintFileLine(de, w->highlight_line, w, max_namelen, size_off, date_off);
 
-	DrawActive(gd);
-	DrawStatusInfoLine(gd);
-	DrawFilter(gd);
+	chdir(GetActDPath(gd));
 
-	chdir( GetActDPath(gd));
+	DrawActive(gd);
+	DrawFilter(gd);
+	DrawStatusInfoLine(gd);
 }
 
 void SetActivePane(uGlobalData *gd, int p)
@@ -1710,7 +1710,11 @@ void DrawFilter(uGlobalData *gd)
 	memset(x, ' ', gd->screen->get_screen_width());
 	memmove(x, "Filter: ", 8);
 
-	e = dlist_head(GetActFilter(gd));
+	if(GetActFilter(gd) == NULL)
+		e = NULL;
+	else
+		e = dlist_head(GetActFilter(gd));
+
 	p = x + 8;
 
 	while(e != NULL)
@@ -2131,6 +2135,8 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 	assert(GetActList(gd) != NULL);
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
+	DrawFilter(gd);
+	DrawStatusInfoLine(gd);
 }
 
 int change_dir(uGlobalData *gd, char *dir)
@@ -2184,6 +2190,7 @@ int updir(uGlobalData *gd)
 	}
 
 	UpdateDir(gd, scan);
+
 	free(cpath);
 
 	return 0;
