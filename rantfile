@@ -151,11 +151,11 @@ end
 
 if DRIVER=="NCURSES"
 desc "Build the app"
-task :app => ["auxfiles", "appx"] do
+task :all => ["auxfiles", "appx"] do
 end
 else
 desc "Build the app"
-task :app => ["auxfiles", "rl/librl.a", "appx"] do
+task :all => ["auxfiles", "rl/librl.a", "appx"] do
 end
 end
 
@@ -182,6 +182,7 @@ task :tools => %w(bin2c.o) do |t|
 	sys "bin2c options.ini include_options_ini >> defaults.h"
 	sys "bin2c core_extract.lua core_extract_lua >> defaults.h"
 	sys "bin2c core_hash.lua core_hash_lua >> defaults.h"
+	sys "bin2c viewer_languages.lua viewer_languages_lua >> defaults.h"
 if DRIVER=="X11"
 	sys "bin2c font.rlf x11_data_font > x11_fonts.h"
 	sys "bin2c font_small.rlf x11_data_font_small >> x11_fonts.h"

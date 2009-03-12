@@ -699,6 +699,8 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE x, LPSTR y, int z)
 	screen_y_size = s->height;
 
 	signal(SIGABRT, sig_abrt);
+	driver_redraw = 0;
+	return rlmain(argc, argv);
 #else
 	DEVMODE dvmdOrig;
 	HDC hdc = GetDC(NULL);
@@ -713,11 +715,13 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE x, LPSTR y, int z)
 	screen_x_size = dvmdOrig.dmPelsWidth;
 
 	hinst = inst;
-#endif
 	driver_redraw = 0;
-	return rlmain(argc, argv);
+	return rlmain(0, NULL);
+#endif
+
 }
 
+#ifdef xlib
 void maximise_window(void)
 {
 	XEvent xev;
@@ -742,4 +746,4 @@ void maximise_window(void)
 
 	driver_redraw = 1;
 }
-
+#endif

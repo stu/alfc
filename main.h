@@ -212,6 +212,7 @@ typedef struct udtDirEntry
 {
 	uint8_t	tagged;
 
+	char		*path;
 	char 		*name;
 	uint64_t	size;
 	uint32_t	attrs;
@@ -242,7 +243,6 @@ typedef struct udtWindow
 	uint64_t tagged_size;
 
 	uint64_t	total_size;
-
 	uint64_t	hidden_count;
 
 } uWindow;

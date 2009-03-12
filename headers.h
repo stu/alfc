@@ -18,6 +18,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#ifdef __WIN32__
+#include <windows.h>
+#endif
 
 // default for mingw..
 #ifdef __MINGW_H

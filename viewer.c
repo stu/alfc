@@ -818,7 +818,7 @@ static int LoadGlobalViewerScript(uViewFile *v, char *sn)
 
 	cpath = ConvertDirectoryName(sn);
 
-	fp = fopen(cpath, "r");
+	fp = fopen(cpath, "rb");
 	if(fp == NULL)
 	{
 		free(cpath);
@@ -830,7 +830,7 @@ static int LoadGlobalViewerScript(uViewFile *v, char *sn)
 	maxsize = ftell(fp);
 	fseek(fp, 0x0L, SEEK_SET);
 
-	v->gcode = malloc(64 + maxsize);
+	v->gcode = calloc(1, 64 + maxsize);
 	if(v->gcode == NULL)
 	{
 		free(cpath);
@@ -838,7 +838,6 @@ static int LoadGlobalViewerScript(uViewFile *v, char *sn)
 		fclose(fp);
 		return -1;
 	}
-
 	fread(v->gcode, 1, maxsize, fp);
 	fclose(fp);
 	free(cpath);
@@ -846,7 +845,12 @@ static int LoadGlobalViewerScript(uViewFile *v, char *sn)
 	v->_GL = lua_open();
 	RegisterViewerFuncs(v, v->_GL);
 
-	luaL_loadbuffer(v->_GL, v->gcode, maxsize, "GlobalLuaFuncs");
+	vv = luaL_loadbuffer(v->_GL, v->gcode, maxsize, "GlobalLuaFuncs");
+	if(vv != 0)
+	{
+		LogError("_gl lua error : %s\n", lua_tostring(v->_GL, -1));
+		return -1;
+	}
 
 	// call to register globals
 	vv = lua_pcall(v->_GL, 0, 0, 0);			/* call 'SetGlobals' with 0 arguments and 0 result */
@@ -1002,6 +1006,9 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 						break;
 
 					default:
+						if(key == 0)
+							break;
+
 						// terminal could send ^H (0x08) or ASCII DEL (0x7F)
 						if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
 						{

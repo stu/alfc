@@ -24,11 +24,15 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 		fn = ViewedFilename()
 		ext = findpattern(fn, "[.]")
 
+		debug_msg("fn="..fn .. " lang count="..#lang)
+
 		if lang == nil then return end
+		if #lang == 0 then return end
 
 		for k,v in pairs(lang) do
 			if v.extensions ~= nil then
 				for kk, vv in pairs(v.extensions) do
+					debug_msg("vv=" .. vv .. "ext="..ext)
 					if vv == ext then
 						SetTabSize(tonumber(v.tab))
 						SetFileType(v.name);
@@ -116,4 +120,4 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 	-- which should not happen anyway but lets define functions and protect...
 	_G["VIEWER_BOOTSTRAP"] = 1
 
-end -- _G["BOOTSTRAP"]
+end -- _G["VIEWER_BOOTSTRAP"]

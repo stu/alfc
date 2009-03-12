@@ -302,7 +302,7 @@ int gmec_IncludeFile(lua_State *L)
 	buffsize = ftell(fp);
 	fseek(fp, 0x0L, SEEK_SET);
 
-	buff = malloc(buffsize + 32);
+	buff = calloc(1, buffsize + 32);
 	if(buff == NULL)
 	{
 		free(cpath);
@@ -381,10 +381,10 @@ void push_file(lua_State *L, uDirEntry *de, int idx, char *path)
 		lua_settable(L, -3);
 
 		lua_pushstring(L, "directory");
-		if( S_ISDIR(de->attrs&S_IFDIR) == 0)
-			lua_pushnumber(L, 0);
-		else
+		if( ALFC_IsDir(de->attrs) == 0)
 			lua_pushnumber(L, 1);
+		else
+			lua_pushnumber(L, 0);
 		lua_settable(L, -3);
 
 		lua_pushstring(L, "tagged");

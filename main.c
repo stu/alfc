@@ -730,11 +730,13 @@ static void FreeListEntry(void *x)
 		free(de->lnk);
 
 	free(de->name);
+	free(de->path);
 
 	memset(de, 0x0, sizeof(uDirEntry));
 	free(de);
 }
 
+#ifndef __WIN32__
 static char* ReadLink(char *fn, uint32_t len)
 {
 	char *buff;
@@ -746,6 +748,37 @@ static char* ReadLink(char *fn, uint32_t len)
 
 	return realloc(buff, strlen(buff)+1);
 }
+#endif
+
+void CalcDirStats(uGlobalData *gd, uWindow *w, DList *lstFiles)
+{
+	DLElement *e;
+	uDirEntry *de;
+
+	w->total_size = 0;
+	w->hidden_count = 0;
+
+	e = dlist_head(lstFiles);
+	while(e != NULL)
+	{
+		de = dlist_data(e);
+
+		if(ALFC_IsHidden(de->name, de->attrs) == 0)
+			w->hidden_count += 1;
+
+#ifndef __WIN32__
+		// test link to see if its a directory...
+		if(S_ISLNK(de->attrs) != 0)
+			w->total_size += de->lnk_size;
+		else
+			w->total_size += de->size;
+#else
+		w->total_size += de->size;
+#endif
+
+		e = dlist_next(e);
+	}
+}
 
 DList* GetFiles(uGlobalData *gd, char *path, int hidden)
 {
@@ -756,19 +789,13 @@ DList* GetFiles(uGlobalData *gd, char *path, int hidden)
 	uDirEntry *de;
 	struct stat buff;
 
-	//char *dirx;
-	//dirx = GetCurrentWorkingDirectory();
-
 	lstF = malloc(sizeof(DList));
 	dlist_init(lstF, FreeListEntry);
 
 	cpath = replace(path, '\\', '/');
 
 	assert(gd != NULL);
-	assert(GetActWindow(gd) != NULL);
-
-	GetActWindow(gd)->hidden_count = 0;
-	GetActWindow(gd)->total_size = 0;
+	//assert(GetActWindow(gd) != NULL);
 
 	d = opendir(cpath);
 	if(d != NULL)
@@ -779,46 +806,47 @@ DList* GetFiles(uGlobalData *gd, char *path, int hidden)
 		{
 			if( ( strcmp(dr->d_name, ".") != 0 && strcmp(dr->d_name, "..") != 0))
 			{
-				ALFC_stat(dr->d_name, &buff);
+				char *fname;
+
+				fname = malloc( strlen(cpath) + strlen(dr->d_name) + 16 );
+				strcpy(fname, cpath);
+				strcat(fname, "/");
+				strcat(fname, dr->d_name);
+
+				ALFC_stat(fname, &buff);
 
 				de = malloc(sizeof(uDirEntry));
 				memset(de, 0x0, sizeof(uDirEntry));
 
-				if(ALFC_IsHidden(dr->d_name, buff.st_mode) == 0)
-					GetActWindow(gd)->hidden_count += 1;
+				// setup the defaults
+				de->attrs = buff.st_mode;
+				de->size = buff.st_size;
+				de->time = buff.st_mtime;
 
-				de->size = ALFC_GetFileSize(de->name, &buff);
+				de->path = strdup(cpath);
+				de->name = strdup(dr->d_name);
+				de->attrs = ALFC_GetFileAttrs(de);
+				de->size = ALFC_GetFileSize(de);
+				de->time = ALFC_GetFileTime(de);
 
-				if( hidden == 0 || ALFC_IsHidden(dr->d_name, buff.st_mode) != 0)
+				free(fname);
+
+#ifndef __WIN32__
+				// test link to see if its a directory...
+				if(S_ISLNK(buff.st_mode) != 0)
 				{
-					de->name = strdup(dr->d_name);
-					de->attrs = ALFC_GetFileAttrs(de, &buff);
-					de->time = ALFC_GetFileTime(de, &buff);
+					de->lnk = ReadLink(de->name, de->size);
 
-					// test link to see if its a directory...
-					if(S_ISLNK(buff.st_mode) != 0)
+					ALFC_stat(de->lnk, &buff);
+					de->lnk_size = ALFC_GetFileSize(de);
+
+					if(S_ISDIR(buff.st_mode) != 0)
 					{
-						de->lnk = ReadLink(de->name, de->size);
-
-						ALFC_stat(de->lnk, &buff);
-						de->lnk_size = ALFC_GetFileSize(de->lnk, &buff);
-						GetActWindow(gd)->total_size += de->lnk_size;
-
-						if(S_ISDIR(buff.st_mode) != 0)
-						{
-							de->attrs |= S_IFDIR;
-						}
+						de->attrs |= S_IFDIR;
 					}
-					else
-						GetActWindow(gd)->total_size += de->size;
-
-					dlist_ins(lstF, de);
 				}
-				else
-				{
-                	GetActWindow(gd)->total_size += de->size;
-					free(de);
-				}
+#endif
+				dlist_ins(lstF, de);
 			}
 
 			dr = readdir(d);
@@ -958,7 +986,7 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 
 		style = STYLE_DIR_LINK;
 		// exec status overrides link status
-		if(ALFC_IsExec(de->name, de->attrs) == 0 && (de->attrs&S_IFDIR) == 0)
+		if(ALFC_IsExec(de->name, de->attrs) == 0 && ALFC_IsDir(de->attrs) != 0)
 		{
 			*p++='*';
 			style = STYLE_DIR_EXEC;
@@ -976,7 +1004,7 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 		buff2 = calloc(1, strlen(de->name) + 16);
 		p = buff2;
 
-		if(ALFC_IsExec(de->name, de->attrs) == 0 && (de->attrs&S_IFDIR) == 0)
+		if(ALFC_IsExec(de->name, de->attrs) == 0 && ALFC_IsDir(de->attrs) != 0)
 		{
 			*p++ = '*';
 			style = STYLE_DIR_EXEC;
@@ -995,16 +1023,8 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 
 	if(HaveColumnSize(win->gd) == 1)
 	{
-		if( S_ISDIR(de->attrs&S_IFDIR) == 0 )
+		if( ALFC_IsDir(de->attrs) != 0 )
 		{
-			/*
-			if( S_ISLNK(de->attrs&S_IFLNK) != 0 )
-			{
-				sprintf(buff + size_off, " symlink");
-				p = strchr(buff + size_off, 0x0);
-				*p = ' ';
-			}
-			else */
 			if(win->gd->compress_filesize == 0)
 			{
 				uint64_t xx = de->size;
@@ -1301,19 +1321,19 @@ static void DrawFileInfo(uWindow *win)
 
 		// do size : "Size: 1,123,123,123"
 		memmove(buff + size_offset, "Size: ", 6);
-		if( S_ISDIR(de->attrs&S_IFDIR) == 0)
+		if( ALFC_IsDir(de->attrs) != 0)
 		{
 			// do size : "Size: 1,123,123,123"
-			memmove(buff + size_offset, "Size: ", 6);
+			//memmove(buff + size_offset, "Size: ", 6);
 			siz = PrintNumber(de->size);
 			memmove(buff + size_offset + 6 + (13 - strlen(siz)), siz, strlen(siz));
 			free(siz);
 		}
 
+#ifndef __WIN32__
 		// do attributes :: "Attr: rwxrwxrwx"
 		memmove(buff + attr_offset, "Attr: ---------", 15);
 
-#ifndef __WIN32__
 		if( (de->attrs & S_IRUSR) == S_IRUSR) buff[attr_offset + 6] = 'r';
 		if( (de->attrs & S_IWUSR) == S_IWUSR) buff[attr_offset + 7] = 'w';
 		if( (de->attrs & S_IXUSR) == S_IXUSR) buff[attr_offset + 8] = 'x';
@@ -1324,11 +1344,14 @@ static void DrawFileInfo(uWindow *win)
 
 		if( (de->attrs & S_IROTH) == S_IROTH) buff[attr_offset + 12] = 'r';
 		if( (de->attrs & S_IWOTH) == S_IWOTH) buff[attr_offset + 13] = 'w';
-		if( (de->attrs & S_IWOTH) == S_IWOTH) buff[attr_offset + 14] = 'x';
+		if( (de->attrs & S_IXOTH) == S_IXOTH) buff[attr_offset + 14] = 'x';
 #else
-		if( (de->attrs & S_IRUSR) == S_IRUSR) buff[attr_offset + 6] = 'r';
-		if( (de->attrs & S_IWUSR) == S_IWUSR) buff[attr_offset + 7] = 'w';
-		if( (de->attrs & S_IXUSR) == S_IXUSR) buff[attr_offset + 8] = 'x';
+		memmove(buff + attr_offset, "Attr: -----", 11);
+		if((de->attrs & FILE_ATTRIBUTE_HIDDEN) == FILE_ATTRIBUTE_HIDDEN) buff[attr_offset + 6] = 'H';
+		if((de->attrs & FILE_ATTRIBUTE_SYSTEM) == FILE_ATTRIBUTE_SYSTEM) buff[attr_offset + 7] = 'S';
+		if((de->attrs & FILE_ATTRIBUTE_COMPRESSED) == FILE_ATTRIBUTE_COMPRESSED) buff[attr_offset + 8] = 'C';
+		if((de->attrs & FILE_ATTRIBUTE_ARCHIVE) == FILE_ATTRIBUTE_ARCHIVE) buff[attr_offset + 9] = 'A';
+		if((de->attrs & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY) buff[attr_offset + 10] = 'R';
 #endif
 	}
 
@@ -2074,6 +2097,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 			free(gd->lstFullLeft);
 		}
 		gd->lstFullLeft = GetFiles(gd, gd->left_dir, IsTrue(INI_get(gd->optfile, "options", "show_hidden")));
+		CalcDirStats(gd, gd->win_left, gd->lstFullLeft);
 
 		if(gd->lstLeft != NULL)
 		{
@@ -2105,6 +2129,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 			free(gd->lstFullRight);
 		}
 		gd->lstFullRight = GetFiles(gd, gd->right_dir, IsTrue(INI_get(gd->optfile, "options", "show_hidden")));
+		CalcDirStats(gd, gd->win_right, gd->lstFullRight);
 
 		if(gd->lstRight != NULL)
 		{
@@ -2239,7 +2264,7 @@ int downdir(uGlobalData *gd)
 
 	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
 
-	if( S_ISDIR(de->attrs&S_IFDIR) == 0 )
+	if( ALFC_IsDir(de->attrs) != 0 )
 		return -1;
 
 	cpath = strdup( GetActDPath(gd) );
@@ -2660,7 +2685,7 @@ static void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DLis
 		{
 			de = dlist_data(e2);
 
-			if( S_ISDIR(de->attrs&S_IFDIR) == 0)
+			if( ALFC_IsDir(de->attrs) != 0)
 			{
 				status = fnmatch(pattern, de->name, 0);
 				if(status == 0)
@@ -3070,6 +3095,9 @@ int ALFC_main(int start_mode, char *view_file)
 									break;
 
 								default:
+									if(key == 0)
+										break;
+
 									// terminal could send ^H (0x08) or ASCII DEL (0x7F)
 									if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
 									{

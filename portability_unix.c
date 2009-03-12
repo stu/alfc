@@ -44,19 +44,19 @@ void ALFC_GetUserInfo(uGlobalData *gd)
 }
 
 
-uint64_t ALFC_GetFileSize(char *name, struct stat *buff)
+uint64_t ALFC_GetFileSize(uDirEntry *de)
 {
-	return buff->st_size;
+	return de->size;
 }
 
-uint32_t ALFC_GetFileAttrs(uDirEntry *de, struct stat *buff)
+uint32_t ALFC_GetFileAttrs(uDirEntry *de)
 {
-	return buff->st_mode;
+	return de->attrs;
 }
 
-time_t ALFC_GetFileTime(uDirEntry *de, struct stat *buff)
+time_t ALFC_GetFileTime(uDirEntry *de)
 {
-	return buff->st_mtime;
+	return de->time;
 }
 
 int ALFC_stat(char *fn, struct stat *buff)
@@ -151,6 +151,14 @@ int ALFC_IsHidden(char *fn, uint32_t attrs)
 int ALFC_IsExec(char *fn, uint32_t attrs)
 {
 	if( (attrs & (S_IXUSR | S_IXOTH | S_IXGRP)) != 0)
+		return 0;
+	else
+		return -1;
+}
+
+int ALFC_IsDir(uint32_t attrs)
+{
+	if(S_ISDIR(attrs&S_IFDIR) != 0)
 		return 0;
 	else
 		return -1;

@@ -65,16 +65,23 @@ void ALFC_GetUserInfo(uGlobalData *gd)
 	gd->gid = INT_MAX;
 }
 
-uint64_t ALFC_GetFileSize(char *file, struct stat *buff)
+uint64_t ALFC_GetFileSize(uDirEntry *de)
 {
 	WIN32_FIND_DATA fd;
 	HANDLE hFind;
 	uint64_t rc;
+	char *x;
 
-	if( S_ISDIR(buff->st_mode) != 0)
+	if(ALFC_IsDir(de->attrs) == 0)
 		return 0;
 
-	hFind = FindFirstFile(file, &fd);
+	x = malloc(strlen(de->path) + strlen(de->name) + 16);
+	strcpy(x, de->path);
+	strcat(x, "/");
+	strcat(x, de->name);
+
+	hFind = FindFirstFile(x, &fd);
+	free(x);
 
 	if(hFind == INVALID_HANDLE_VALUE)
 		return 0L;
@@ -88,14 +95,27 @@ uint64_t ALFC_GetFileSize(char *file, struct stat *buff)
 	return rc;
 }
 
-uint32_t ALFC_GetFileAttrs(uDirEntry *de, struct stat *buff)
+uint32_t ALFC_GetFileAttrs(uDirEntry *de)
 {
-	return buff->st_mode;
+	char *x;
+	uint32_t z;
+
+	x = malloc(strlen(de->path) + strlen(de->name) + 16);
+	strcpy(x, de->path);
+	strcat(x, "/");
+	strcat(x, de->name);
+
+	z = GetFileAttributes(x);
+
+	free(x);
+
+	return z;
+
 }
 
-time_t ALFC_GetFileTime(uDirEntry *de, struct stat *buff)
+time_t ALFC_GetFileTime(uDirEntry *de)
 {
-	return buff->st_mtime;
+	return de->time;
 }
 
 int ALFC_stat(char *fn, struct stat *buff)
@@ -191,11 +211,22 @@ char* ALFC_get_last_error(int err)
 
 int ALFC_IsHidden(char *fn, uint32_t attrs)
 {
-	return -1;
+	if( (attrs & FILE_ATTRIBUTE_HIDDEN) == FILE_ATTRIBUTE_HIDDEN)
+		return 0;
+	else
+		return -1;
 }
 
 int ALFC_IsExec(char *fn, uint32_t attrs)
 {
 	return -1;
+}
+
+int ALFC_IsDir(uint32_t attrs)
+{
+	if( (attrs&FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY)
+		return 0;
+	else
+		return -1;
 }
 
