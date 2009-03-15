@@ -1592,11 +1592,12 @@ void DrawStatusInfoLine(uGlobalData *gd)
 
 	char *x1, *x2;
 
+	assert(gd!=NULL);
 	buff = malloc(4 + m);
 
 	memset(buff, ' ', m);
 
-    compress_size(ssize, GetActWindow(gd)->tagged_size);
+	compress_size(ssize, GetActWindow(gd)->tagged_size);
 	while(ssize[0] == ' ')
 		memmove(ssize, ssize +1, strlen(ssize)+1);
 
@@ -2259,8 +2260,6 @@ int godir(uGlobalData *gd, char *dir)
 	free(cpath1);
 	free(cpath2);
 
-	assert(gd->lstLeft != NULL);
-
 	return 0;
 }
 
@@ -2834,7 +2833,7 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 	if(godir(gdata, gdata->right_dir) == -1)
 		godir(gdata, ConvertDirectoryName("$HOME"));
 
-	if(gdata->lstLeft == NULL)
+	if(gdata->lstRight == NULL)
 	{
 		gdata->right_dir = GetCurrentWorkingDirectory();
 		godir(gdata, gdata->right_dir);

@@ -221,7 +221,7 @@ end
 
 desc "Cleanup..."
 task :clean => "rl/clean" do
-	x = Dir["*.{bak,o,obj,a}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"] + Dir["Makefile"]
+	x = Dir["*.{bak,o,obj,a}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"] + Dir["Makefile"] + Dir["bin2c"]
 
 	x += Dir["lua_helper.c"]
 	x += Dir["lua_common_api.c"]
@@ -337,3 +337,4 @@ task :make =>  ["clean", "bin2c.o", "auxfiles"] do
 end
 
 subdirs "rl"
+
