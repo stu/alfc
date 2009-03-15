@@ -774,7 +774,8 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 
 	CreateMenu(ALFC_KEY_ALT + string.byte("F"), "File", {
-				{ key = string.byte('x'), name = "Exit", code = [[__QuitApp()]]},
+				{ key = string.byte('h'), name = "Hidden", code = [[if GetOption("options", "show_hidden") == "false" then SetOption("options", "show_hidden", "true") else SetOption("options", "show_hidden", "false") end SetCurrentWorkingDirectory(GetCurrentWorkingDirectory())]]},
+                { key = string.byte('x'), name = "Exit", code = [[__QuitApp()]]},
 				{ key = string.byte('a'), name = "About", code = [[About()]] },
 				{ key = ALFC_KEY_F1, name = "Help", code = [[ViewFile("help.txt")]] },
 			})

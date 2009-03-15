@@ -780,7 +780,7 @@ void CalcDirStats(uGlobalData *gd, uWindow *w, DList *lstFiles)
 	}
 }
 
-DList* GetFiles(uGlobalData *gd, char *path, int hidden)
+DList* GetFiles(uGlobalData *gd, char *path)
 {
 	DList *lstF;
 	DIR *d;
@@ -1129,6 +1129,7 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	int name_len;
 	int size_off;
 	int date_off;
+	uDirEntry *de;
 
 	assert(lstFiles != NULL);
 
@@ -1170,7 +1171,6 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 
 	while(e != NULL && i < depth)
 	{
-		uDirEntry *de;
 		de = dlist_data(e);
 		e = dlist_next(e);
 
@@ -2049,19 +2049,26 @@ int SetHighlightedFile(uGlobalData *gd, int idx)
 }
 
 
-DList* ResetFilteredFileList(DList *lstF, DList *lstA)
+DList* ResetFilteredFileList(uGlobalData *gd, DList *lstF, DList *lstA)
 {
 	DList *lstB;
 	DLElement *e;
+	int hidden;
+
+	hidden = IsTrue(INI_get(gd->optfile, "options", "show_hidden"));
 
 	lstB = malloc(sizeof(DList));
 	dlist_init(lstB, NULL);
 
 	e = dlist_head(lstA);
-
 	while(e != NULL)
 	{
-		dlist_ins(lstB, dlist_data(e));
+		uDirEntry *de;
+
+		de = dlist_data(e);
+		if(hidden == 0 || ALFC_IsHidden(de->name, de->attrs) != 0)
+			dlist_ins(lstB, dlist_data(e));
+
 		e = dlist_next(e);
 	}
 
@@ -2096,15 +2103,16 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 			dlist_destroy(gd->lstFullLeft);
 			free(gd->lstFullLeft);
 		}
-		gd->lstFullLeft = GetFiles(gd, gd->left_dir, IsTrue(INI_get(gd->optfile, "options", "show_hidden")));
+		gd->lstFullLeft = GetFiles(gd, gd->left_dir);
 		CalcDirStats(gd, gd->win_left, gd->lstFullLeft);
+
 
 		if(gd->lstLeft != NULL)
 		{
 			dlist_destroy(gd->lstLeft);
 			free(gd->lstLeft);
 		}
-		gd->lstLeft = ResetFilteredFileList(gd->lstFilterLeft, gd->lstFullLeft);
+		gd->lstLeft = ResetFilteredFileList(gd, gd->lstFilterLeft, gd->lstFullLeft);
 
 		assert(gd->lstFilterLeft != NULL);
 		assert(gd->lstFullLeft != NULL);
@@ -2128,7 +2136,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 			dlist_destroy(gd->lstFullRight);
 			free(gd->lstFullRight);
 		}
-		gd->lstFullRight = GetFiles(gd, gd->right_dir, IsTrue(INI_get(gd->optfile, "options", "show_hidden")));
+		gd->lstFullRight = GetFiles(gd, gd->right_dir);
 		CalcDirStats(gd, gd->win_right, gd->lstFullRight);
 
 		if(gd->lstRight != NULL)
@@ -2136,7 +2144,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 			dlist_destroy(gd->lstRight);
 			free(gd->lstRight);
 		}
-		gd->lstRight = ResetFilteredFileList(gd->lstFilterRight, gd->lstFullRight);
+		gd->lstRight = ResetFilteredFileList(gd, gd->lstFilterRight, gd->lstFullRight);
 
 		assert(gd->lstFilterRight != NULL);
 		assert(gd->lstFullRight != NULL);
@@ -2464,20 +2472,18 @@ void scroll_page_up(uGlobalData *gd)
 	}
 }
 
-
 void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstGlob, DList *lstFull, DList *lstF)
 {
 	DLElement *e, *e2;
 	regex_t preg;
 	uDirEntry *de;
 	int status;
+	DList *lstNew;
+	DList *lstOld;
 
 	uDirEntry *deold;
 
 	deold = GetHighlightedFile(lstF, GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
-
-	DList *lstNew;
-	DList *lstOld;
 
 	if(dlist_size(lstFilter) > 0)
 	{
@@ -2557,10 +2563,12 @@ void UpdateFilterList(uGlobalData *gd, DList *lstFilter, DList *lstGlob, DList *
 		}
 	}
 
-
 	UpdateGlobList(gd, lstGlob, lstFull, lstF);
+
 	if( dlist_size(lstF) > 0)
 	{
+
+
 		assert(lstF != NULL);
 		SortList(gd, lstF);
 		assert(lstF != NULL);

@@ -1340,7 +1340,7 @@ int gme_SetFilter(lua_State *L)
 				dlist_destroy(gd->lstRight);
 				free(gd->lstRight);
 			}
-			gd->lstRight = ResetFilteredFileList(gd->lstFilterRight, gd->lstFullRight);
+			gd->lstRight = ResetFilteredFileList(gd, gd->lstFilterRight, gd->lstFullRight);
 		}
 		else
 		{
@@ -1349,7 +1349,7 @@ int gme_SetFilter(lua_State *L)
 				dlist_destroy(gd->lstLeft);
 				free(gd->lstLeft);
 			}
-			gd->lstLeft = ResetFilteredFileList(gd->lstFilterLeft, gd->lstFullLeft);
+			gd->lstLeft = ResetFilteredFileList(gd, gd->lstFilterLeft, gd->lstFullLeft);
 		}
 	}
 	else
@@ -1406,7 +1406,7 @@ int gme_AddFilter(lua_State *L)
 				dlist_destroy(gd->lstRight);
 				free(gd->lstRight);
 			}
-			gd->lstRight = ResetFilteredFileList(gd->lstFilterRight, gd->lstFullRight);
+			gd->lstRight = ResetFilteredFileList(gd, gd->lstFilterRight, gd->lstFullRight);
 		}
 		else
 		{
@@ -1415,7 +1415,7 @@ int gme_AddFilter(lua_State *L)
 				dlist_destroy(gd->lstLeft);
 				free(gd->lstLeft);
 			}
-			gd->lstLeft = ResetFilteredFileList(gd->lstFilterLeft, gd->lstFullLeft);
+			gd->lstLeft = ResetFilteredFileList(gd, gd->lstFilterLeft, gd->lstFullLeft);
 		}
 	}
 	else
@@ -1467,7 +1467,7 @@ int gme_SetGlob(lua_State *L)
 				dlist_destroy(gd->lstRight);
 				free(gd->lstRight);
 			}
-			gd->lstRight = ResetFilteredFileList(gd->lstFilterRight, gd->lstFullRight);
+			gd->lstRight = ResetFilteredFileList(gd, gd->lstFilterRight, gd->lstFullRight);
 		}
 		else
 		{
@@ -1476,7 +1476,7 @@ int gme_SetGlob(lua_State *L)
 				dlist_destroy(gd->lstLeft);
 				free(gd->lstLeft);
 			}
-			gd->lstLeft = ResetFilteredFileList(gd->lstFilterLeft, gd->lstFullLeft);
+			gd->lstLeft = ResetFilteredFileList(gd, gd->lstFilterLeft, gd->lstFullLeft);
 		}
 	}
 	else
@@ -1535,7 +1535,7 @@ int gme_AddGlob(lua_State *L)
 				dlist_destroy(gd->lstRight);
 				free(gd->lstRight);
 			}
-			gd->lstRight = ResetFilteredFileList(gd->lstFilterRight, gd->lstFullRight);
+			gd->lstRight = ResetFilteredFileList(gd, gd->lstFilterRight, gd->lstFullRight);
 		}
 		else
 		{
@@ -1544,7 +1544,7 @@ int gme_AddGlob(lua_State *L)
 				dlist_destroy(gd->lstLeft);
 				free(gd->lstLeft);
 			}
-			gd->lstLeft = ResetFilteredFileList(gd->lstFilterLeft, gd->lstFullLeft);
+			gd->lstLeft = ResetFilteredFileList(gd, gd->lstFilterLeft, gd->lstFullLeft);
 		}
 	}
 	else
