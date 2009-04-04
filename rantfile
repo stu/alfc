@@ -169,7 +169,7 @@ task "fixversion" do
 	end
 
 	# now build lua helper files
-	sys "#{var[:lua]}", "lua_helper.lua"
+	sys "#{var[:lua]} lua_helper.lua"
 end
 
 
