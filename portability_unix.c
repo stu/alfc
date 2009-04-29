@@ -7,6 +7,7 @@
 #endif
 
 const char ALFC_pathsep = '/';
+const char ALFC_path_varset = ':';
 
 char* ALFC_getenv(const char *s)
 {
@@ -164,3 +165,7 @@ int ALFC_IsDir(uint32_t attrs)
 		return -1;
 }
 
+char* ALFC_get_basepath(void)
+{
+	return strdup(":/bin:/usr/bin:/usr/local/bin:/");
+}

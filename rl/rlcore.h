@@ -1,3 +1,10 @@
+#ifndef RLCORE_H
+#define RLCORE_H
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+
 /*
   The header file for RLLib.
   These functions are implemented in rlbase.c, rlfont.c, rlcolor.c, and rlmsg.c.
@@ -114,3 +121,11 @@ enum
 
 void clear(void);
 void maximise_window(void);
+int window_isshutdown(void);
+
+
+#ifdef __cplusplus
+}
+#endif
+#endif // _MAIN_H
+

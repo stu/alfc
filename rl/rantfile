@@ -1,22 +1,8 @@
 
 rll_objs = %w(rlcore.o)
 
-desc "lib file"
-task "librl.a" => rll_objs do |t|
+file "librl.a" => rll_objs do |t|
 	sys "ar rsv librl.a #{rll_objs.join(' ')}"
-	sys.cp "librl.a",".."
-end
-
-
-
-file "xlibrl.a"  do
-	rll_objs.each do |c|
-		sys "#{CC} -O2 -c #{c}"
-	end
-
-	xx = Dir["*.o"]
-
-	sys "ar rsv librl.a #{xx.join(' ')}"
 	sys.cp "librl.a",".."
 end
 

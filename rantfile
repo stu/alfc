@@ -15,14 +15,21 @@ case y.to_s
 		var[:exec] = "alfc.exe"
 		var[:lua] = "lua.exe"
 		var[:luac] = "luac.exe"
+		var[:bin2c] = "bin2c.exe"
+		var[:gcomp] = "gcomp.exe"
+		var[:guide] = "guide.exe"
+		var[:gdump] = "gdump.exe"
+
 		if DRIVER=="NCURSES"
 			var[:libs] = "-lpdcurses -llua -lregex -liberty -lkernel32"
-			PORTABILITY_OBJS = %w( portability_win32.o  ncurses_interface.o)
+			PORTABILITY_OBJS = %w( portability_win32.o ncurses_interface.o)
+			GPORTABILITY_OBJS = %w( portability_win32.o ncurses_interface.o)
 		else
 			var[:libs] = "-llua -lregex -liberty -lkernel32 -Lrl -lrl -mwindows"
-			PORTABILITY_OBJS = %w( portability_win32.o  x11_interface.o)
+			PORTABILITY_OBJS = %w( portability_win32.o x11_interface.o x11_main.o)
+			GPORTABILITY_OBJS = %w( portability_win32.o x11_interface.o x11_guide.o)
 		end
-
+		GLIBS = "-lz"
 		# mingw has bugs with 64bit stuff (mostly in sprintf etc dropping upper 32bits).
 		# this allows us to use %I64u format...
 		PORT_CFLAGS = "-Wno-format"
@@ -31,20 +38,36 @@ case y.to_s
 		var[:exec] = "alfc.exe"
 		var[:lua] = "lua.exe"
 		var[:luac] = "luac.exe"
+		var[:bin2c] = "bin2c.exe"
+		var[:gcomp] = "gcomp.exe"
+		var[:guide] = "guide.exe"
+		var[:gdump] = "gdump.exe"
+
 		var[:libs] = "-lpdcurses -llua"
 		PORTABILITY_OBJS = %w( portability_unix.o  ncurses_interface.o)
+		GPORTABILITY_OBJS = %w( portability_unix.o  ncurses_interface.o)
 		PORT_CFLAGS = ""
+		GLIBS = "-lz"
 	else
 		@strPlatform = "ALFC_UNIXLIKE"
 		var[:exec] = "alfc"
 		var[:lua] = "lua"
 		var[:luac] = "luac"
+		var[:bin2c] = "bin2c"
+		var[:gcomp] = "gcomp"
+		var[:guide] = "guide"
+		var[:gdump] = "gdump"
+
 		if DRIVER=="NCURSES"
 			var[:libs] = "-lncurses -llua5.1"
-			PORTABILITY_OBJS = %w( portability_unix.o  ncurses_interface.o)
+			PORTABILITY_OBJS = %w( portability_unix.o ncurses_interface.o)
+			GPORTABILITY_OBJS = %w( portability_unix.o ncurses_interface.o)
+			GLIBS = "-lz -lbz2"
 		else
 			var[:libs] = "-llua5.1 -Lrl -lrl -lX11"
-			PORTABILITY_OBJS = %w( portability_unix.o  x11_interface.o)
+			PORTABILITY_OBJS = %w( portability_unix.o x11_interface.o x11_main.o)
+			GPORTABILITY_OBJS = %w( portability_unix.o x11_interface.o x11_guide.o)
+			GLIBS = "-lz -lbz2"
 		end
 
 		PORT_CFLAGS=""
@@ -134,8 +157,14 @@ end
 cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
 
 CC = "gcc"
-CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH " + PORT_CFLAGS
+CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DNMEMWATCH " + PORT_CFLAGS
 LIBS = ""
+
+default_files = %w(global.lua viewer.lua startup.lua shutdown.lua options.ini core_extract.lua
+			core_hash.lua viewer_languages.lua filemanager_menu.lua)
+if DRIVER=="X11"
+	default_files += %w(font.rlf font_small.rlf)
+end
 
 alfc = %w( dlist.o logwrite.o ini.o
 			version.o main.o memwatch.o lua_helper.o
@@ -149,17 +178,16 @@ gen Action do
 	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s + " -DDRV_" + DRIVER
 end
 
-if DRIVER=="NCURSES"
 desc "Build the app"
-task :all => ["auxfiles", "appx"] do
-end
-else
-desc "Build the app"
-task :all => ["auxfiles", "rl/librl.a", "appx"] do
-end
+task :all => ["auxfiles", "appx", "help"] do
 end
 
-task "auxfiles" => ["fixversion", "tools" ] do
+if DRIVER=="NCURSES"
+task "auxfiles" => ["fixversion", "defaults.h" ] do
+end
+else
+task "auxfiles" => ["fixversion", "defaults.h", "rl/librl.a" ] do
+end
 end
 
 task "fixversion" do
@@ -172,20 +200,23 @@ task "fixversion" do
 	sys "#{var[:lua]} lua_helper.lua"
 end
 
+file "#{var[:bin2c]}" => %w(bin2c.o) do |t|
+	sys "#{CC} -o #{var[:bin2c]} #{t.prerequisites.join(' ')} "
+end
 
-task :tools => %w(bin2c.o) do |t|
-	sys "#{CC} -o bin2c  #{t.prerequisites.join(' ')} "
-	sys "bin2c global.lua include_global_lua > defaults.h"
-	sys "bin2c viewer.lua include_viewer_lua >> defaults.h"
-	sys "bin2c startup.lua include_startup_lua >> defaults.h"
-	sys "bin2c shutdown.lua include_shutdown_lua >> defaults.h"
-	sys "bin2c options.ini include_options_ini >> defaults.h"
-	sys "bin2c core_extract.lua core_extract_lua >> defaults.h"
-	sys "bin2c core_hash.lua core_hash_lua >> defaults.h"
-	sys "bin2c viewer_languages.lua viewer_languages_lua >> defaults.h"
+file "defaults.h" => [var[:bin2c]] + default_files do |t|
+	sys "#{var[:bin2c]} global.lua include_global_lua > defaults.h"
+	sys "#{var[:bin2c]} viewer.lua include_viewer_lua >> defaults.h"
+	sys "#{var[:bin2c]} startup.lua include_startup_lua >> defaults.h"
+	sys "#{var[:bin2c]} shutdown.lua include_shutdown_lua >> defaults.h"
+	sys "#{var[:bin2c]} options.ini include_options_ini >> defaults.h"
+	sys "#{var[:bin2c]} core_extract.lua core_extract_lua >> defaults.h"
+	sys "#{var[:bin2c]} core_hash.lua core_hash_lua >> defaults.h"
+	sys "#{var[:bin2c]} viewer_languages.lua viewer_languages_lua >> defaults.h"
+	sys "#{var[:bin2c]} filemanager_menu.lua filemanager_menu_lua >> defaults.h"
 if DRIVER=="X11"
-	sys "bin2c font.rlf x11_data_font > x11_fonts.h"
-	sys "bin2c font_small.rlf x11_data_font_small >> x11_fonts.h"
+	sys "#{var[:bin2c]} font.rlf x11_data_font > x11_fonts.h"
+	sys "#{var[:bin2c]} font_small.rlf x11_data_font_small >> x11_fonts.h"
 end
 end
 
@@ -196,32 +227,63 @@ task :appx => alfc + PORTABILITY_OBJS do |t|
 	cBV.WriteVersion
 end
 
+desc "help"
+task :help => ["auxfiles", "#{var[:gdump]}", "#{var[:guide]}", "#{var[:gcomp]}"] do
+end
+
+file "#{var[:gcomp]}" => %w(guidecompiler.o dlist.o lzss.o) do |t|
+	sys "#{CC} -o #{var[:gcomp]} #{t.prerequisites.join(' ')} #{GLIBS}"
+    sys "./#{var[:gcomp]} docs/guide_create.txt guide_create.gd"
+    sys "./#{var[:gcomp]} docs/help.txt help.gd"
+end
+
+file "#{var[:gdump]}" => %w(guidedump.o guideload.o dlist.o lzss.o) do |t|
+    sys "#{CC} -o #{var[:gdump]} #{t.prerequisites.join(' ')} #{GLIBS} "
+end
+
+file "#{var[:guide]}" => %w(guide.o guideload.o dlist.o lzss.o version.o) + GPORTABILITY_OBJS do |t|
+    sys "#{CC} -o #{var[:guide]} #{t.prerequisites.join(' ')} #{var[:libs]} #{GLIBS}"
+end
+
+
 desc "Build documentation"
 task "docs" do
 	print "Updating Lua API documentation (html mutli) :: "
-	sys "robodoc --rc robodoc_lua_multi_html.rc"
+	sys "robodoc --html --doc ./doc/lua_api/html_multi --multidoc --rc robodoc_lua.rc"
 
 	print "Updating Lua API documentation (html single) :: "
-	sys "robodoc --rc robodoc_lua_single_html.rc"
+	sys "robodoc --html --doc ./doc/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
 
 	print "Updating Lua API documentation (rtf) :: "
-	sys "robodoc --rc robodoc_lua_rtf.rc"
+	sys "robodoc --rtf --doc ./doc/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
+
+	print "Updating Lua API documentation (latex) :: "
+	sys "robodoc --latex --doc ./doc/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
 
 	################
 
 	print "Updating Core documentation (html mutli) :: "
-	sys "robodoc --rc robodoc_core_multi_html.rc"
+	sys "robodoc --html --doc ./doc/core/html_multi --multidoc --rc robodoc_core.rc"
 
 	print "Updating Core documentation (html single) :: "
-	sys "robodoc --rc robodoc_core_single_html.rc"
+	sys "robodoc --html --doc ./doc/core/alfc_core --singledoc --rc robodoc_core.rc"
 
 	print "Updating Core documentation (rtf) :: "
-	sys "robodoc --rc robodoc_core_rtf.rc"
+	sys "robodoc --rtf --doc ./doc/core/alfc_core --singledoc --rc robodoc_core.rc"
+
+	print "Updating Core documentation (latex) :: "
+	sys "robodoc --latex --doc ./doc/core/alfc_core --singledoc --rc robodoc_core.rc"
 end
 
 desc "Cleanup..."
 task :clean => "rl/clean" do
-	x = Dir["*.{bak,o,obj,a}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"] + Dir["Makefile"] + Dir["bin2c"]
+	x = Dir["*.{bak,o,obj,a,gd}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"] + Dir["Makefile"]
+
+	x += Dir["#{var[:gcomp]}"]
+	x += Dir["#{var[:gdump]}"]
+	x += Dir["#{var[:guide]}"]
+	x += Dir["#{var[:bin2c]}"]
+
 
 	x += Dir["lua_helper.c"]
 	x += Dir["lua_common_api.c"]
@@ -234,6 +296,15 @@ task :clean => "rl/clean" do
 	if x.length > 0
 		sys.rm_rf x
 	end
+end
+
+gen Rule, '.rlf' => '.rlf' do |t|
+end
+
+gen Rule, '.ini' => '.ini' do |t|
+end
+
+gen Rule, '.lua' => '.lua' do |t|
 end
 
 gen Rule, '.o' => '.c' do |t|
@@ -337,4 +408,3 @@ task :make =>  ["clean", "bin2c.o", "auxfiles"] do
 end
 
 subdirs "rl"
-

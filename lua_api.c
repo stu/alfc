@@ -2472,3 +2472,21 @@ int gme_SetFileType(lua_State *L)
 
 	return 0;
 }
+
+int gme_ToggleHidden(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	ToggleHidden(gd);
+
+	SwitchPanes(gd);
+	UpdateDir(gd, NULL);
+	SwitchPanes(gd);
+	UpdateDir(gd, NULL);
+
+	DrawAll(gd);
+
+	return 0;
+}

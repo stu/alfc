@@ -731,61 +731,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	LoadPlugins()
 
 	--------------------------------------------------------------------------
-
-	BindKey(ALFC_KEY_F01, "View", [[ViewFile(GetHighlightedFilename())]])
-
-	--BindKey(ALFC_KEY_F02, "Same", [[:s]])
-	--BindKey(ALFC_KEY_F03, "History", [[ViewHistory()]])
-
-	BindKey(ALFC_KEY_ALT + string.byte("X"), "Quit", [[:q]])
-	--BindKey(ALFC_KEY_CTRL + string.byte("X"), "Quit", [[:q]])
-
-	BindKey(ALFC_KEY_F12, "Tag", [[TagHighlightedFile()]])
-
-	-- Bind ALT-C, ALT-D, ALT-M for copy/delete/move
-	BindKey(ALFC_KEY_ALT + string.byte("C"), "Copy Tagged", [[:tc]])
-	BindKey(ALFC_KEY_ALT + string.byte("D"), "Del Tagged", [[:td]])
-	BindKey(ALFC_KEY_ALT + string.byte("M"), "Move Tagged", [[:tm]])
-	if SystemType() == "UNIX" then
-		BindKey(ALFC_KEY_ALT + string.byte("S"), "Symlink Tagged", [[:sym]])
-
-	end
-
-	BindKey(ALFC_KEY_F10, "Menu", [[Menu()]])
-
-	BindKey(string.byte("{"), "HBck", [[HistoryUp()]])
-	BindKey(string.byte("}"), "HFwd", [[HistoryDown()]])
-
-
-	-- ALT-H for home directory
-	BindKey(ALFC_KEY_ALT + string.byte("H"), "Home", [[SetCurrentWorkingDirectory("$HOME")]])
-
-
-	-- ALT-A for About
-	BindKey(ALFC_KEY_ALT + string.byte("A"), "About", [[About()]])
-
-
-	CreateMenu(ALFC_KEY_ALT + string.byte("1"), "Left Panel", {
-				{ key = string.byte('s'), name = "make Same as Right", code = [[local x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __MakeInactivePaneSame(); SetActivePane(x)]]},
-				{ key = string.byte('c'), name = "Copy to Right", code = [[local x = GetActivePane(); SetActivePane(WINDOW_LEFT); __TagCopy(); SetActivePane(x)]]},
-				{ key = string.byte('d'), name = "Delete", code = [[local x = GetActivePane(); SetActivePane(WINDOW_LEFT); __TagDelete(); SetActivePane(x)]]},
-				{ key = string.byte('m'), name = "Move to Right", code = [[local x = GetActivePane(); SetActivePane(WINDOW_LEFT); __TagMove(); SetActivePane(x)]]},
-			})
-
-
-	CreateMenu(ALFC_KEY_ALT + string.byte("F"), "File", {
-				{ key = string.byte('h'), name = "Hidden", code = [[if GetOption("options", "show_hidden") == "false" then SetOption("options", "show_hidden", "true") else SetOption("options", "show_hidden", "false") end SetCurrentWorkingDirectory(GetCurrentWorkingDirectory())]]},
-                { key = string.byte('x'), name = "Exit", code = [[__QuitApp()]]},
-				{ key = string.byte('a'), name = "About", code = [[About()]] },
-				{ key = ALFC_KEY_F1, name = "Help", code = [[ViewFile("help.txt")]] },
-			})
-
-	CreateMenu(ALFC_KEY_ALT + string.byte("2"), "Right Panel", {
-				{ key = string.byte('s'), name = "make Same as left", code = [[local x = GetActivePane(); SetActivePane(WINDOW_LEFT); __MakeInactivePaneSame(); SetActivePane(x)]]},
-				{ key = string.byte('c'), name = "Copy to Left", code = [[local x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __TagCopy(); SetActivePane(x)]]},
-				{ key = string.byte('d'), name = "Delete", code = [[local x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __TagDelete(); SetActivePane(x)]]},
-				{ key = string.byte('m'), name = "Move to Left", code = [[local x = GetActivePane(); SetActivePane(WINDOW_RIGHT); __TagMove(); SetActivePane(x)]]},
-			})
+	IncludeFile("$HOME/.alfc/filemanager_menu.lua")
 
 	_G["DIR_BOOTSTRAP"] = 1
 end -- _G["BOOTSTRAP"]

@@ -15,4 +15,14 @@ uint16_t VersionBuild(void)
 	return VBUILD;
 }
 
+char* VersionDate(void)
+{
+	return __DATE__;
+}
+
+char* VersionTime(void)
+{
+	return __TIME__;
+}
+
 

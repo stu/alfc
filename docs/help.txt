@@ -1,29 +1,101 @@
-{Welcome}
-Welcome to Another Linux File Commander
-by Stu George
+Another Linux File Commander
+Stu George
+0.0.1-20090415
+----
+%MAIN%Introduction%
+Welcome to Another Linux File Commander (~ALFC~ for short).
 
-Sections
-	#{Welcome}
-	#{Moving Around}
-	#{Tips and Tricks}
+This program is a file management utility patterned after
+a very famous classic program called ~Norton Commander~.
 
-{Moving Around}
-Moving around ALFC is very simple.
+Hence the 'commander' in the title.
 
-In its primary file view mode,
-TAB - Will toggle between the left and right file windows
-LEFT/RIGHT - Cursor key left or right to change up a directory or down into the selected directory.
+This program is designed to be easy and powerful, giving you
+control back over your filesystem.
 
-{Tips and Tricks}
-- Whats the easiest way to delete all *.o files?
-	:tg *.o
-	:td
+%%LIST%MAIN%%
 
-- What about deleting everything BUT my .c and .h files?
-	:tf \.[ch]$
-	:t!
-	:td
+%MAIN%Date and Time Formats%
 
-- How do I refresh the current direcory?
-	To refresh current directory just issue a ':c' with no parameter
+ALFC can display the time in the following formats;
+	^HH:mm.ss^ - eg 13:57.03
+	^hh:mm.ss AMPM^ - eg 1:57.03 PM
+	^hh:mm.ssAMPM^ - eg 1:57.03PM
+	^hh:mm.ss^ - eg 1:57.03
+	^HH:mm^ - eg 13:57
+	^hh:mm^ - eg 1:57
+	^hh:mm AMPM^ - eg 1:57 PM
+	^hh:mmAMPM^ - eg 1:57PM
+
+	Where;
+
+	^HH^ - 24hour format
+	^hh^ - 12hour format
+	^mm^ - minutes
+	^ss^ - seconds
+	^AMPM^ - Displays AM or PM
+
+Date formats are as below;
+	^dd/mm/yyyy^ - eg 22/12/2009
+	^dd/mm/yy^ - eg 22/12/09
+	^mm/dd/yyyy^ - eg 12/22/2009
+	^mm/dd/yy^ - eg 12/22/09
+	^mm-dd-yyyy^ - eg 12-22-2009
+	^mm-dd-yy^ - eg 12-22-09
+	^dd-mm-yyyy^ - eg 22-12-2009
+	^dd-mm-yy^ - eg 22-12-09
+
+	^dd/mmm/yyyy^ - eg 22/dec/2009
+	^dd/mmm/yy^ - eg 22/dec/09
+	^mmm/dd/yyyy^ - eg dec/22/2009
+	^mmm/dd/yy^ - eg dec/22/09
+	^mmm-dd-yyyy^ - eg dec-22-2009
+	^mmm-dd-yy^ - eg dec-22-09
+	^dd-mmm-yyyy^ - eg 22-dec-2009
+	^dd-mmm-yy^ - eg 22-dec-09
+
+	^dd/mmmm/yyyy^ - eg 22/December/2009
+	^dd/mmmm/yy^ - eg 22/December/09
+	^mmmm/dd/yyyy^ - eg December/22/2009
+	^mmmm/dd/yy^ - eg December/22/09
+	^mmmm-dd-yyyy^ - eg December-22-2009
+	^mmmm-dd-yy^ - eg December-22-09
+	^dd-mmmm-yyyy^ - eg 22-December-2009
+	^dd-mmmm-yy^ - eg 22-December-09
+
+	^yymmdd^ - eg 091222
+	^yyyymmdd^ - eg 20091222
+	^ddmmyyyy^ - eg 22122009
+	^ddmmmyyyy^ - eg 22dec2009
+
+	Where;
+
+	  ^dd^ - day of month (1-31)
+	  ^mm^ - month, numericly (1-12)
+	 ^mmm^ - month as jan/feb/.../dec
+	^mmmm^ - month as whole January, September, etc.
+	  ^yy^ - two digit year
+	^yyyy^ - four digit year
+
+
+
+%MAIN%Keyboard Commands%
+
+%MAIN%About%
+ALFC is a utility program for file and directory management.
+
+%%LINK%MAIN%About%Credits%%
+
+Thanks!
+%MAIN%About%Credits%
+Stu George - Most everything
+Nate       - Originally did the rlcore code.
+Lua Team   - Lua
+
+%VIEW%Intro%
+This is the inbuilt Viewer command
+
+%VIEW%Keyboard Commands%
+
+blah blah
 

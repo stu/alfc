@@ -81,6 +81,8 @@ void RegisterCommonFuncs(uGlobalData *gd, lua_State *l)
 	lua_pushnumber(l, FILETYPE_ARCHIVE); lua_setglobal(l, "FILETYPE_ARCHIVE");
 	lua_pushnumber(l, FILETYPE_DOC); lua_setglobal(l, "FILETYPE_DOC");
 	lua_pushnumber(l, FILETYPE_BACKUP); lua_setglobal(l, "FILETYPE_BACKUP");
+	lua_pushnumber(l, FILETYPE_EXEC); lua_setglobal(l, "FILETYPE_EXEC");
+	lua_pushnumber(l, FILETYPE_MOVIE); lua_setglobal(l, "FILETYPE_MOVIE");
 
 	ps = get_charsep();
 	lua_pushstring(l, ps); lua_setglobal(l, "pathsep");

@@ -17,11 +17,13 @@ extern char* ALFC_get_last_error(int err);
 extern int ALFC_IsHidden(char *fn, uint32_t attrs);
 extern int ALFC_IsExec(char *fn, uint32_t attrs);
 extern int ALFC_IsDir(uint32_t attrs);
+extern char* ALFC_get_basepath(void);
 
 extern int ALFC_startup(void);
 extern int ALFC_shutdown(void);
 
 extern const char ALFC_pathsep;
+extern const char ALFC_path_varset;
 
 #ifdef __cplusplus
 };

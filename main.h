@@ -9,6 +9,9 @@ extern "C"{
 #define FILETYPE_ARCHIVE 	2
 #define FILETYPE_DOC 		3
 #define FILETYPE_BACKUP 	4
+#define FILETYPE_EXEC       5
+#define FILETYPE_MOVIE      6
+
 
 enum
 {
@@ -274,10 +277,12 @@ struct udtScreenDriver
 	void (*init_style)(int style, uint32_t fg, uint32_t bg);
 	void (*print_hline)(void);
 	void (*print_vline)(void);
+	void (*set_updates)(int set);
 
 	void (*init_dir_styles)(uScreenDriver *scr);
 	void (*init_view_styles)(uScreenDriver *scr);
-	int (*screen_resized)(void);
+	int (*screen_isresized)(void);
+	int (*screen_isshutdown)(void);
 };
 
 #define WINDOW_LEFT	0
@@ -456,8 +461,12 @@ extern DList* GetFiles(uGlobalData *gd, char *path);
 extern int ALFC_main(int start_mode, char *view_file);
 extern void DrawCLI(uGlobalData *gd);
 
+extern void ToggleHidden(uGlobalData *gd);
+
 extern char *start_left;
 extern char *start_right;
+
+extern char* gstr_WindowTitle;
 
 #ifdef __cplusplus
 }

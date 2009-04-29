@@ -5,6 +5,7 @@ static char *alfc_script_home;
 static char *last_error;
 
 const char ALFC_pathsep = '\\';
+const char ALFC_path_varset = ';';
 
 static void GetWindowsErrorMsg(char *func)
 {
@@ -17,7 +18,7 @@ static void GetWindowsErrorMsg(char *func)
 
 	last_error = (LPVOID)LocalAlloc(LMEM_ZEROINIT, (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)func) + 40) * sizeof(TCHAR));
 	sprintf(last_error, "%s failed with error %d: %s", func, dw, lpMsgBuf);
-	LogInfo(last_error);
+	//LogInfo(last_error);
 	LocalFree(lpMsgBuf);
 }
 
@@ -106,6 +107,16 @@ uint32_t ALFC_GetFileAttrs(uDirEntry *de)
 	strcat(x, de->name);
 
 	z = GetFileAttributes(x);
+	if(z == 0xFFFFFFFF)
+	{
+		// HACK : SGEO : special case to handle the two locked files...
+		// My test system shows default of AHS flags.
+		if(strcasecmp(de->name, "pagefile.sys") == 0)
+			z = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_ARCHIVE;
+
+		if(strcasecmp(de->name, "hiberfil.sys") == 0)
+			z = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_ARCHIVE;
+	}
 
 	free(x);
 
@@ -228,5 +239,38 @@ int ALFC_IsDir(uint32_t attrs)
 		return 0;
 	else
 		return -1;
+}
+
+char* ALFC_get_basepath(void)
+{
+	// SYSTEMROOT on XP usually "c:\windows" (mostly nt derivatives)
+	// WINDIR usually c:\windows (moslty win95/95 derivatives)
+
+	char *p;
+	char buff[512];
+
+	buff[0] = 0;
+
+	// try systemroot first, then windir second
+
+	p = getenv("SYSTEMROOT");
+	if(p == NULL)
+		p = getenv("WINDIR");
+
+	if(p != NULL)
+	{
+		strcat(buff, p);
+		strcat(buff, ";");
+		strcat(buff, p);
+		strcat(buff, "\\system32");
+		strcat(buff, ";");
+		// for good measure on systems without a system32
+		strcat(buff, "\\system");
+		strcat(buff, ";");
+	}
+	else
+		strcat(buff, "C:\\Winnt;C:\\Winnt\\System32;c:\\windows;c:\\windows\\system32");
+
+	return strdup(buff);
 }
 

@@ -3,9 +3,6 @@
 options:
 	--documenttitle "Another Linux File Commander"
     --src .
-    --doc ./doc/core/html_multi
-    --html
-    --multidoc
     --index
     --tabsize 4
     --cmode
@@ -14,10 +11,9 @@ options:
 	--toc
 source items:
     SYNOPSIS
-	SOURCE
 	EXAMPLE
 items:
-	SOURCE
+   SOURCE
     NAME
     COPYRIGHT
     SYNOPSIS
@@ -95,6 +91,10 @@ ignore files:
 	stucore
 	.git
 	doc
+	docs
+	rl
+	mingw
+	scripts
 accept files:
     *.c
     *.h

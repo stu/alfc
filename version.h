@@ -8,7 +8,8 @@ extern "C"{
 extern uint16_t VersionMajor(void);
 extern uint16_t VersionMinor(void);
 extern uint16_t VersionBuild(void);
-
+extern char* VersionTime(void);
+extern char* VersionDate(void);
 
 #ifdef __cplusplus
 };

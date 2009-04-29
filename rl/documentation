@@ -1,3 +1,10 @@
+
+SGEO: I've hacked up rllib a tonne. 
+below is the original documentation.
+
+
+--------------
+
 This is the documentation for the RLLib API.
 
 Instead of using the normal main() function, applications that use RLLib should use rlmain() instead.

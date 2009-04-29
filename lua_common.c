@@ -1,84 +1,127 @@
 #include "headers.h"
 
+static int HaveShellMetaCharacters(char *s)
+{
+	while (*s != 0)
+	{
+		switch (*s++)
+		{
+			case '|':
+			case '^':
+			case ';':
+			case '&':
+			case '(':
+			case ')':
+			case '<':
+			case '>':
+			case '[':
+			case ']':
+			case '*':
+			case '?':
+			case '\'':
+			case '\"':
+			case '\\':
+			case '`':
+			case '$':
+			case '~':
+				return 1;
+		}
+	}
+
+	return 0;
+}
+
+int gmec_VersionDate(lua_State *L)
+{
+	lua_pushstring(L, VersionDate());
+	return 1;
+}
+
+int gmec_VersionTime(lua_State *L)
+{
+	lua_pushstring(L, VersionTime());
+	return 1;
+}
+
 /****f* LuaAPI/VersionMajor
-* FUNCTION
-*	Returns the major version number
-* SYNOPSIS
-major = VersionMajor()
-* INPUTS
-*	o None
-* RESULTS
-*	o major (number) -- major number (eg: 1)
-* EXAMPLE
-debug_msg("ALFC v " .. VersionMajor())
-* AUTHOR
-*	Stu George
-******
-*/
+ * FUNCTION
+ *	Returns the major version number
+ * SYNOPSIS
+ major = VersionMajor()
+ * INPUTS
+ *	o None
+ * RESULTS
+ *	o major (number) -- major number (eg: 1)
+ * EXAMPLE
+ debug_msg("ALFC v " .. VersionMajor())
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_VersionMajor(lua_State *L)
 {
 	lua_pushnumber(L, VersionMajor());
 	return 1;
 }
 /****f* LuaAPI/VersionMinor
-* FUNCTION
-*	Returns the minor version number
-* SYNOPSIS
-minor = VersionMinor()
-* INPUTS
-*	o None
-* RESULTS
-*	o minor (number) -- minor number (eg: 2)
-* EXAMPLE
-debug_msg("ALFC minor version = " .. VersionMinor())
-* AUTHOR
-*	Stu George
-******
-*/
+ * FUNCTION
+ *	Returns the minor version number
+ * SYNOPSIS
+ minor = VersionMinor()
+ * INPUTS
+ *	o None
+ * RESULTS
+ *	o minor (number) -- minor number (eg: 2)
+ * EXAMPLE
+ debug_msg("ALFC minor version = " .. VersionMinor())
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_VersionMinor(lua_State *L)
 {
 	lua_pushnumber(L, VersionMinor());
 	return 1;
 }
 /****f* LuaAPI/VersionBuild
-* FUNCTION
-*	Returns the build number
-* SYNOPSIS
-build = VersionBuild()
-* INPUTS
-*	o None
-* RESULTS
-*	o build (number) -- build number (eg: 1234)
-* EXAMPLE
-debug_msg("ALFC build " .. VersionBuild())
-* AUTHOR
-*	Stu George
-******
-*/
+ * FUNCTION
+ *	Returns the build number
+ * SYNOPSIS
+ build = VersionBuild()
+ * INPUTS
+ *	o None
+ * RESULTS
+ *	o build (number) -- build number (eg: 1234)
+ * EXAMPLE
+ debug_msg("ALFC build " .. VersionBuild())
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_VersionBuild(lua_State *L)
 {
 	lua_pushnumber(L, VersionBuild());
 	return 1;
 }
 /****f* LuaAPI/Version
-* FUNCTION
-*	This function returns the version in a hexadecimal encoding. The upper 8 bits
-*   are the major number, the next 8 bits are minor and the lower 16 are build.
-*    0-15 - Build
-*   16-23 - Minor
-*   24-31 - Major
-* SYNOPSIS
-vers = Version()
-* INPUTS
-*	o None
-* RESULTS
-*	o version (number) -- version number (eg: 1.02.1234 as 0x010204D2)
-* EXAMPLE
-debug_msg("ALFC version " .. Version())
-* AUTHOR
-*	Stu George
-******
-*/
+ * FUNCTION
+ *	This function returns the version in a hexadecimal encoding. The upper 8 bits
+ *   are the major number, the next 8 bits are minor and the lower 16 are build.
+ *    0-15 - Build
+ *   16-23 - Minor
+ *   24-31 - Major
+ * SYNOPSIS
+ vers = Version()
+ * INPUTS
+ *	o None
+ * RESULTS
+ *	o version (number) -- version number (eg: 1.02.1234 as 0x010204D2)
+ * EXAMPLE
+ debug_msg("ALFC version " .. Version())
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_Version(lua_State *L)
 {
 	lua_pushnumber(L, (VersionMajor() << 24) | (VersionMinor() << 16) | VersionBuild());
@@ -95,13 +138,12 @@ int gmec_GetMode(lua_State *L)
 	return 1;
 }
 
-
 static char* rtrim(const char *s)
 {
 	char *p;
 	char *x;
 
-	if(*s == 0x0)
+	if (*s == 0x0)
 		return strdup("");
 
 	x = strdup(s);
@@ -109,10 +151,10 @@ static char* rtrim(const char *s)
 	p = strchr(x, 0x0);
 	p -= 1;
 
-	while(p > x && isspace(*p) != 0 )
+	while (p > x && isspace(*p) != 0)
 		p--;
 
-	*(p+1)=0;
+	*(p + 1) = 0;
 
 	p = strdup(x);
 	free(x);
@@ -125,7 +167,7 @@ static char* ltrim(const char *s)
 	const char *p;
 
 	p = s;
-	while(*p != 0x0 && isspace(*p) != 0)
+	while (*p != 0x0 && isspace(*p) != 0)
 		p++;
 
 	return strdup(p);
@@ -175,20 +217,20 @@ int gmec_rtrim(lua_State *L)
 }
 
 /****f* LuaAPI/debug_msg
-* FUNCTION
-*	This outputs a string to the logging window
-* SYNOPSIS
-debug_msg(message)
-* INPUTS
-*	o Message (string) -- String to log
-* RESULTS
-*	o None
-* EXAMPLE
-debug_msg("Log this string to the logging window")
-* AUTHOR
-*	Stu George
-******
-*/
+ * FUNCTION
+ *	This outputs a string to the logging window
+ * SYNOPSIS
+ debug_msg(message)
+ * INPUTS
+ *	o Message (string) -- String to log
+ * RESULTS
+ *	o None
+ * EXAMPLE
+ debug_msg("Log this string to the logging window")
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_debug_msg(lua_State *L)
 {
 	struct lstr msg;
@@ -200,24 +242,23 @@ int gmec_debug_msg(lua_State *L)
 	return 0;
 }
 
-
 /****f* LuaAPI/GetVersionString
-* FUNCTION
-*	This function will return a string representation
-*	of the program version in the format of %i.%02i/%04i of Major Version,
-*	Minor Version and Build Number.
-* SYNOPSIS
-vers = GetVersionString()
-* INPUTS
-*	o None
-* RESULTS
-*	o version (string) -- version number (eg: 1.02.1234)
-* EXAMPLE
-debug_msg("ALFC version " .. GetVersionString())
-* AUTHOR
-*	Stu George
-******
-*/
+ * FUNCTION
+ *	This function will return a string representation
+ *	of the program version in the format of %i.%02i/%04i of Major Version,
+ *	Minor Version and Build Number.
+ * SYNOPSIS
+ vers = GetVersionString()
+ * INPUTS
+ *	o None
+ * RESULTS
+ *	o version (string) -- version number (eg: 1.02.1234)
+ * EXAMPLE
+ debug_msg("ALFC version " .. GetVersionString())
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_GetVersionString(lua_State *L)
 {
 	char *str = malloc(64);
@@ -230,28 +271,28 @@ int gmec_GetVersionString(lua_State *L)
 }
 
 /****f* LuaAPI/ConvertDirectoryName
-* FUNCTION
-*	This function will take a path and convert
-*	environment strings into an absolute path name
-*
-* 	Will translate any Environment variable that begins with '$' and is
-* 	delimited by '/' (or end of string) and will also substitute '~' for '$HOME'.
-*
-* SYNOPSIS
-newPath = ConvertDirectoryName(Path)
-* INPUTS
-*	o Path -- The path to convert
-* RESULTS
-*	o newPath (string) -- Converted path
-* EXAMPLE
-debug_msg("$HOME == " .. ConvertDirectoryName("$HOME"))
-* PORTABILITY
-*	On windows machines if "$HOME" is present, it will be used,
-*	but if it is not, it will substitute "$USERPROFILE"
-* AUTHOR
-*	Stu George
-******
-*/
+ * FUNCTION
+ *	This function will take a path and convert
+ *	environment strings into an absolute path name
+ *
+ * 	Will translate any Environment variable that begins with '$' and is
+ * 	delimited by '/' (or end of string) and will also substitute '~' for '$HOME'.
+ *
+ * SYNOPSIS
+ newPath = ConvertDirectoryName(Path)
+ * INPUTS
+ *	o Path -- The path to convert
+ * RESULTS
+ *	o newPath (string) -- Converted path
+ * EXAMPLE
+ debug_msg("$HOME == " .. ConvertDirectoryName("$HOME"))
+ * PORTABILITY
+ *	On windows machines if "$HOME" is present, it will be used,
+ *	but if it is not, it will substitute "$USERPROFILE"
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_ConvertDirectoryName(lua_State *L)
 {
 	char *dir;
@@ -277,7 +318,6 @@ int gmec_DriverName(lua_State *L)
 	return 1;
 }
 
-
 int gmec_IncludeFile(lua_State *L)
 {
 	struct lstr s;
@@ -292,7 +332,7 @@ int gmec_IncludeFile(lua_State *L)
 	cpath = ConvertDirectoryName(s.data);
 
 	fp = fopen(cpath, "rb");
-	if(fp == NULL)
+	if (fp == NULL)
 	{
 		free(cpath);
 		return luaL_error(L, "Could not open file %s\n", s.data);
@@ -303,7 +343,7 @@ int gmec_IncludeFile(lua_State *L)
 	fseek(fp, 0x0L, SEEK_SET);
 
 	buff = calloc(1, buffsize + 32);
-	if(buff == NULL)
+	if (buff == NULL)
 	{
 		free(cpath);
 		fclose(fp);
@@ -314,15 +354,15 @@ int gmec_IncludeFile(lua_State *L)
 	fclose(fp);
 	free(cpath);
 
-	v = luaL_loadbuffer(L, (char*)buff, buffsize, s.data);
-	if(v != 0)
+	v = luaL_loadbuffer(L, (char*) buff, buffsize, s.data);
+	if (v != 0)
 	{
 		LogError("cant include (%s) lua error : %s", s.data, lua_tostring(L, -1));
 	}
 	else
 	{
-		v = lua_pcall(L, 0, 0, 0);			// call 'SetGlobals' with 0 arguments and 0 result
-		if(v != 0)
+		v = lua_pcall(L, 0, 0, 0); // call 'SetGlobals' with 0 arguments and 0 result
+		if (v != 0)
 		{
 			LogError("include (%s) lua error : %s", s.data, lua_tostring(L, -1));
 		}
@@ -342,7 +382,7 @@ int gmec_DoesFileExist(lua_State *L)
 	GET_LUA_STRING(d, 1);
 	dir = ConvertDirectoryName(d.data);
 
-	if( ALFC_stat(dir, &buff) == 0)
+	if (ALFC_stat(dir, &buff) == 0)
 		lua_pushnumber(L, 0);
 	else
 		lua_pushnumber(L, -1);
@@ -354,46 +394,49 @@ int gmec_DoesFileExist(lua_State *L)
 void push_file(lua_State *L, uDirEntry *de, int idx, char *path)
 {
 	char *buff_date;
-	char date_fmt[8] = { et_Year4,et_Month,et_Day,' ',et_Hour24,et_Min,et_Sec, 0};
+	char date_fmt[8] =
+	{
+	et_Year4, et_Month, et_Day, ' ', et_Hour24, et_Min, et_Sec, 0
+	};
 
 	lua_pushnumber(L, idx);
 	lua_newtable(L);
 
-		lua_pushstring(L, "name");
-		lua_pushstring(L, de->name);
-		lua_settable(L, -3);
+	lua_pushstring(L, "name");
+	lua_pushstring(L, de->name);
+	lua_settable(L, -3);
 
-		lua_pushstring(L, "size");
-		lua_pushnumber(L, de->size);
-		lua_settable(L, -3);
+	lua_pushstring(L, "size");
+	lua_pushnumber(L, de->size);
+	lua_settable(L, -3);
 
-		buff_date = GetDateTimeString(date_fmt, de->time);
-		lua_pushstring(L, "date");
-		lua_pushstring(L, buff_date);
-		lua_settable(L, -3);
-		free(buff_date);
+	buff_date = GetDateTimeString(date_fmt, de->time);
+	lua_pushstring(L, "date");
+	lua_pushstring(L, buff_date);
+	lua_settable(L, -3);
+	free(buff_date);
 
-		lua_pushstring(L, "link");
-		if(de->lnk == NULL || strlen(de->lnk) == 0)
-			lua_pushnumber(L, 0);
-		else
-			lua_pushnumber(L, 1);
-		lua_settable(L, -3);
+	lua_pushstring(L, "link");
+	if (de->lnk == NULL || strlen(de->lnk) == 0)
+		lua_pushnumber(L, 0);
+	else
+		lua_pushnumber(L, 1);
+	lua_settable(L, -3);
 
-		lua_pushstring(L, "directory");
-		if( ALFC_IsDir(de->attrs) == 0)
-			lua_pushnumber(L, 1);
-		else
-			lua_pushnumber(L, 0);
-		lua_settable(L, -3);
+	lua_pushstring(L, "directory");
+	if (ALFC_IsDir(de->attrs) == 0)
+		lua_pushnumber(L, 1);
+	else
+		lua_pushnumber(L, 0);
+	lua_settable(L, -3);
 
-		lua_pushstring(L, "tagged");
-		lua_pushnumber(L, de->tagged);
-		lua_settable(L, -3);
+	lua_pushstring(L, "tagged");
+	lua_pushnumber(L, de->tagged);
+	lua_settable(L, -3);
 
-		lua_pushstring(L, "path");
-		lua_pushstring(L, path);
-		lua_settable(L, -3);
+	lua_pushstring(L, "path");
+	lua_pushstring(L, path);
+	lua_settable(L, -3);
 
 	lua_settable(L, -3);
 }
@@ -415,7 +458,7 @@ int gmec_GetFileListFromPath(lua_State *L)
 	dir = ConvertDirectoryName(d.data);
 	lst = GetFiles(gd, dir);
 
-	if(lst != NULL)
+	if (lst != NULL)
 	{
 		int i;
 
@@ -423,7 +466,7 @@ int gmec_GetFileListFromPath(lua_State *L)
 
 		i = 1;
 		e = dlist_head(lst);
-		while(e != NULL)
+		while (e != NULL)
 		{
 			de = dlist_data(e);
 
@@ -451,7 +494,6 @@ int gmec_SystemType(lua_State *L)
 	return 1;
 }
 
-
 int gmec_globmatch(lua_State *L)
 {
 	struct lstr name;
@@ -464,10 +506,53 @@ int gmec_globmatch(lua_State *L)
 	GET_LUA_STRING(name, 1);
 	GET_LUA_STRING(pattern, 2);
 
-	if( fnmatch(pattern.data, name.data, 0) == 0)
+	if (fnmatch(pattern.data, name.data, 0) == 0)
 		lua_pushnumber(L, 0);
 	else
 		lua_pushnumber(L, -1);
 
 	return 1;
 }
+
+int gmec_exec(lua_State *L)
+{
+	struct lstr cmd;
+	int meta;
+	int rc;
+
+	char *path;
+
+	rc = 0;
+
+	GET_LUA_STRING(cmd, 1);
+	meta = HaveShellMetaCharacters(cmd.data);
+
+	if (meta == 1)
+	{
+		// exec with sh
+		char *shell;
+
+		shell = getenv("SHELL");
+		if (shell != NULL)
+		{
+
+		}
+	}
+	else
+	{
+		// exec binary?
+
+		path = getenv("PATH");
+		if (path == NULL)
+			path = ALFC_get_basepath();
+
+
+		// split it with ALFC_path_varset
+		// run exec on name in each path if it does not contain path in its name
+		// until we hit a good one
+	}
+
+	lua_pushnumber(L, rc);
+	return 1;
+}
+

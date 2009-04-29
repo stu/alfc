@@ -1,5 +1,5 @@
 #include "headers.h"
-#include "rl/rllib.h"
+#include "rl/rlcore.h"
 
 #ifdef __WIN32__
 #include <windows.h>
@@ -13,6 +13,7 @@
 static int intCurCol;
 static int intCurRow;
 static int intStyle;
+static int intUpdates;
 
 static void x11_cls(void);
 static void x11_setcursor(int row, int col);
@@ -177,6 +178,11 @@ static void x11_print_string_abs(const char *s)
 	}
 }
 
+static int x11_isshutdown(void)
+{
+	return window_isshutdown();
+}
+
 static int x11_resized(void)
 {
 	return window_resized();
@@ -259,10 +265,10 @@ static void init_dir_styles(uScreenDriver *scr)
 	init_style(STYLE_DIR_EXEC, 		CLR_BR_GREEN, CLR_BLACK);				// exec
 	init_style(STYLE_DIR_LINK, 		CLR_YELLOW, CLR_BLACK);					// link
 
-	init_style(STYLE_DIR_IMAGE, 	CLR_BR_BLUE, CLR_BLACK);				// image
+	init_style(STYLE_DIR_IMAGE, 	CLR_BR_CYAN, CLR_BLACK);				// image
 	init_style(STYLE_DIR_DIR, 		CLR_BR_BLUE, CLR_BLACK);				// dir
-	init_style(STYLE_DIR_DOCUMENT, 	CLR_BR_BLUE, CLR_BLACK);				// document
-	init_style(STYLE_DIR_ARCHIVE, 	CLR_BR_BLUE, CLR_BLACK);				// archive
+	init_style(STYLE_DIR_DOCUMENT, 	CLR_MAGENTA, CLR_BLACK);				// document
+	init_style(STYLE_DIR_ARCHIVE, 	CLR_RED, CLR_BLACK);				// archive
 	init_style(STYLE_DIR_BACKUP, 	CLR_DK_GREY, CLR_BLACK);				// archive
 }
 
@@ -285,10 +291,10 @@ static int x11_screen_init(uScreenDriver *scr)
 
 	if( w < 100*10 || h < 25*20)
 		//create_window(w/8 - 4, h/12 - 5, "Another Linux File Commander", x11_data_font_small, x11_data_font_small_SIZE);
-		create_window(100, 25, "Another Linux File Commander", x11_data_font_small, x11_data_font_small_SIZE);
+		create_window(100, 25, gstr_WindowTitle, x11_data_font_small, x11_data_font_small_SIZE);
 	else
 		//create_window(w/10 - 4,  h/20 - 5, "Another Linux File Commander", x11_data_font, x11_data_font_SIZE);
-		create_window(100, 25, "Another Linux File Commander", x11_data_font, x11_data_font_SIZE);
+		create_window(100, 25, gstr_WindowTitle, x11_data_font, x11_data_font_SIZE);
 
 	x11_init_colours();
 
@@ -305,8 +311,6 @@ static int x11_screen_init(uScreenDriver *scr)
 	scr->set_style(STYLE_NORMAL);
 	x11_cls();
 	//x11_print_string("Another Linux File Commander");
-
-	update_window();
 
 	return 0;
 }
@@ -349,7 +353,7 @@ static void x11_cls(void)
 {
 	int i;
 
-	clear();
+	//clear();
 
 	for(i=0; i < window_height_in_chars(); i++)
 	{
@@ -366,51 +370,12 @@ static void x11_set_style(int style)
 	intStyle = style;
 }
 
-
-int rlmain(int argc, char *argv[])
+static void x11_set_updates(int set)
 {
-	int i;
-	int start_mode = eMode_Directory;
-	char *view_file = NULL;
-
-
-	for(i=1; i<argc; i++)
-	{
-		if(argv[i][0] == '-')
-		{
-			if(1+i < argc && strcmp("-l", argv[i]) == 0)
-			{
-				start_left = argv[i+1];
-			}
-			if(1+i < argc && strcmp("-r", argv[i]) == 0)
-			{
-				start_right = argv[i+1];
-			}
-			else if(strcmp("-?", argv[i]) == 0 || strcmp("--help", argv[i]) == 0)
-			{
-				fprintf(stderr, "\n-v\t\tVersion\n"
-								"-?\t\tHelp\n"
-								"-l DIR\t\tStart left side in directory DIR\n"
-								"-r DIR\t\tStart right side in directory DIR\n"
-								"-view FILE\tStart in viewer mode\n"
-								);
-				exit(0);
-			}
-			else if(strcmp("-v", argv[i]) == 0 || strcmp("--version", argv[i]) == 0)
-			{
-				fprintf(stderr, "ALFC v%i.%02i/%04i\n", VersionMajor(), VersionMinor(), VersionBuild());
-				exit(0);
-			}
-			else if(strcmp("-view", argv[i]) == 0 && 1+i < argc)
-			{
-				view_file = argv[1+i];
-				i+=1;
-				start_mode = eMode_Viewer;
-			}
-		}
-	}
-
-	return ALFC_main(start_mode, view_file);
+	if(set == 0)
+		intUpdates = 0;
+	else
+		intUpdates = 1;
 }
 
 uScreenDriver screen =
@@ -434,8 +399,10 @@ uScreenDriver screen =
 	x11_init_style,
 	x11_print_hline,
 	x11_print_vline,
+	x11_set_updates,
 
 	init_dir_styles,
 	init_view_styles,
-	x11_resized
+	x11_resized,
+	x11_isshutdown
 };

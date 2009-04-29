@@ -1,0 +1,78 @@
+Hypertext Help Guied Creation
+Stu George
+0.0.1-20090415
+----
+%Formatting%
+Formatting has three main attributes, ~BOLD~, ^Reverse^ and @underline@
+
+and they look like this;
+
+{{{~BOLD~
+^Reverse^
+@underline@}}}
+
+You can turn all elements off (for say, showing code) with triple braces.
+
+The above piece of code looks like this;
+
+{{{{{{
+~BOLD~
+^Reverse^
+@underline@
+}}}}}}
+
+Please note, you cant mix your formatting, and when one ends
+it goes back to normal, so a bold inside of a reverse wont
+have the effect you think it will.
+
+example; ~BOLD with ^Reverse^ inside~ now out of bold tag.
+
+{{{example; ~BOLD with ^Reverse^ inside~ now out of bold tag.}}}
+
+it can be done like this;
+
+{{{example; ~BOLD with ~^Reverse^~ inside~ now out of bold tag.}}}
+
+example; ~BOLD with ~^Reverse^~ inside~ now out of bold tag.
+
+You can create a link to a subtopic (page title) like this
+
+%%LINK%SubTopic%%
+
+That code looks like this {{{%%LINK%SubTopic%%}}}
+
+The other feature is having the guide build a list of topics automatically
+for you.
+
+%%LIST%%
+
+which looks like this {{{%%LIST%%}}}.
+
+The ^LIST^ and ^LINK^ items both take up to 32 separators.
+
+You can think of separators as subtitles. For example you can have text like;
+
+
+{{{
+%Chapter 1%
+text here...
+%Chapter 1%Paragraph 1%
+para 1 here
+%Chapter 1%Paragraph 2%
+para 2 here
+%Chapter 1%Paragraph 3%
+para 3 here
+}}}
+
+and using a list as {{{%%LIST%Chapter 1%}}} will show you a list like this
+
+{{{Paragraph 1
+Paragraph 2
+Paragraph 3
+}}}
+
+And having a link jump directly to paragraph 3 you can use {{{%%LINK%Chapter 1%Paragraph 3%%}}}
+
+
+%SubTopic%
+This is a sub-topic.

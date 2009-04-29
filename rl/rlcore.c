@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "rllib.h"
+#include "rlcore.h"
 
 #ifdef xlib
 static Display* screen_display;
@@ -54,6 +54,7 @@ static int gotkey;
 static int screen_x_size;
 static int screen_y_size;
 static int driver_redraw;
+static int driver_shutdown;
 
 static char* font_data[256];
 static int cur_byte;
@@ -98,13 +99,11 @@ int font_height_in_pixels()
 int window_width_in_chars()
 {
 	return window_width_in_pixels() / font_width_in_pixels();
-	//return window_width_in_chars();
 }
 
 int window_height_in_chars()
 {
 	return window_height_in_pixels() / font_height_in_pixels();
-	//return window_height_in_chars();
 }
 
 static void read_font(int* cwidth, int* cheight, uint8_t *fdata, uint32_t flen)
@@ -198,33 +197,10 @@ void display_char(int char_num, rgbcolor fore, rgbcolor back, int x, int y)
 	}
 }
 
-void display_char_offset_x(int char_num, rgbcolor fore, rgbcolor back, int x, int y)
+int window_isshutdown(void)
 {
-	if (displayed_chars_different(stored_display[(y * window_width_in_chars() + x)*4+1], char_num, fore, back))
-	{
-		display_char_at_pixel(char_num, fore, back, x * char_width + 2 + char_width/2, y * char_height + 2);
-		stored_display[(y * window_width_in_chars() + x)*4+1] = get_displayed_char(char_num, fore, back);
-	}
+	return driver_shutdown;
 }
-
-void display_char_offset_y(int char_num, rgbcolor fore, rgbcolor back, int x, int y)
-{
-	if (displayed_chars_different(stored_display[(y * window_width_in_chars() + x)*4+2], char_num, fore, back))
-	{
-		display_char_at_pixel(char_num, fore, back, x * char_width + 2, y * char_height + 2 + char_height/2);
-		stored_display[(y * window_width_in_chars() + x)*4+2] = get_displayed_char(char_num, fore, back);
-	}
-}
-
-void display_char_offset_both(int char_num, rgbcolor fore, rgbcolor back, int x, int y)
-{
-	if (displayed_chars_different(stored_display[(y * window_width_in_chars() + x)*4+3], char_num, fore, back))
-	{
-		display_char_at_pixel(char_num, fore, back, x * char_width + 2 + char_width/2, y * char_height + 2 + char_height/2);
-		stored_display[(y * window_width_in_chars() + x)*4+3] = get_displayed_char(char_num, fore, back);
-	}
-}
-
 
 int window_resized(void)
 {
@@ -233,11 +209,13 @@ int window_resized(void)
 	return x;
 }
 
-int window_width_in_pixels(void) {
+int window_width_in_pixels(void)
+{
 	return screen_x_size;
 }
 
-int window_height_in_pixels(void) {
+int window_height_in_pixels(void)
+{
 	return screen_y_size;
 }
 
@@ -247,10 +225,44 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 {
 	switch(message)
 	{
+		case WM_CREATE:
+			{
+				//CREATESTRUCT *x = (CREATESTRUCT*)lParam;
+				//fprintf(stderr, "createxxx  %i.%i\n", x->cx, x->cy);
+			}
+			break;
+
+		case WM_SIZE:
+			if(first_paint == 0)
+			{
+				DeleteObject(scr_bmp);
+
+				screen_x_size =  LOWORD(lParam);
+				screen_y_size =  HIWORD(lParam); // >> 16;
+
+				// round to 4.. seems to fix screen corruption bug...
+				screen_x_size = (screen_x_size + 3) & 0xFFFC;
+
+				scr_bmp = CreateCompatibleBitmap(hdc, screen_x_size, screen_y_size);
+
+				di_bmp_info.bmiHeader.biWidth = screen_x_size;
+				di_bmp_info.bmiHeader.biHeight = screen_y_size;
+
+				bmpinfo = (char*) realloc(bmpinfo, screen_x_size*screen_y_size*4);
+				stored_display = (displayed_char*) realloc(stored_display, (screen_x_size*screen_y_size*4) * sizeof(displayed_char));
+
+				first_paint = -1;
+				driver_redraw = 1;
+			}
+			break;
+
 		case WM_PAINT:
 			hdc = BeginPaint(hwnd, &paintstruct);
 			if (first_paint)
 			{
+				if(scr_bmp != NULL)
+					DeleteObject(scr_bmp);
+
 				scr_bmp = CreateCompatibleBitmap(hdc, screen_x_size, screen_y_size);
 
 				di_bmp_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -260,7 +272,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 				di_bmp_info.bmiHeader.biBitCount = 24;
 				di_bmp_info.bmiHeader.biCompression = 0;
 
-				bmpinfo = (char*) malloc(screen_x_size * screen_y_size * 3);
+				if(bmpinfo != NULL)
+					free(bmpinfo);
+
+				bmpinfo = (char*) malloc(screen_x_size*screen_y_size*4);
 			}
 
 			imghdc = CreateCompatibleDC(hdc);
@@ -270,7 +285,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 				int x;
 
 				GetDIBits(imghdc, scr_bmp, 0, screen_y_size, bmpinfo, &di_bmp_info, DIB_RGB_COLORS);
-				for (x = 0; x < screen_x_size*screen_y_size*3; x++)
+				for (x = 0; x < screen_x_size*screen_y_size*4; x++)
 				{
 					bmpinfo[x] = 0;
 				}
@@ -538,6 +553,7 @@ key get_key(void)
 	MSG msg;
 #endif
 	update_window();
+
 	//restart:
 #ifdef xlib
 	while (1)
@@ -547,6 +563,12 @@ key get_key(void)
 		{
 			default:
 				goto gotkey_out;
+				break;
+
+			case DestroyNotify:
+				driver_shutdown = 1;
+				memset(&result, 0x0, sizeof(key));
+				return result;
 				break;
 
 			case ConfigureNotify:
@@ -645,20 +667,23 @@ key get_key(void)
 	curkey.c = 0;
 	while (!gotkey)
 	{
+		if(driver_redraw == 1 )
+		{
+			memset(&result, 0x0, sizeof(key));
+			return result;
+		}
+
 		if (!GetMessage(&msg, 0, 0, 0))
 		{
 			destroy_window();
 			exit(0);
 		}
+
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
 #endif
 	result = key_to_keycode(curkey, curkey_k);
-	/*if (result.c == 0)
-	{
-		goto restart;
-	}*/
 
 	return result;
 }
@@ -702,6 +727,10 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE x, LPSTR y, int z)
 	driver_redraw = 0;
 	return rlmain(argc, argv);
 #else
+	char **cli;
+	int count;
+	char *q, *p;
+
 	DEVMODE dvmdOrig;
 	HDC hdc = GetDC(NULL);
 
@@ -716,7 +745,32 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE x, LPSTR y, int z)
 
 	hinst = inst;
 	driver_redraw = 0;
-	return rlmain(0, NULL);
+
+
+	q = y;
+	p = q;
+	cli = calloc(64, sizeof(char*));
+
+	cli[count++] = strdup("fakeexec");
+
+	while(*p != 0)
+	{
+		while(*p == 0x20 && *p != 0x0)
+			p++;
+
+		q = p;
+		while(*p != 0 && *p != 0x20)
+			p++;
+
+		if(*p == 0x20)
+		{
+			cli[count] = calloc(1, (p - q) + 8);
+			memmove(cli[count], q, (p-q));
+			count++;
+		}
+	}
+
+	return rlmain(count, cli);
 #endif
 
 }

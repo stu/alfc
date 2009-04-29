@@ -461,6 +461,11 @@ static int nc_resized(void)
 	return 0;
 }
 
+static int nc_isshutdown(void)
+{
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	int i;
@@ -530,5 +535,6 @@ uScreenDriver screen =
 
 	init_dir_styles,
 	init_view_styles,
-	nc_resized
+	nc_resized,
+	nc_isshutdown
 };

@@ -3,9 +3,6 @@
 options:
 	--documenttitle "Another Linux File Commander LUA Script API"
     --src .
-    --doc ./doc/lua_api/alfc_lua_api
-    --html
-    --singledoc
     --index
     --tabsize 4
     --cmode
@@ -94,6 +91,10 @@ ignore files:
 	stucore
 	.git
 	doc
+	docs
+	rl
+	mingw
+	scripts
 accept files:
     lua_api.c
     lua_api.h
