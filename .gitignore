@@ -22,7 +22,7 @@ lua_helper.c
 alfc.geany
 lua_hash.h
 Makefile
-x11_fonts.h
+gui_fonts.h
 atest
 test
 te$st
@@ -32,4 +32,11 @@ Debug
 Release
 .metadata
 .settings
+guide
+guide.exe
+gcomp
+gcomp.exe
+gdump
+gdump.exe
+*.gd
 

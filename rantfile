@@ -4,7 +4,7 @@ import "md5"
 _VER_MAJ = 0
 _VER_MIN = 1
 
-DRIVER="X11"	# NCURSES, X11
+DRIVER="GUI"	# NCURSES, GUI
 #DRIVER="NCURSES"
 
 
@@ -25,9 +25,9 @@ case y.to_s
 			PORTABILITY_OBJS = %w( portability_win32.o ncurses_interface.o)
 			GPORTABILITY_OBJS = %w( portability_win32.o ncurses_interface.o)
 		else
-			var[:libs] = "-llua -lregex -liberty -lkernel32 -Lrl -lrl -mwindows"
-			PORTABILITY_OBJS = %w( portability_win32.o x11_interface.o x11_main.o)
-			GPORTABILITY_OBJS = %w( portability_win32.o x11_interface.o x11_guide.o)
+			var[:libs] = "-llua -lregex -liberty -lkernel32 -mwindows"
+			PORTABILITY_OBJS = %w( portability_win32.o gui_interface.o gui_main.o guicore.o)
+			GPORTABILITY_OBJS = %w( portability_win32.o gui_interface.o gui_guide.o guicore.o)
 		end
 		GLIBS = "-lz"
 		# mingw has bugs with 64bit stuff (mostly in sprintf etc dropping upper 32bits).
@@ -64,9 +64,9 @@ case y.to_s
 			GPORTABILITY_OBJS = %w( portability_unix.o ncurses_interface.o)
 			GLIBS = "-lz -lbz2"
 		else
-			var[:libs] = "-llua5.1 -Lrl -lrl -lX11"
-			PORTABILITY_OBJS = %w( portability_unix.o x11_interface.o x11_main.o)
-			GPORTABILITY_OBJS = %w( portability_unix.o x11_interface.o x11_guide.o)
+			var[:libs] = "-llua5.1 -lX11"
+			PORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_main.o guicore.o)
+			GPORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_guide.o guicore.o)
 			GLIBS = "-lz -lbz2"
 		end
 
@@ -162,9 +162,6 @@ LIBS = ""
 
 default_files = %w(global.lua viewer.lua startup.lua shutdown.lua options.ini core_extract.lua
 			core_hash.lua viewer_languages.lua filemanager_menu.lua)
-if DRIVER=="X11"
-	default_files += %w(font.rlf font_small.rlf)
-end
 
 alfc = %w( dlist.o logwrite.o ini.o
 			version.o main.o memwatch.o lua_helper.o
@@ -174,6 +171,11 @@ alfc = %w( dlist.o logwrite.o ini.o
 			menu.o
 			)
 
+if DRIVER=="GUI"
+	default_files += %w(font.rlf font_small.rlf)
+end
+
+
 gen Action do
 	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s + " -DDRV_" + DRIVER
 end
@@ -182,12 +184,7 @@ desc "Build the app"
 task :all => ["auxfiles", "appx", "help"] do
 end
 
-if DRIVER=="NCURSES"
 task "auxfiles" => ["fixversion", "defaults.h" ] do
-end
-else
-task "auxfiles" => ["fixversion", "defaults.h", "rl/librl.a" ] do
-end
 end
 
 task "fixversion" do
@@ -214,9 +211,9 @@ file "defaults.h" => [var[:bin2c]] + default_files do |t|
 	sys "#{var[:bin2c]} core_hash.lua core_hash_lua >> defaults.h"
 	sys "#{var[:bin2c]} viewer_languages.lua viewer_languages_lua >> defaults.h"
 	sys "#{var[:bin2c]} filemanager_menu.lua filemanager_menu_lua >> defaults.h"
-if DRIVER=="X11"
-	sys "#{var[:bin2c]} font.rlf x11_data_font > x11_fonts.h"
-	sys "#{var[:bin2c]} font_small.rlf x11_data_font_small >> x11_fonts.h"
+if DRIVER=="GUI"
+	sys "#{var[:bin2c]} font.rlf gui_data_font > gui_fonts.h"
+	sys "#{var[:bin2c]} font_small.rlf gui_data_font_small >> gui_fonts.h"
 end
 end
 
@@ -259,24 +256,13 @@ task "docs" do
 
 	print "Updating Lua API documentation (latex) :: "
 	sys "robodoc --latex --doc ./doc/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
-
-	################
-
-	print "Updating Core documentation (html mutli) :: "
-	sys "robodoc --html --doc ./doc/core/html_multi --multidoc --rc robodoc_core.rc"
-
-	print "Updating Core documentation (html single) :: "
-	sys "robodoc --html --doc ./doc/core/alfc_core --singledoc --rc robodoc_core.rc"
-
-	print "Updating Core documentation (rtf) :: "
-	sys "robodoc --rtf --doc ./doc/core/alfc_core --singledoc --rc robodoc_core.rc"
-
-	print "Updating Core documentation (latex) :: "
-	sys "robodoc --latex --doc ./doc/core/alfc_core --singledoc --rc robodoc_core.rc"
+	
+	print "Updating Lua API documentation (docbook xml) :: "
+	sys "robodoc --dbxml --doc ./doc/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
 end
 
 desc "Cleanup..."
-task :clean => "rl/clean" do
+task :clean do
 	x = Dir["*.{bak,o,obj,a,gd}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"] + Dir["Makefile"]
 
 	x += Dir["#{var[:gcomp]}"]
@@ -292,6 +278,8 @@ task :clean => "rl/clean" do
 	x += Dir["lua_common.h"]
 	x += Dir["lua_api.h"]
 	x += Dir["viewer.h"]
+	x += Dir["gui_fonts.h"]
+	x += Dir["defaults.h"]
 
 	if x.length > 0
 		sys.rm_rf x
@@ -407,4 +395,3 @@ task :make =>  ["clean", "bin2c.o", "auxfiles"] do
 
 end
 
-subdirs "rl"

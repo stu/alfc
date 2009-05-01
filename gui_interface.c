@@ -1,5 +1,5 @@
 #include "headers.h"
-#include "rl/rlcore.h"
+#include "guicore.h"
 
 #ifdef __WIN32__
 #include <windows.h>
@@ -8,15 +8,15 @@
 #include <X11/keysymdef.h>
 #endif
 
-#include "x11_fonts.h"
+#include "gui_fonts.h"
 
 static int intCurCol;
 static int intCurRow;
 static int intStyle;
 static int intUpdates;
 
-static void x11_cls(void);
-static void x11_setcursor(int row, int col);
+static void gui_cls(void);
+static void gui_setcursor(int row, int col);
 
 
 struct udtStyles
@@ -46,7 +46,7 @@ static void GetScreenDimensions(int *w, int *h)
 
 static char* driver_name(void)
 {
-	return "X11";
+	return "GUI";
 }
 
 static int convert_colour(int c)
@@ -55,29 +55,29 @@ static int convert_colour(int c)
 }
 
 
-static void x11_set_colour(int c, int r, int g, int b)
+static void gui_set_colour(int c, int r, int g, int b)
 {
 	xc_colors[convert_colour(c)] = rgb(r, g, b);
 }
 
-static void x11_init_colours(void)
+static void gui_init_colours(void)
 {
-	x11_set_colour(CLR_BLACK, 0, 0, 0);
-	x11_set_colour(CLR_GREY, 0xAA, 0xAA, 0xAA);
-	x11_set_colour(CLR_RED, 0x80, 0, 0);
-	x11_set_colour(CLR_GREEN, 0, 0x80, 0);
-	x11_set_colour(CLR_BROWN, 0xAE, 0xB3, 00);
-	x11_set_colour(CLR_BLUE, 0x00, 0, 0x80);
-	x11_set_colour(CLR_MAGENTA, 0x80, 0x00, 0x80);
-	x11_set_colour(CLR_CYAN, 0x00, 0x80, 0x80);
-	x11_set_colour(CLR_DK_GREY, 0x40, 0x40, 0x40);
-	x11_set_colour(CLR_BR_RED, 0xff, 0x40, 0x4);
-	x11_set_colour(CLR_BR_GREEN, 0, 0xff, 0);
-	x11_set_colour(CLR_YELLOW, 0xff, 0xff, 0);
-	x11_set_colour(CLR_BR_BLUE, 0x40, 0x40, 0xff);
-	x11_set_colour(CLR_BR_MAGENTA, 0xFF, 0x00, 0xFF);
-	x11_set_colour(CLR_BR_CYAN, 00, 0xFF, 0xFF);
-	x11_set_colour(CLR_WHITE, 0xFF, 0xFF, 0xFF);
+	gui_set_colour(CLR_BLACK, 0, 0, 0);
+	gui_set_colour(CLR_GREY, 0xAA, 0xAA, 0xAA);
+	gui_set_colour(CLR_RED, 0x80, 0, 0);
+	gui_set_colour(CLR_GREEN, 0, 0x80, 0);
+	gui_set_colour(CLR_BROWN, 0xAE, 0xB3, 00);
+	gui_set_colour(CLR_BLUE, 0x00, 0, 0x80);
+	gui_set_colour(CLR_MAGENTA, 0x80, 0x00, 0x80);
+	gui_set_colour(CLR_CYAN, 0x00, 0x80, 0x80);
+	gui_set_colour(CLR_DK_GREY, 0x40, 0x40, 0x40);
+	gui_set_colour(CLR_BR_RED, 0xff, 0x40, 0x4);
+	gui_set_colour(CLR_BR_GREEN, 0, 0xff, 0);
+	gui_set_colour(CLR_YELLOW, 0xff, 0xff, 0);
+	gui_set_colour(CLR_BR_BLUE, 0x40, 0x40, 0xff);
+	gui_set_colour(CLR_BR_MAGENTA, 0xFF, 0x00, 0xFF);
+	gui_set_colour(CLR_BR_CYAN, 00, 0xFF, 0xFF);
+	gui_set_colour(CLR_WHITE, 0xFF, 0xFF, 0xFF);
 }
 
 
@@ -86,39 +86,39 @@ static void dr_outchar(int s)
 	display_char(s&0xFF, xc_colors[styles[intStyle].fg], xc_colors[styles[intStyle].bg], intCurCol, intCurRow);
 }
 
-static void x11_print_hline(void)
+static void gui_print_hline(void)
 {
 	dr_outchar(196);
 }
 
-static void x11_print_vline(void)
+static void gui_print_vline(void)
 {
 	dr_outchar(179);
 }
 
-static void x11_draw_frame(uWindow *w)
+static void gui_draw_frame(uWindow *w)
 {
 	int i;
 
-	x11_setcursor(1 + w->offset_row, 1 + w->offset_col);										dr_outchar(218);
-	x11_setcursor(1 + w->offset_row, 1 + w->offset_col + (w->width-1));						dr_outchar(191);
-	x11_setcursor(1 + w->offset_row + (w->height-1), 1 + w->offset_col);						dr_outchar(192);
-	x11_setcursor(1 + w->offset_row + (w->height-1), 1 + w->offset_col + (w->width-1));		dr_outchar(217);
+	gui_setcursor(1 + w->offset_row, 1 + w->offset_col);										dr_outchar(218);
+	gui_setcursor(1 + w->offset_row, 1 + w->offset_col + (w->width-1));						dr_outchar(191);
+	gui_setcursor(1 + w->offset_row + (w->height-1), 1 + w->offset_col);						dr_outchar(192);
+	gui_setcursor(1 + w->offset_row + (w->height-1), 1 + w->offset_col + (w->width-1));		dr_outchar(217);
 
 	for(i = 1 ; i < (w->width-1); i++)
 	{
-		x11_setcursor(1 + w->offset_row, 1 + w->offset_col + i);			x11_print_hline();
-		x11_setcursor(w->offset_row + w->height, 1 + w->offset_col + i );	x11_print_hline();
+		gui_setcursor(1 + w->offset_row, 1 + w->offset_col + i);			gui_print_hline();
+		gui_setcursor(w->offset_row + w->height, 1 + w->offset_col + i );	gui_print_hline();
 	}
 
 	for(i = 1; i < (w->height-1); i++)
 	{
-		x11_setcursor(1 + w->offset_row + i , 1 + w->offset_col);			x11_print_vline();
-		x11_setcursor(1 + w->offset_row + i, w->offset_col + w->width);	x11_print_vline();
+		gui_setcursor(1 + w->offset_row + i , 1 + w->offset_col);			gui_print_vline();
+		gui_setcursor(1 + w->offset_row + i, w->offset_col + w->width);	gui_print_vline();
 	}
 }
 
-static void x11_print_string(const char *s)
+static void gui_print_string(const char *s)
 {
 	while(*s!=0x0)
 	{
@@ -162,7 +162,7 @@ static void x11_print_string(const char *s)
 	}
 }
 
-static void x11_print_string_abs(const char *s)
+static void gui_print_string_abs(const char *s)
 {
 	while(*s!=0x0)
 	{
@@ -178,17 +178,17 @@ static void x11_print_string_abs(const char *s)
 	}
 }
 
-static int x11_isshutdown(void)
+static int gui_isshutdown(void)
 {
 	return window_isshutdown();
 }
 
-static int x11_resized(void)
+static int gui_resized(void)
 {
 	return window_resized();
 }
 
-static uint32_t x11_get_keypress(void)
+static uint32_t gui_get_keypress(void)
 {
 	key k;
 	uint32_t x = 0;
@@ -255,7 +255,7 @@ static void init_style(int style, uint32_t fg, uint32_t bg)
 	styles[style].bg = convert_colour(bg);
 }
 
-static void x11_init_style(int style, uint32_t fg, uint32_t bg)
+static void gui_init_style(int style, uint32_t fg, uint32_t bg)
 {
 	init_style(style, fg, bg);
 }
@@ -277,7 +277,7 @@ static void init_view_styles(uScreenDriver *scr)
 	init_style(STYLE_VIEW_EDIT_EOL, CLR_BR_GREEN, CLR_BLACK);	// end of line marker in viewer...
 }
 
-static int x11_screen_init(uScreenDriver *scr)
+static int gui_screen_init(uScreenDriver *scr)
 {
 	int w, h;
 
@@ -290,13 +290,13 @@ static int x11_screen_init(uScreenDriver *scr)
 	}
 
 	if( w < 100*10 || h < 25*20)
-		//create_window(w/8 - 4, h/12 - 5, "Another Linux File Commander", x11_data_font_small, x11_data_font_small_SIZE);
-		create_window(100, 25, gstr_WindowTitle, x11_data_font_small, x11_data_font_small_SIZE);
+		//create_window(w/8 - 4, h/12 - 5, "Another Linux File Commander", gui_data_font_small, gui_data_font_small_SIZE);
+		create_window(100, 25, gstr_WindowTitle, gui_data_font_small, gui_data_font_small_SIZE);
 	else
-		//create_window(w/10 - 4,  h/20 - 5, "Another Linux File Commander", x11_data_font, x11_data_font_SIZE);
-		create_window(100, 25, gstr_WindowTitle, x11_data_font, x11_data_font_SIZE);
+		//create_window(w/10 - 4,  h/20 - 5, "Another Linux File Commander", gui_data_font, gui_data_font_SIZE);
+		create_window(100, 25, gstr_WindowTitle, gui_data_font, gui_data_font_SIZE);
 
-	x11_init_colours();
+	gui_init_colours();
 
 	init_style(STYLE_NORMAL,	CLR_GREY, 		CLR_BLACK);
 	init_style(STYLE_TITLE,  	CLR_WHITE, 		CLR_RED);
@@ -309,13 +309,13 @@ static int x11_screen_init(uScreenDriver *scr)
 	init_dir_styles(scr);
 
 	scr->set_style(STYLE_NORMAL);
-	x11_cls();
-	//x11_print_string("Another Linux File Commander");
+	gui_cls();
+	//gui_print_string("Another Linux File Commander");
 
 	return 0;
 }
 
-static void x11_erase_eol(void)
+static void gui_erase_eol(void)
 {
 	int i;
 
@@ -327,29 +327,29 @@ static void x11_erase_eol(void)
 }
 
 
-static void x11_setcursor(int row, int col)
+static void gui_setcursor(int row, int col)
 {
 	intCurCol = (col-1);
 	intCurRow = (row-1);
 }
 
-static int x11_screen_deinit(void)
+static int gui_screen_deinit(void)
 {
 	destroy_window();
 	return 0;
 }
 
-static int x11_get_screen_height(void)
+static int gui_get_screen_height(void)
 {
 	return window_height_in_chars();
 }
 
-static int x11_get_screen_width(void)
+static int gui_get_screen_width(void)
 {
 	return window_width_in_chars();
 }
 
-static void x11_cls(void)
+static void gui_cls(void)
 {
 	int i;
 
@@ -357,20 +357,20 @@ static void x11_cls(void)
 
 	for(i=0; i < window_height_in_chars(); i++)
 	{
-		x11_setcursor(1+i, 1);
-		x11_erase_eol();
+		gui_setcursor(1+i, 1);
+		gui_erase_eol();
 	}
 
-	x11_setcursor(1,1);
+	gui_setcursor(1,1);
 	update_window();
 }
 
-static void x11_set_style(int style)
+static void gui_set_style(int style)
 {
 	intStyle = style;
 }
 
-static void x11_set_updates(int set)
+static void gui_set_updates(int set)
 {
 	if(set == 0)
 		intUpdates = 0;
@@ -384,25 +384,25 @@ uScreenDriver screen =
 
 	driver_name,
 
-	x11_screen_init,		// init screen
-	x11_screen_deinit,	// uninit
-	x11_cls,				// clear scren
-	x11_get_screen_height,
-	x11_get_screen_width,
-	x11_get_keypress,
-	x11_print_string,
-	x11_print_string_abs,
-	x11_set_style,
-	x11_setcursor,
-	x11_erase_eol,
-	x11_draw_frame,
-	x11_init_style,
-	x11_print_hline,
-	x11_print_vline,
-	x11_set_updates,
+	gui_screen_init,		// init screen
+	gui_screen_deinit,	// uninit
+	gui_cls,				// clear scren
+	gui_get_screen_height,
+	gui_get_screen_width,
+	gui_get_keypress,
+	gui_print_string,
+	gui_print_string_abs,
+	gui_set_style,
+	gui_setcursor,
+	gui_erase_eol,
+	gui_draw_frame,
+	gui_init_style,
+	gui_print_hline,
+	gui_print_vline,
+	gui_set_updates,
 
 	init_dir_styles,
 	init_view_styles,
-	x11_resized,
-	x11_isshutdown
+	gui_resized,
+	gui_isshutdown
 };

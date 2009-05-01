@@ -180,45 +180,16 @@ static void draw_page(uWindow *w, uIM_GuidePage *page_data)
 	int style = STYLE_NORMAL;
 	uIM_GuideLine *line;
 
-	char *start_line;
-
-	start_line = NULL;
-
 	e = dlist_head(page_data->lstLines);
 	e = dlist_next(e);
+
 
 	// skip lines to the correct start line.
 	wide = w->top_line;
 	while (wide > 0)
 	{
-		int ll;
-
-		line = dlist_data(e);
-		ll = line->length;
-
-		if (ll < w->width - 2)
-		{
-			wide -= 1;
-			e = dlist_next(e);
-		}
-		else
-		{
-			start_line = (char*) line->text;
-
-			while (wide > 0 && ll > w->width - 2)
-			{
-				ll -= w->width - 2;
-				start_line += w->width - 2;
-				wide -= 1;
-			}
-
-			if (wide > 0 && start_line != (char*) line->text)
-			{
-				wide -= 1;
-				e = dlist_next(e);
-				start_line = NULL;
-			}
-		}
+		wide -= 1;
+		e = dlist_next(e);
 	}
 
 	fixed = 0;
@@ -230,23 +201,18 @@ static void draw_page(uWindow *w, uIM_GuidePage *page_data)
 		style = STYLE_DIR_ARCHIVE;
 	if ((line->flags & 0xFF) == eLF_Underline)
 		style = STYLE_DIR_DOCUMENT;
-	if ((line->flags & 0xFF) == eLF_Fixed)
+	if ((line->flags & 0xFF) == eLF_Fixed || line->flags >= 0x100)
 		style = STYLE_DIR_DIR;
 
 	fixed = (line->flags >> 8) & 0xFF;
 
-	w->screen->set_style(STYLE_NORMAL);
 	i = 0;
+	w->screen->set_style(style);
+
 	while (e != NULL && i < w->height - 2)
 	{
 		line = dlist_data(e);
-
-		if (start_line != NULL)
-			pp = start_line;
-		else
-			pp = (char*) line->text;
-
-		start_line = NULL;
+		pp = (char*) line->text;
 
 		wide = 0;
 
@@ -255,69 +221,6 @@ static void draw_page(uWindow *w, uIM_GuidePage *page_data)
 
 		while (*pp != 0 && wide < w->width - 2)
 		{
-			int wlen;
-			int rlen;
-			int ffixed;
-
-
-			// calculate word length.
-			wlen = 0;
-			rlen = 0;
-			ffixed = fixed;
-			while (pp[wlen] != 0x0 && pp[wlen] != 0x0A && pp[wlen] != ' ')
-			{
-				switch (pp[wlen])
-				{
-					case '{':
-					case '}':
-						if (fixed == 0)
-						{
-							if (memcmp(pp + wlen, "{{{", 3) == 0)
-							{
-								ffixed += 1;
-								wlen += 3;
-							}
-							else if (memcmp(pp + wlen, "}}}", 3) == 0)
-							{
-								ffixed -= 1;
-								wlen += 3;
-							}
-							else
-							{
-								wlen++;
-								rlen++;
-							}
-						}
-						else
-						{
-							wlen++;
-							rlen++;
-						}
-						break;
-
-					case '@':
-					case '~':
-					case '^':
-						if (ffixed == 1)
-							rlen++;
-						wlen++;
-						break;
-
-					default:
-						wlen++;
-						rlen++;
-						break;
-				}
-			}
-
-			// draw it on screen...
-			if (wide + rlen > w->width - 2)
-			{
-				i += 1;
-				wide = 0;
-				w->screen->set_cursor(2 + w->offset_row + i, 2 + w->offset_col);
-			}
-
 			switch (*pp)
 			{
 				// link
@@ -605,7 +508,7 @@ int ALFC_main(int start_mode, char *view_file)
 		redraw = 1;
 		qflag = 0;
 
-		page_data = ReflowPage(hdr, count, page);
+		page_data = ReflowPage(hdr, count, page, w->width - 2);
 		if (page_data != NULL)
 		{
 			int ph;
@@ -632,6 +535,9 @@ int ALFC_main(int start_mode, char *view_file)
 					gdata->screen->cls();
 					BuildWindowLayout(gdata);
 					w = gdata->win_left;
+					FreePage(page_data);
+
+					page_data = ReflowPage(hdr, count, page, w->width - 2);
 
 					draw_window(w, page_data);
 					draw_page(w, page_data);

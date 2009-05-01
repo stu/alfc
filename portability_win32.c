@@ -61,7 +61,7 @@ void ALFC_GetUserInfo(uGlobalData *gd)
 	gd->strRealName = strdup(UserName);
 	gd->strLoginName = strdup(UserName);
 	gd->strHomeDirectory = strdup(getenv("USERPROFILE"));
-	gd->strShell = strdup("cmd.exe");
+	gd->strShell = strdup(getenv("COMSPEC"));
 	gd->uid = INT_MAX;
 	gd->gid = INT_MAX;
 }

@@ -95,9 +95,16 @@ ignore files:
 	rl
 	mingw
 	scripts
+	.metadata
+	.settings
+	.cproject
+	.project
+	.rant.meta
 accept files:
-    lua_api.c
-    lua_api.h
+    lua*.c
+    lua*.h
+    viewer.c
+    viewer.h
 remark begin markers:
     /*
     #

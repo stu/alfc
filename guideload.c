@@ -267,7 +267,204 @@ void FreePage(uIM_GuidePage *page)
 	free(page);
 }
 
-uIM_GuidePage* ReflowPage(uIM_GuideHeader *hdr, int depth, char **titles)
+static uIM_GuidePage *FormatPage(uIM_GuidePage *page_data, int page_width)
+{
+	DLElement *e;
+	char *pp;
+	int fixed;
+	int i;
+	int wide;
+	uIM_GuideLine *line;
+	uIM_GuideLine *ln;
+	int style;
+	int flags;
+	int old_flags;
+
+	DList *lstNewLines;
+
+	char *start_line;
+
+	lstNewLines = malloc(sizeof(DList));
+	dlist_init(lstNewLines, FreeLine);
+
+	e = dlist_head(page_data->lstLines);
+	line = dlist_data(e);
+
+	ln = calloc(1, sizeof(uIM_GuideLine));
+	ln->flags = 0;
+	ln->text = (uint8_t*)strdup((char*)line->text);
+	e = dlist_next(e);
+
+	dlist_ins(lstNewLines, ln);
+
+	fixed = 0;
+	line = dlist_data(e);
+
+	start_line = calloc(1, 4096);
+
+	i = 0;
+	style = STYLE_NORMAL;
+	flags = 0;
+	old_flags = 0;
+	while (e != NULL)
+	{
+		line = dlist_data(e);
+		pp = (char*) line->text;
+
+		wide = 0;
+
+		while (*pp != 0 && wide < page_width)
+		{
+			int wlen;
+			int rlen;
+
+			// calculate word length.
+			wlen = 0; // word length - codes
+			rlen = 0; // total word length + codes
+
+			if (pp[wlen] == ' ')
+			{
+				rlen++;
+				wlen++;
+			}
+
+			while (pp[wlen] != 0x0 && pp[wlen] != 0x0A && pp[wlen] != ' ')
+			{
+				switch (pp[wlen])
+				{
+					case '{':
+					case '}':
+						if (memcmp(pp + wlen, "{{{", 3) == 0)
+						{
+							fixed += 1;
+							wlen += 3;
+							flags += 0x100;
+							if (fixed > 1)
+								rlen += 3;
+						}
+						else if (memcmp(pp + wlen, "}}}", 3) == 0)
+						{
+							fixed -= 1;
+							wlen += 3;
+							flags -= 0x100;
+							if (fixed > 0)
+								rlen += 3;
+						}
+						else
+						{
+							wlen++;
+							rlen++;
+						}
+						break;
+
+					case '@':
+					case '~':
+					case '^':
+						if (fixed > 0)
+							rlen++;
+						else
+						{
+							switch (pp[wlen])
+							{
+								case '~':
+									if (fixed == 0)
+									{
+										if ((flags & 0xFF) == 0)
+											flags |= eLF_Bold;
+										else
+											flags &= 0xFF00;
+									}
+									break;
+								case '^':
+									if (fixed == 0)
+									{
+										if ((flags & 0xFF) == 0)
+											flags |= eLF_Reverse;
+										else
+											flags &= 0xFF00;
+									}
+									break;
+								case '@':
+									if (fixed == 0)
+									{
+										if ((flags & 0xFF) == 0)
+											flags |= eLF_Underline;
+										else
+											flags &= 0xFF00;
+									}
+									break;
+							}
+						}
+						wlen++;
+						break;
+
+					default:
+						wlen++;
+						rlen++;
+						break;
+				}
+			}
+
+
+			// draw it on screen...
+			if (wide + rlen > page_width)
+			{
+				// new line
+				i += 1;
+				wide = 0;
+
+				ln = calloc(1, sizeof(uIM_GuideLine));
+				ln->flags = old_flags;
+				ln->text = (uint8_t*) strdup(start_line);
+				start_line[0] = 0;
+
+				old_flags = flags;
+
+				dlist_ins(lstNewLines, ln);
+
+				if (fixed == 0)
+				{
+					while (*pp == ' ')
+						pp++;
+				}
+
+				strncat(start_line, pp, wlen);
+				pp += wlen;
+				wide += rlen;
+			}
+			else
+			{
+				strncat(start_line, pp, wlen);
+				pp += wlen;
+				wide += rlen;
+			}
+		}
+
+		//if (start_line[0] != 0)
+		{
+			ln = calloc(1, sizeof(uIM_GuideLine));
+			ln->flags = old_flags;
+			ln->text = (uint8_t*) strdup(start_line);
+			start_line[0] = 0;
+			dlist_ins(lstNewLines, ln);
+
+			old_flags = flags;
+
+			i += 1;
+		}
+
+		e = dlist_next(e);
+	}
+
+	dlist_destroy(page_data->lstLines);
+	free(page_data->lstLines);
+	page_data->lstLines = lstNewLines;
+
+	return page_data;
+}
+
+
+uIM_GuidePage* ReflowPage(uIM_GuideHeader *hdr, int depth, char **titles, int page_width)
 {
 	uIM_Node *node;
 	char *p;
@@ -478,7 +675,7 @@ uIM_GuidePage* ReflowPage(uIM_GuideHeader *hdr, int depth, char **titles)
 
 	free(line_buffer);
 
-	return rv;
+	return FormatPage(rv, page_width);
 }
 
 void FreeGuide(uIM_GuideHeader *g)
@@ -497,4 +694,5 @@ void FreeGuide(uIM_GuideHeader *g)
 
 	free(g);
 }
+
 

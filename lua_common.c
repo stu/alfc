@@ -1,3 +1,10 @@
+/****h* ALFC/LuaAPICommon
+ * FUNCTION
+ *   The C<>Lua interface functions used in the Lua scripts.
+ *   This is the common functions can are shared between the directory mode, viewer etc.
+ *****
+ */
+
 #include "headers.h"
 
 static int HaveShellMetaCharacters(char *s)
@@ -31,19 +38,53 @@ static int HaveShellMetaCharacters(char *s)
 	return 0;
 }
 
+/****f* LuaAPICommon/VersionDate
+ * FUNCTION
+ *	Returns the build date
+ * SYNOPSIS
+ dte = VersionDate()
+ * INPUTS
+ *	o None
+ * RESULTS
+ *	o dte (string) -- C __DATE__ stamp as string of build
+ * EXAMPLE
+ debug_msg("ALFC built on " .. VersionDate())
+ * SEE ALSO
+ * VersionDate, VersionTime, Version, VersionMinor, VersionMajor, VersionBuild, VersionString
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_VersionDate(lua_State *L)
 {
 	lua_pushstring(L, VersionDate());
 	return 1;
 }
 
+/****f* LuaAPICommon/VersionTime
+ * FUNCTION
+ *	Returns the build time
+ * SYNOPSIS
+ dte = VersionTime()
+ * INPUTS
+ *	o None
+ * RESULTS
+ *	o dte (string) -- C __TIME__ stamp as string of build
+ * EXAMPLE
+ debug_msg("ALFC built on " .. VersionTime())
+ * SEE ALSO
+ * VersionDate, VersionTime, Version, VersionMinor, VersionMajor, VersionBuild, VersionString
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_VersionTime(lua_State *L)
 {
 	lua_pushstring(L, VersionTime());
 	return 1;
 }
 
-/****f* LuaAPI/VersionMajor
+/****f* LuaAPICommon/VersionMajor
  * FUNCTION
  *	Returns the major version number
  * SYNOPSIS
@@ -54,6 +95,8 @@ int gmec_VersionTime(lua_State *L)
  *	o major (number) -- major number (eg: 1)
  * EXAMPLE
  debug_msg("ALFC v " .. VersionMajor())
+ * SEE ALSO
+ * VersionDate, VersionTime, Version, VersionMinor, VersionMajor, VersionBuild, VersionString
  * AUTHOR
  *	Stu George
  ******
@@ -63,7 +106,8 @@ int gmec_VersionMajor(lua_State *L)
 	lua_pushnumber(L, VersionMajor());
 	return 1;
 }
-/****f* LuaAPI/VersionMinor
+
+/****f* LuaAPICommon/VersionMinor
  * FUNCTION
  *	Returns the minor version number
  * SYNOPSIS
@@ -74,6 +118,8 @@ int gmec_VersionMajor(lua_State *L)
  *	o minor (number) -- minor number (eg: 2)
  * EXAMPLE
  debug_msg("ALFC minor version = " .. VersionMinor())
+ * SEE ALSO
+ * VersionDate, VersionTime, Version, VersionMinor, VersionMajor, VersionBuild, VersionString
  * AUTHOR
  *	Stu George
  ******
@@ -83,7 +129,8 @@ int gmec_VersionMinor(lua_State *L)
 	lua_pushnumber(L, VersionMinor());
 	return 1;
 }
-/****f* LuaAPI/VersionBuild
+
+/****f* LuaAPICommon/VersionBuild
  * FUNCTION
  *	Returns the build number
  * SYNOPSIS
@@ -94,6 +141,8 @@ int gmec_VersionMinor(lua_State *L)
  *	o build (number) -- build number (eg: 1234)
  * EXAMPLE
  debug_msg("ALFC build " .. VersionBuild())
+ * SEE ALSO
+ * VersionDate, VersionTime, Version, VersionMinor, VersionMajor, VersionBuild, VersionString
  * AUTHOR
  *	Stu George
  ******
@@ -103,7 +152,8 @@ int gmec_VersionBuild(lua_State *L)
 	lua_pushnumber(L, VersionBuild());
 	return 1;
 }
-/****f* LuaAPI/Version
+
+/****f* LuaAPICommon/Version
  * FUNCTION
  *	This function returns the version in a hexadecimal encoding. The upper 8 bits
  *   are the major number, the next 8 bits are minor and the lower 16 are build.
@@ -118,6 +168,8 @@ int gmec_VersionBuild(lua_State *L)
  *	o version (number) -- version number (eg: 1.02.1234 as 0x010204D2)
  * EXAMPLE
  debug_msg("ALFC version " .. Version())
+ * SEE ALSO
+ * VersionDate, VersionTime, Version, VersionMinor, VersionMajor, VersionBuild, VersionString
  * AUTHOR
  *	Stu George
  ******
@@ -128,6 +180,28 @@ int gmec_Version(lua_State *L)
 	return 1;
 }
 
+/****f* LuaAPICommon/GetMode
+ * FUNCTION
+ *	Returns the current mode the program is running in
+ * SYNOPSIS
+ mode = GetMode()
+ * INPUTS
+ *	o None
+ * RESULTS
+ *	o mode (number) -- Returns currently active mode.
+ *	mode:
+ *	o 1 = eMode_Directory
+ *	o 2 = eMode_Viewer
+ * EXAMPLE
+ if GetMode() == eMode_Viewer then
+	 debug_msg("Script is running inside the viewer")
+ end
+ * SEE ALSO
+ * VersionDate, VersionTime, Version, VersionMinor, VersionMajor, VersionBuild, VersionString
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_GetMode(lua_State *L)
 {
 	uGlobalData *gd;
@@ -173,6 +247,21 @@ static char* ltrim(const char *s)
 	return strdup(p);
 }
 
+/****f* LuaAPICommon/trim
+ * FUNCTION
+ *	Trims both trailing and leading spaces
+ * SYNOPSIS
+ string = trim(string)
+ * INPUTS
+ *	o string
+ * RESULTS
+ *	o string
+ * SEE ALSO
+ * rtrim, ltrim
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_trim(lua_State *L)
 {
 	struct lstr strx;
@@ -190,6 +279,21 @@ int gmec_trim(lua_State *L)
 	return 1;
 }
 
+/****f* LuaAPICommon/ltrim
+ * FUNCTION
+ *	Trims only leading spaces
+ * SYNOPSIS
+ string = ltrim(string)
+ * INPUTS
+ *	o string
+ * RESULTS
+ *	o string
+ * SEE ALSO
+ * rtrim, trim
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_ltrim(lua_State *L)
 {
 	struct lstr strx;
@@ -203,6 +307,21 @@ int gmec_ltrim(lua_State *L)
 	return 1;
 }
 
+/****f* LuaAPICommon/rtrim
+ * FUNCTION
+ *	Trims only trailing spaces
+ * SYNOPSIS
+ string = rtrim(string)
+ * INPUTS
+ *	o string
+ * RESULTS
+ *	o string
+ * SEE ALSO
+ * ltrim, trim
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_rtrim(lua_State *L)
 {
 	struct lstr strx;
@@ -216,7 +335,7 @@ int gmec_rtrim(lua_State *L)
 	return 1;
 }
 
-/****f* LuaAPI/debug_msg
+/****f* LuaAPICommon/debug_msg
  * FUNCTION
  *	This outputs a string to the logging window
  * SYNOPSIS
@@ -242,24 +361,26 @@ int gmec_debug_msg(lua_State *L)
 	return 0;
 }
 
-/****f* LuaAPI/GetVersionString
+/****f* LuaAPICommon/VersionString
  * FUNCTION
  *	This function will return a string representation
  *	of the program version in the format of %i.%02i/%04i of Major Version,
  *	Minor Version and Build Number.
  * SYNOPSIS
- vers = GetVersionString()
+ vers = VersionString()
  * INPUTS
  *	o None
  * RESULTS
  *	o version (string) -- version number (eg: 1.02.1234)
  * EXAMPLE
- debug_msg("ALFC version " .. GetVersionString())
+ debug_msg("ALFC version " .. VersionString())
+ * SEE ALSO
+ * VersionDate, VersionTime, Version, VersionMinor, VersionMajor, VersionBuild, VersionString
  * AUTHOR
  *	Stu George
  ******
  */
-int gmec_GetVersionString(lua_State *L)
+int gmec_VersionString(lua_State *L)
 {
 	char *str = malloc(64);
 
@@ -270,7 +391,7 @@ int gmec_GetVersionString(lua_State *L)
 	return 1;
 }
 
-/****f* LuaAPI/ConvertDirectoryName
+/****f* LuaAPICommon/ConvertDirectoryName
  * FUNCTION
  *	This function will take a path and convert
  *	environment strings into an absolute path name
@@ -308,6 +429,24 @@ int gmec_ConvertDirectoryName(lua_State *L)
 	return 1;
 }
 
+/****f* LuaAPICommon/DriverName
+ * FUNCTION
+ *	returns a string for the current output driver
+ * SYNOPSIS
+ string = DriverName()
+ * INPUTS
+ *	o string
+ * RESULTS
+ *	o string
+ *	driver:
+ *	o "GUI" - Basically the gui driver on both X11 and Win32.
+ *	o "NCURSES" - NCurses text mode driver
+ * AUTHOR
+ *	Stu George
+ * SEE ALSO
+ * SystemType
+ ******
+ */
 int gmec_DriverName(lua_State *L)
 {
 	uGlobalData *gd;
@@ -318,6 +457,18 @@ int gmec_DriverName(lua_State *L)
 	return 1;
 }
 
+/****f* LuaAPICommon/IncludeFile
+ * FUNCTION
+ *	This function includes another lua script inside the current one.
+ *	This The included file is then executed to run any global code/definitions in side it.
+ * SYNOPSIS
+ IncludeFile("$ALFC/filename.lua")
+ * INPUTS
+ *	o filename (string) - File to load
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_IncludeFile(lua_State *L)
 {
 	struct lstr s;
@@ -373,6 +524,22 @@ int gmec_IncludeFile(lua_State *L)
 	return 0;
 }
 
+/****f* LuaAPICommon/DoesFileExist
+ * FUNCTION
+ *	This function tests for the existance of a file
+ * SYNOPSIS
+ x = DoesFileExist("$ALFC/global.lua")
+ * INPUTS
+ *	o filename (string) - file to test
+ * RESULTS
+ *	o result (integer)
+ *	result:
+ *	o 0 - yes file exists
+ *	o -1 - no file does not exist
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_DoesFileExist(lua_State *L)
 {
 	char *dir;
@@ -441,6 +608,27 @@ void push_file(lua_State *L, uDirEntry *de, int idx, char *path)
 	lua_settable(L, -3);
 }
 
+/****f* LuaAPICommon/GetFileListFromPath
+ * FUNCTION
+ *	This function tests for the existance of a file
+ * SYNOPSIS
+ x = GetFileListFromPath("$HOME")
+ * INPUTS
+ *	o directory (string) - directory to enumerate files from
+ * RESULTS
+ *	o filelist (table) - a table of data
+ *	data:
+ *	o name (string) - filename
+ *	o size (number) - size of file
+ *	o date (string) - date time formatted string per preferences
+ *	o link (number) - if file is a symlink or not
+ *	o directory (number) - if file is directory or not
+ *	o tagged (number) - if tagged or not
+ *	o path (string) - path to filename
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_GetFileListFromPath(lua_State *L)
 {
 	DList *lst;
@@ -484,6 +672,24 @@ int gmec_GetFileListFromPath(lua_State *L)
 	return 1;
 }
 
+/****f* LuaAPICommon/SystemType
+ * FUNCTION
+ *	returns a string for the current system (windows, unix, etc)
+ * SYNOPSIS
+ string = SystemType()
+ * INPUTS
+ *	o string
+ * RESULTS
+ *	o string
+ *	driver:
+ *	o "WIN32" - Windows machines
+ *	o "UNIX" - Unix boxes
+ * AUTHOR
+ *	Stu George
+ * SEE ALSO
+ * DriverName
+ ******
+ */
 int gmec_SystemType(lua_State *L)
 {
 #ifdef __WIN32__
@@ -494,6 +700,27 @@ int gmec_SystemType(lua_State *L)
 	return 1;
 }
 
+/****f* LuaAPICommon/globmatch
+ * FUNCTION
+ *	tests a glob against a string
+ * SYNOPSIS
+ result = globmatch(string, globpattern)
+ * INPUTS
+ *	o string to test for pattern
+ *	o pattern
+ * RESULTS
+ *	o value (number)
+ *	value:
+ *	o 0 - matches
+ *	o -1 - does not match
+ * EXAMPLE
+ if globmatch("readme.txt", "*.txt") == 1 then
+	 debug_msg("matches *.txt pattern")
+ end
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_globmatch(lua_State *L)
 {
 	struct lstr name;
@@ -514,6 +741,25 @@ int gmec_globmatch(lua_State *L)
 	return 1;
 }
 
+
+/****f* LuaAPICommon/exec
+ * FUNCTION
+ *	Executes an external program.
+ *	Program will determine shell meta characters and execute $SHELL with the parameters.
+ * SYNOPSIS
+ exec("/usr/bin/ls")
+ * INPUTS
+ *	o filename to exec
+ * RESULTS
+ *	o None
+ * EXAMPLE
+ exec("/bin/cat $HOME/test.txt | sort")
+ * PORTABILITY
+ *  On windows COMSPEC environment variable will be used for shell, on unix SHELL will be invoked.
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gmec_exec(lua_State *L)
 {
 	struct lstr cmd;

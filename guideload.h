@@ -7,7 +7,8 @@ extern "C"{
 extern void FreePage(uIM_GuidePage *page);
 extern void FreeGuide(uIM_GuideHeader *g);
 extern uIM_GuideHeader* LoadGuide(char *fn);
-extern uIM_GuidePage* ReflowPage(uIM_GuideHeader *hdr, int depth, char **titles);
+extern uIM_GuidePage* ReflowPage(uIM_GuideHeader *hdr, int depth, char **titles, int page_width);
+
 
 #ifdef __cplusplus
 }

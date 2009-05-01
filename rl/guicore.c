@@ -44,7 +44,7 @@ static HDC hdc, imghdc;
 static HBITMAP scr_bmp;
 static int first_paint = 1;
 static BITMAPINFO di_bmp_info;
-static char* bmpinfo;
+static uint8_t* bmpinfo;
 
 static key curkey;
 static int curkey_k;
@@ -166,6 +166,7 @@ void create_window(int x_size, int y_size, char* title, uint8_t *fdata, uint32_t
 	init_window(x_size*char_width+4, y_size*char_height+4, title);
 
 	total_size = x_size * y_size * 4;
+	fprintf(stderr, "x0 - stored_display - create\n");
 	stored_display = (displayed_char*) malloc(total_size * sizeof(displayed_char));
 
 	for (i = 0; i < total_size; i++)
@@ -248,17 +249,17 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 				di_bmp_info.bmiHeader.biWidth = screen_x_size;
 				di_bmp_info.bmiHeader.biHeight = screen_y_size;
 
-				bmpinfo = (char*) realloc(bmpinfo, screen_x_size*screen_y_size*4);
+				bmpinfo = (uint8_t*) realloc(bmpinfo, screen_x_size*screen_y_size*4);
 				stored_display = (displayed_char*) realloc(stored_display, (screen_x_size*screen_y_size*4) * sizeof(displayed_char));
 
-				first_paint = -1;
+				first_paint = 1;
 				driver_redraw = 1;
 			}
 			break;
 
 		case WM_PAINT:
 			hdc = BeginPaint(hwnd, &paintstruct);
-			if (first_paint)
+			if(first_paint == 1)
 			{
 				if(scr_bmp != NULL)
 					DeleteObject(scr_bmp);
@@ -275,20 +276,19 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 				if(bmpinfo != NULL)
 					free(bmpinfo);
 
-				bmpinfo = (char*) malloc(screen_x_size*screen_y_size*4);
+				bmpinfo = (uint8_t*) malloc(screen_x_size*screen_y_size*4);
 			}
 
 			imghdc = CreateCompatibleDC(hdc);
 
-			if (first_paint)
+			if (first_paint == 1)
 			{
 				int x;
 
 				GetDIBits(imghdc, scr_bmp, 0, screen_y_size, bmpinfo, &di_bmp_info, DIB_RGB_COLORS);
+
 				for (x = 0; x < screen_x_size*screen_y_size*4; x++)
-				{
 					bmpinfo[x] = 0;
-				}
 			}
 
 			SetDIBits(imghdc, scr_bmp, 0, screen_y_size, bmpinfo, &di_bmp_info, DIB_RGB_COLORS);
@@ -296,6 +296,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			BitBlt(hdc, 0, 0, screen_x_size, screen_y_size, imghdc, 0, 0, SRCCOPY);
 			DeleteDC(imghdc);
 			EndPaint(hwnd, &paintstruct);
+
 			first_paint = 0;
 			break;
 
@@ -492,9 +493,9 @@ rgbcolor get_pixel(int x, int y)
 {
 	rgbcolor r;
 #ifdef xlib
-	char* ptr = screen_image->data + (y * screen_image->bytes_per_line + 4 * x);
+	uint8_t* ptr = screen_image->data + (y * screen_image->bytes_per_line + 4 * x);
 #else
-	char* ptr = bmpinfo + (screen_y_size-y-1)*screen_x_size*3 + x*3;
+	uint8_t* ptr = bmpinfo + (screen_y_size-y-1)*screen_x_size*3 + x*3;
 #endif
 	r.r = ptr[2];
 	r.g = ptr[1];
@@ -526,9 +527,9 @@ void set_pixel(int x, int y, rgbcolor color)
 	if(y < 0 || y >= screen_y_size) return;
 
 #ifdef xlib
-	char* ptr = screen_image->data + (y * screen_image->bytes_per_line + 4 * x);
+	uint8_t* ptr = screen_image->data + (y * screen_image->bytes_per_line + 4 * x);
 #else
-	char* ptr = bmpinfo + (screen_y_size-y-1)*screen_x_size*3 + x*3;
+	uint8_t* ptr = bmpinfo + (screen_y_size-y-1)*screen_x_size*3 + x*3;
 #endif
 	ptr[2] = color.r;
 	ptr[1] = color.g;

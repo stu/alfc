@@ -1,6 +1,7 @@
 /****h* ALFC/LuaAPIHash
  * FUNCTION
- *   The C<>Lua interface functions used in the Lua scripts.
+ *   The C<>Lua interface functions used in the Lua scripts. These functions can
+ *   be used by any other lua script regardless of mode.
  *****
  */
 #include "headers.h"

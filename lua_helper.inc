@@ -347,6 +347,8 @@ void RegisterLuaFuncs(uGlobalData *gb, lua_State *l)
 /* LUA EXT REF */
 /* LUA END EXT REF */
 
+	/* dupes from common? */
+	/*
 	lua_pushnumber(l, VMAJ); lua_setglobal(l, "VERSION_MAJ");
 	lua_pushnumber(l, VMIN); lua_setglobal(l, "VERSION_MIN");
 	lua_pushnumber(l, VBUILD); lua_setglobal(l, "VERSION_BUILD");
@@ -403,6 +405,9 @@ void RegisterLuaFuncs(uGlobalData *gb, lua_State *l)
 	lua_pushnumber(l, eMode_Directory); lua_setglobal(l, "eMode_Directory");
 	lua_pushnumber(l, eMode_Viewer); lua_setglobal(l, "eMode_Viewer");
 
+	*/
+
 	lua_settop(l, 0);
+
 }
 

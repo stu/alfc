@@ -58,8 +58,8 @@
 #ifdef DRV_NCURSES
 #include "ncurses_interface.h"
 #endif
-#ifdef DRV_X11
-#include "x11_interface.h"
+#ifdef DRV_GUI
+#include "gui_interface.h"
 #endif
 
 

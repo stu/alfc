@@ -1,11 +1,4 @@
-/****h* ALFC/Core
- * FUNCTION
- *   Helper functions for dealing with Lua scripts
- *****
- */
-
 #include "headers.h"
-
 
 static void UpdateGlobList(uGlobalData *gd, DList *lstGlob, DList *lstFull, DList *lstF);
 static void FreeListEntry(void *x);
@@ -146,13 +139,13 @@ char* GetDateTimeString(char *fmt, time_t t)
 	struct tm *tt;
 
 	char *mns[] =
-	{
-	"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-	};
+		{
+		"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+		};
 	char *mnl[] =
-	{
-	"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
-	};
+		{
+		"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
+		};
 
 	tt = localtime(&t);
 
@@ -223,7 +216,7 @@ char* GetDateTimeString(char *fmt, time_t t)
 	if (x[0] == '0' && fmt[0] != et_Year2)
 		x[0] = ' ';
 
-	return realloc(x, strlen(x)+1);
+	return realloc(x, strlen(x) + 1);
 }
 
 void about_window(uGlobalData *gd)
@@ -799,9 +792,9 @@ void CalcDirStats(uGlobalData *gd, uWindow *w, DList *lstFiles)
 #ifndef __WIN32__
 		// test link to see if its a directory...
 		if (S_ISLNK(de->attrs) != 0)
-			w->total_size += de->lnk_size;
+		w->total_size += de->lnk_size;
 		else
-			w->total_size += de->size;
+		w->total_size += de->size;
 #else
 		w->total_size += de->size;
 #endif
@@ -838,7 +831,7 @@ DList* GetFiles(uGlobalData *gd, char *path)
 			{
 				char *fname;
 
-				fname = malloc( strlen(cpath) + strlen(dr->d_name) + 16 );
+				fname = malloc(strlen(cpath) + strlen(dr->d_name) + 16);
 				strcpy(fname, cpath);
 				strcat(fname, "/");
 				strcat(fname, dr->d_name);
@@ -922,13 +915,6 @@ static int CalcSizeOff(uWindow *w, int end)
 	else
 		return end - 8;
 }
-
-/*
- static int CalcMaxNameLen(uWindow *w, int end)
- {
- return (end - 5);
- }
- */
 
 static int CalcDateOff(uWindow *w, int end)
 {
@@ -1033,7 +1019,7 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 			style = STYLE_DIR_EXEC;
 		}
 		else
-			*p++ = '@';
+		*p++ = '@';
 
 		strcat(buff2 + 1, de->name);
 		strcat(buff2, " -> ");
@@ -1073,7 +1059,7 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 
 #ifndef __WIN32__
 				if (S_ISLNK(de->attrs&S_IFLNK) != 0)
-					xx = de->lnk_size;
+				xx = de->lnk_size;
 #endif
 
 
@@ -1088,7 +1074,7 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 				xx = de->size;
 #ifndef __WIN32__
 				if (S_ISLNK(de->attrs&S_IFLNK) != 0)
-					xx = de->lnk_size;
+				xx = de->lnk_size;
 #endif
 
 				compress_size(buff + size_off, xx);
@@ -1123,8 +1109,6 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 		style = STYLE_HIGHLIGHT;
 
 	win->screen->set_style(style);
-	//win->screen->set_cursor( 2 + i + win->offset_row, 2 + win->offset_col );
-	//win->screen->print_abs(buff);
 
 	if (HaveColumnDate(win->gd) == 1)
 	{
@@ -1147,11 +1131,6 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 	}
 
 	buff[win->width - 2] = 0;
-
-
-	//win->screen->set_style(STYLE_NORMAL);
-	//win->screen->set_cursor( 2 + i + win->offset_row, 2 + win->offset_col + date_off );
-	//win->screen->print(buff+date_off);
 
 	win->screen->set_cursor(2 + i + win->offset_row, 2 + win->offset_col);
 	win->screen->print_abs(buff);
@@ -1281,7 +1260,7 @@ static char* PrintNumber(uint64_t num)
 		q++;
 
 	if (*q == ',')
-		return strdup(q+1);
+		return strdup(q + 1);
 	else
 		return strdup(q);
 }
@@ -1386,32 +1365,37 @@ static void DrawFileInfo(uWindow *win)
 		memmove(buff + attr_offset, "Attr: ---------", 15);
 
 		if ((de->attrs & S_IRUSR) == S_IRUSR)
-			buff[attr_offset + 6] = 'r';
+		buff[attr_offset + 6] = 'r';
 		if ((de->attrs & S_IWUSR) == S_IWUSR)
-			buff[attr_offset + 7] = 'w';
+		buff[attr_offset + 7] = 'w';
 		if ((de->attrs & S_IXUSR) == S_IXUSR)
-			buff[attr_offset + 8] = 'x';
+		buff[attr_offset + 8] = 'x';
 
 		if ((de->attrs & S_IRGRP) == S_IRGRP)
-			buff[attr_offset + 9] = 'r';
+		buff[attr_offset + 9] = 'r';
 		if ((de->attrs & S_IWGRP) == S_IWGRP)
-			buff[attr_offset + 10] = 'w';
+		buff[attr_offset + 10] = 'w';
 		if ((de->attrs & S_IXGRP) == S_IXGRP)
-			buff[attr_offset + 11] = 'x';
+		buff[attr_offset + 11] = 'x';
 
 		if ((de->attrs & S_IROTH) == S_IROTH)
-			buff[attr_offset + 12] = 'r';
+		buff[attr_offset + 12] = 'r';
 		if ((de->attrs & S_IWOTH) == S_IWOTH)
-			buff[attr_offset + 13] = 'w';
+		buff[attr_offset + 13] = 'w';
 		if ((de->attrs & S_IXOTH) == S_IXOTH)
-			buff[attr_offset + 14] = 'x';
+		buff[attr_offset + 14] = 'x';
 #else
 		memmove(buff + attr_offset, "Attr: -----", 11);
-		if((de->attrs & FILE_ATTRIBUTE_HIDDEN) == FILE_ATTRIBUTE_HIDDEN) buff[attr_offset + 6] = 'H';
-		if((de->attrs & FILE_ATTRIBUTE_SYSTEM) == FILE_ATTRIBUTE_SYSTEM) buff[attr_offset + 7] = 'S';
-		if((de->attrs & FILE_ATTRIBUTE_COMPRESSED) == FILE_ATTRIBUTE_COMPRESSED) buff[attr_offset + 8] = 'C';
-		if((de->attrs & FILE_ATTRIBUTE_ARCHIVE) == FILE_ATTRIBUTE_ARCHIVE) buff[attr_offset + 9] = 'A';
-		if((de->attrs & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY) buff[attr_offset + 10] = 'R';
+		if ((de->attrs & FILE_ATTRIBUTE_HIDDEN) == FILE_ATTRIBUTE_HIDDEN)
+			buff[attr_offset + 6] = 'H';
+		if ((de->attrs & FILE_ATTRIBUTE_SYSTEM) == FILE_ATTRIBUTE_SYSTEM)
+			buff[attr_offset + 7] = 'S';
+		if ((de->attrs & FILE_ATTRIBUTE_COMPRESSED) == FILE_ATTRIBUTE_COMPRESSED)
+			buff[attr_offset + 8] = 'C';
+		if ((de->attrs & FILE_ATTRIBUTE_ARCHIVE) == FILE_ATTRIBUTE_ARCHIVE)
+			buff[attr_offset + 9] = 'A';
+		if ((de->attrs & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY)
+			buff[attr_offset + 10] = 'R';
 #endif
 	}
 
@@ -1516,95 +1500,94 @@ char* ConvertKeyToName(int key)
 {
 	char *s;
 
-	struct udtKeyNames
-	{
+	struct udtKeyNames {
 		int key;
 		char *name;
 	} keys[] =
-	{
-	{
-	ALFC_KEY_DOWN, "Down"
-	},
-	{
-	ALFC_KEY_UP, "Up"
-	},
-	{
-	ALFC_KEY_LEFT, "Left"
-	},
-	{
-	ALFC_KEY_RIGHT, "Right"
-	},
-	{
-	ALFC_KEY_INS, "Insert"
-	},
-	{
-	ALFC_KEY_DEL, "Delete"
-	},
-	{
-	ALFC_KEY_BACKSPACE, "Backspace"
-	},
-	{
-	ALFC_KEY_HOME, "Home"
-	},
-	{
-	ALFC_KEY_END, "End"
-	},
-	{
-	ALFC_KEY_PAGE_UP, "Page Up"
-	},
-	{
-	ALFC_KEY_PAGE_DOWN, "Page Down"
-	},
-	{
-	ALFC_KEY_ENTER, "Enter"
-	},
-	{
-	ALFC_KEY_TAB, "Tab"
-	},
-	{
-	ALFC_KEY_SPACE, "Space"
-	},
-	{
-	ALFC_KEY_F01, "F1"
-	},
-	{
-	ALFC_KEY_F02, "F2"
-	},
-	{
-	ALFC_KEY_F03, "F3"
-	},
-	{
-	ALFC_KEY_F04, "F4"
-	},
-	{
-	ALFC_KEY_F05, "F5"
-	},
-	{
-	ALFC_KEY_F06, "F6"
-	},
-	{
-	ALFC_KEY_F07, "F7"
-	},
-	{
-	ALFC_KEY_F08, "F8"
-	},
-	{
-	ALFC_KEY_F09, "F9"
-	},
-	{
-	ALFC_KEY_F10, "F10"
-	},
-	{
-	ALFC_KEY_F11, "F11"
-	},
-	{
-	ALFC_KEY_F12, "F12"
-	},
+		{
+			{
+			ALFC_KEY_DOWN, "Down"
+			},
+			{
+			ALFC_KEY_UP, "Up"
+			},
+			{
+			ALFC_KEY_LEFT, "Left"
+			},
+			{
+			ALFC_KEY_RIGHT, "Right"
+			},
+			{
+			ALFC_KEY_INS, "Insert"
+			},
+			{
+			ALFC_KEY_DEL, "Delete"
+			},
+			{
+			ALFC_KEY_BACKSPACE, "Backspace"
+			},
+			{
+			ALFC_KEY_HOME, "Home"
+			},
+			{
+			ALFC_KEY_END, "End"
+			},
+			{
+			ALFC_KEY_PAGE_UP, "Page Up"
+			},
+			{
+			ALFC_KEY_PAGE_DOWN, "Page Down"
+			},
+			{
+			ALFC_KEY_ENTER, "Enter"
+			},
+			{
+			ALFC_KEY_TAB, "Tab"
+			},
+			{
+			ALFC_KEY_SPACE, "Space"
+			},
+			{
+			ALFC_KEY_F01, "F1"
+			},
+			{
+			ALFC_KEY_F02, "F2"
+			},
+			{
+			ALFC_KEY_F03, "F3"
+			},
+			{
+			ALFC_KEY_F04, "F4"
+			},
+			{
+			ALFC_KEY_F05, "F5"
+			},
+			{
+			ALFC_KEY_F06, "F6"
+			},
+			{
+			ALFC_KEY_F07, "F7"
+			},
+			{
+			ALFC_KEY_F08, "F8"
+			},
+			{
+			ALFC_KEY_F09, "F9"
+			},
+			{
+			ALFC_KEY_F10, "F10"
+			},
+			{
+			ALFC_KEY_F11, "F11"
+			},
+			{
+			ALFC_KEY_F12, "F12"
+			},
 
-	{
-	-1, NULL
-	}
-	};
+			{
+			-1, NULL
+			}
+		};
 
 	int j;
 
@@ -1787,37 +1770,14 @@ void SetActivePane(uGlobalData *gd, int p)
 	DrawFilter(gd);
 }
 
-/****f* Core/exec_internal_command
- * FUNCTION
- *	This is where the command line goes to call its lua function
- * SYNOPSIS
- */
+
 static void exec_internal_command(uGlobalData *gd, char *command)
-/*
- * INPUTS
- *	o uGlobalData -- standard for all functions
- *	o command -- entire string to pass to the CLI global lua function
- * RETURNS
- *   o None. We dont care or want to know what comes back.
- * AUTHOR
- *	Stu George
- * EXAMPLE
- exec_internal_command(gd, ":q");
- * SEE ALSO
- * 	Lua_Helper/CallGlobalFunc
- * NOTES
- * 	Strings returned from this function must be free'd.
- * SOURCE
- */
 {
 	if (command == NULL)
 		return;
 
 	CallGlobalFunc(gd->_GL, "CLIParse", "s", command);
 }
-/*
- *****
- */
 
 void DrawCLI(uGlobalData *gd)
 {
@@ -2030,9 +1990,9 @@ void AddHistory(uGlobalData *gd, char *str, ...)
 {
 	char *x;
 	char *skip[] =
-	{
-	"HistoryUp()", "HistoryDown()", ":q", NULL
-	};
+		{
+		"HistoryUp()", "HistoryDown()", ":q", NULL
+		};
 	int i;
 
 	x = malloc(8192);
@@ -2344,7 +2304,7 @@ int godir(uGlobalData *gd, char *dir)
 	char *cpath1;
 	char *cpath2;
 
-	cpath1 = strdup( GetActDPath(gd) );
+	cpath1 = strdup(GetActDPath(gd));
 	if (chdir(cpath1) != 0)
 	{
 		LogInfo("Could not change to directory %s\n", cpath1);
@@ -2381,7 +2341,7 @@ int downdir(uGlobalData *gd)
 	if (ALFC_IsDir(de->attrs) != 0)
 		return -1;
 
-	cpath = strdup( GetActDPath(gd) );
+	cpath = strdup(GetActDPath(gd));
 
 	if (chdir(cpath) != 0)
 	{
@@ -3010,6 +2970,7 @@ int ALFC_main(int start_mode, char *view_file)
 		gdata->screen->set_cursor(1, ((gdata->screen->get_screen_width() - (strlen(" Welcome to Another Linux File Commander ") - 8)) / 2));
 		gdata->screen->print(" Welcome to Another Linux File Commander ");
 		BuildWindowLayout(gdata);
+
 
 		// screen too small to show nds columns
 		// date coumns waste too much space.
