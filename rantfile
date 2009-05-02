@@ -157,7 +157,7 @@ end
 cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
 
 CC = "gcc"
-CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DNMEMWATCH " + PORT_CFLAGS
+CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH " + PORT_CFLAGS
 LIBS = ""
 
 default_files = %w(global.lua viewer.lua startup.lua shutdown.lua options.ini core_extract.lua
@@ -228,17 +228,17 @@ desc "help"
 task :help => ["auxfiles", "#{var[:gdump]}", "#{var[:guide]}", "#{var[:gcomp]}"] do
 end
 
-file "#{var[:gcomp]}" => %w(guidecompiler.o dlist.o lzss.o) do |t|
+file "#{var[:gcomp]}" => %w(guidecompiler.o dlist.o lzss.o memwatch.o) do |t|
 	sys "#{CC} -o #{var[:gcomp]} #{t.prerequisites.join(' ')} #{GLIBS}"
     sys "./#{var[:gcomp]} docs/guide_create.txt guide_create.gd"
     sys "./#{var[:gcomp]} docs/help.txt help.gd"
 end
 
-file "#{var[:gdump]}" => %w(guidedump.o guideload.o dlist.o lzss.o) do |t|
+file "#{var[:gdump]}" => %w(guidedump.o guideload.o dlist.o lzss.o memwatch.o) do |t|
     sys "#{CC} -o #{var[:gdump]} #{t.prerequisites.join(' ')} #{GLIBS} "
 end
 
-file "#{var[:guide]}" => %w(guide.o guideload.o dlist.o lzss.o version.o) + GPORTABILITY_OBJS do |t|
+file "#{var[:guide]}" => %w(guide.o guideload.o dlist.o lzss.o version.o memwatch.o) + GPORTABILITY_OBJS do |t|
     sys "#{CC} -o #{var[:guide]} #{t.prerequisites.join(' ')} #{var[:libs]} #{GLIBS}"
 end
 

@@ -240,7 +240,10 @@ static uIM_GuideLink* BustLink(char *p)
 
 static void FreeLine(void *x)
 {
-	free(x);
+	uIM_GuideLine *ln = x;
+
+	free(ln->text);
+	free(ln);
 }
 
 static void FreeLink(void *n)
@@ -459,6 +462,8 @@ static uIM_GuidePage *FormatPage(uIM_GuidePage *page_data, int page_width)
 	dlist_destroy(page_data->lstLines);
 	free(page_data->lstLines);
 	page_data->lstLines = lstNewLines;
+
+	free(start_line);
 
 	return page_data;
 }
