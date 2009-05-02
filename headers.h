@@ -27,9 +27,12 @@
 #include <lua/lauxlib.h>
 #include <lua/lualib.h>
 #else
+// arch linux
+#include <lauxlib.h>
+#include <lualib.h>
 // default for ubuntu..
-#include <lua5.1/lauxlib.h>
-#include <lua5.1/lualib.h>
+//#include <lua5.1/lauxlib.h>
+//#include <lua5.1/lualib.h>
 #endif
 #include "memwatch.h"
 
