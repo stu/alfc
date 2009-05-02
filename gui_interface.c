@@ -268,7 +268,7 @@ static void init_dir_styles(uScreenDriver *scr)
 	init_style(STYLE_DIR_IMAGE, 	CLR_BR_CYAN, CLR_BLACK);				// image
 	init_style(STYLE_DIR_DIR, 		CLR_BR_BLUE, CLR_BLACK);				// dir
 	init_style(STYLE_DIR_DOCUMENT, 	CLR_MAGENTA, CLR_BLACK);				// document
-	init_style(STYLE_DIR_ARCHIVE, 	CLR_RED, CLR_BLACK);				// archive
+	init_style(STYLE_DIR_ARCHIVE, 	CLR_RED, CLR_BLACK);					// archive
 	init_style(STYLE_DIR_BACKUP, 	CLR_DK_GREY, CLR_BLACK);				// archive
 }
 

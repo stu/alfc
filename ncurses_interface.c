@@ -12,6 +12,7 @@ static int intMaxWidth;
 
 static int intMaxColourPairs;
 static int intStyle;
+static int intUpdates;
 
 #ifndef __WIN32__
 static void terminate_signal(int a);
@@ -511,6 +512,14 @@ int main(int argc, char *argv[])
 	return ALFC_main(start_mode, view_file);
 }
 
+static void nc_set_updates(int set)
+{
+	if(set == 0)
+		intUpdates = 0;
+	else
+		intUpdates = 1;
+}
+
 uScreenDriver screen =
 {
 	NULL,
@@ -532,6 +541,7 @@ uScreenDriver screen =
 	nc_init_style,
 	nc_print_hline,
 	nc_print_vline,
+	nc_set_updates,
 
 	init_dir_styles,
 	init_view_styles,
