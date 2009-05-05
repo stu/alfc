@@ -520,6 +520,11 @@ static void nc_set_updates(int set)
 		intUpdates = 1;
 }
 
+static void nc_updatewindow(void)
+{
+	//
+}
+
 uScreenDriver screen =
 {
 	NULL,
@@ -546,5 +551,6 @@ uScreenDriver screen =
 	init_dir_styles,
 	init_view_styles,
 	nc_resized,
-	nc_isshutdown
+	nc_isshutdown,
+	nc_updatewindow
 };

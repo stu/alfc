@@ -378,6 +378,11 @@ static void gui_set_updates(int set)
 		intUpdates = 1;
 }
 
+static void gui_update_window(void)
+{
+	update_window();
+}
+
 uScreenDriver screen =
 {
 	NULL,
@@ -404,5 +409,6 @@ uScreenDriver screen =
 	init_dir_styles,
 	init_view_styles,
 	gui_resized,
-	gui_isshutdown
+	gui_isshutdown,
+	gui_update_window
 };

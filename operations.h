@@ -4,10 +4,10 @@
 extern "C"{
 #endif
 
-extern int Ops_CopyFile(uGlobalData *gd, uFileOperation *op);
-extern int Ops_MoveFile(uGlobalData *gd, uFileOperation *op);
-extern int Ops_DeleteFile(uGlobalData *gd, uFileOperation *op);
-extern int Ops_Symlink(uGlobalData *gd, uFileOperation *op);
+extern int Ops_CopyFile(uGlobalData *gd, uFileOperation *op, uWindow *w);
+extern int Ops_MoveFile(uGlobalData *gd, uFileOperation *op, uWindow *w);
+extern int Ops_DeleteFile(uGlobalData *gd, uFileOperation *op, uWindow *w);
+extern int Ops_Symlink(uGlobalData *gd, uFileOperation *op, uWindow *w);
 
 #ifdef __cplusplus
 }

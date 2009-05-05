@@ -4,6 +4,32 @@
 
 #define BLOCK_SIZE		(1024*16)
 
+static void OpWindowPercentageBuffer(uWindow *w, uint64_t total, uint64_t readin)
+{
+	char buffx[128]; // never exceeds 80
+	int l = w->width - 2;
+	int pct;
+	int q;
+
+	memset(buffx, '-', l);
+
+	if (total == 0)
+		total = 1;
+
+	// 10 in 200
+	pct = (readin * 100) / total;
+	q = (pct * l) / 100;
+
+	memset(buffx, 'X', q);
+	buffx[l] = 0;
+
+	w->gd->screen->set_style(STYLE_HIGHLIGHT);
+	w->gd->screen->set_cursor(3 + w->offset_row, 2 + w->offset_col);
+	w->gd->screen->print_abs(buffx);
+	w->gd->screen->set_style(STYLE_TITLE);
+	w->gd->screen->update_window();
+}
+
 static char* build_fn(char *p, char *f)
 {
 	char *z;
@@ -12,14 +38,14 @@ static char* build_fn(char *p, char *f)
 	assert(z != NULL);
 
 	strcpy(z, p);
-	if(z[strlen(z)] != '/')
+	if (z[strlen(z)] != '/')
 		strcat(z, "/");
 	strcat(z, f);
 
 	return z;
 }
 
-int Ops_Symlink(uGlobalData *gd, uFileOperation *x)
+int Ops_Symlink(uGlobalData *gd, uFileOperation *x, uWindow *w)
 {
 	struct stat statbuff;
 	char *src;
@@ -28,8 +54,9 @@ int Ops_Symlink(uGlobalData *gd, uFileOperation *x)
 	src = build_fn(x->op.udtSymlink.source_path, x->op.udtSymlink.source_filename);
 	dst = build_fn(x->op.udtSymlink.dest_path, x->op.udtSymlink.dest_filename);
 
+
 	// make sure we are in the path of the file to copy and its valid
-	if(ALFC_stat(src, &statbuff) == -1)
+	if (ALFC_stat(src, &statbuff) == -1)
 	{
 		x->result_code = -1;
 		x->result_msg = strdup(strerror(errno));
@@ -49,8 +76,9 @@ int Ops_Symlink(uGlobalData *gd, uFileOperation *x)
 
 	x->op.udtSymlink.source_length = statbuff.st_size;
 
+
 	// GO!
-	if( symlink(src, dst) != 0)
+	if (symlink(src, dst) != 0)
 	{
 		x->result_code = -1;
 		x->result_msg = strdup(strerror(errno));
@@ -71,8 +99,7 @@ int Ops_Symlink(uGlobalData *gd, uFileOperation *x)
 	return x->result_code;
 }
 
-
-int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
+int Ops_CopyFile(uGlobalData *gd, uFileOperation *x, uWindow *w)
 {
 	struct stat statbuff;
 	struct stat ostatbuff;
@@ -83,6 +110,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 
 	char *src;
 	char *dst;
+
 
 #ifndef __WIN32__
 	int ifd;
@@ -96,7 +124,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 	size_t offset;
 
 	buff = malloc(16+BLOCK_SIZE);
-	if(buff == NULL)
+	if (buff == NULL)
 	{
 		x->result_code = -1;
 		x->result_msg = strdup("Not enough memory for buffer");
@@ -104,7 +132,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 	}
 
 	cbuff = malloc(16+BLOCK_SIZE);
-	if(cbuff == NULL)
+	if (cbuff == NULL)
 	{
 		free(buff);
 		x->result_code = -1;
@@ -119,7 +147,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 	//LogInfo("Copy %s to %s\n", src, dst);
 
 	// same?
-	if(strcmp(src, dst) == 0)
+	if (strcmp(src, dst) == 0)
 	{
 		x->result_code = -1;
 		x->result_msg = strdup("Source and Destination are the same");
@@ -131,7 +159,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 	}
 
 	// make sure we are in the path of the file to copy and its valid
-	if(ALFC_stat(src, &statbuff) == -1)
+	if (ALFC_stat(src, &statbuff) == -1)
 	{
 		x->result_code = -1;
 		x->result_msg = strdup(strerror(errno));
@@ -156,10 +184,11 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 	}
 #endif
 
+
 	// directory copy
 	if (S_ISDIR(statbuff.st_mode))
 	{
-		if(strncmp(src, dst, strlen(src))==0)
+		if (strncmp(src, dst, strlen(src)) == 0)
 		{
 			x->result_code = -1;
 			x->result_msg = strdup("Recursive copies are not supported.");
@@ -192,11 +221,11 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 	}
 
 	// test if destination already exists
-	if(ALFC_stat(dst, &ostatbuff) == 0)
+	if (ALFC_stat(dst, &ostatbuff) == 0)
 	{
-		if( IsTrue(INI_get(gd->optfile, "copy_move", "overwrite")) == 0)
+		if (IsTrue(INI_get(gd->optfile, "copy_move", "overwrite")) == 0)
 		{
-			if( ALFC_unlink(dst) != 0)
+			if (ALFC_unlink(dst) != 0)
 			{
 				x->result_code = -1;
 				x->result_msg = strdup(ALFC_get_last_error(errno));
@@ -204,8 +233,9 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 				return x->result_code;
 			}
 
+
 			// make sure its gone!
-			if(ALFC_stat(dst, &ostatbuff) == 0)
+			if (ALFC_stat(dst, &ostatbuff) == 0)
 			{
 				x->result_code = -1;
 				x->result_msg = strdup("Destination failed to delete with overwrite");
@@ -231,7 +261,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 #ifdef __WIN32__
 	if((ifp = fopen(src, "rb")) == NULL)
 #else
-	if((ifd = open(src, O_RDONLY)) < 0)
+	if ((ifd = open(src, O_RDONLY)) < 0)
 #endif
 	{
 		x->result_code = -1;
@@ -246,7 +276,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 #ifdef __WIN32__
 	if((ofp = fopen(dst, "wb+")) == NULL)
 #else
-	if((ofd = open(dst, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | statbuff.st_mode)) < 0)
+	if ((ofd = open(dst, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | statbuff.st_mode)) < 0)
 #endif
 	{
 		x->result_code = -1;
@@ -263,12 +293,11 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 		return x->result_code;
 	}
 
-
 	x->op.udtCopy.source_length = statbuff.st_size;
 
 	flag = 0;
 	offset = 0;
-	while(flag == 0)
+	while (flag == 0)
 	{
 		int size;
 		int size2;
@@ -276,7 +305,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 		uint32_t input_crc;
 		uint32_t output_crc;
 
-		if(statbuff.st_size > BLOCK_SIZE)
+		if (statbuff.st_size > BLOCK_SIZE)
 			size = BLOCK_SIZE;
 		else
 			size = statbuff.st_size;
@@ -284,17 +313,19 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 		memset(buff, 0x0, BLOCK_SIZE);
 		memset(cbuff, 0x0, BLOCK_SIZE);
 
+
 #ifdef __WIN32__
 		//fseek(ifp, offset, SEEK_SET);
 		lseek64(ifp->_file, offset, SEEK_SET);
 		if( (size2 = fread(buff, 1, size, ifp)) != size )
 #else
 		lseek(ifd, offset, SEEK_SET);
-		if( (size2 = read(ifd, buff, size)) == -1 )
+		if ((size2 = read(ifd, buff, size)) == -1)
 #endif
 		{
 			x->result_code = -1;
 			x->result_msg = strdup("Error in reading input file");
+
 
 #ifdef __WIN32__
 			fclose(ifp);
@@ -312,17 +343,19 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 			return x->result_code;
 		}
 		size = size2;
+
 
 #ifdef __WIN32__
 		fseek(ofp, offset, SEEK_SET);
 		if((size2 = fwrite(buff, 1, size, ofp)) != size)
 #else
 		lseek(ofd, offset, SEEK_SET);
-		if( (size2 = write(ofd, buff, size)) != size)
+		if ((size2 = write(ofd, buff, size)) != size)
 #endif
 		{
 			x->result_code = -1;
 			x->result_msg = strdup("Error in writing to output file");
+
 
 #ifdef __WIN32__
 			fclose(ifp);
@@ -340,16 +373,18 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 		}
 		size = size2;
 
+
 #ifdef __WIN32__
 		fseek(ofp, offset, SEEK_SET);
 		if((size2 = fread(cbuff, 1, size, ofp)) != size)
 #else
 		lseek(ofd, offset, SEEK_SET);
-		if((size2 = read(ofd, cbuff, size)) == -1)
+		if ((size2 = read(ofd, cbuff, size)) == -1)
 #endif
 		{
 			x->result_code = -1;
 			x->result_msg = strdup("Error in writing to output file");
+
 
 #ifdef __WIN32__
 			fclose(ifp);
@@ -370,13 +405,14 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 		buff[size] = 0;
 		cbuff[size] = 0;
 
-		input_crc = fletcher32((uint16_t*)buff, (1+size) / 2);
-		output_crc = fletcher32((uint16_t*)cbuff, (1+size) / 2);
+		input_crc = fletcher32((uint16_t*) buff, (1 + size) / 2);
+		output_crc = fletcher32((uint16_t*) cbuff, (1 + size) / 2);
 
-		if(input_crc != output_crc)
+		if (input_crc != output_crc)
 		{
 			x->result_code = -1;
 			x->result_msg = strdup("Failed CRC Match");
+
 
 #ifdef __WIN32__
 			fclose(ifp);
@@ -394,21 +430,21 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 		}
 
 		/*
-		sprintf((char*)buff, "Written CRC %04X, %i bytes", output_crc, size);
-		gd->screen->set_style(STYLE_TITLE);
-		gd->screen->set_cursor(gd->screen->get_screen_height(), 1);
-		gd->screen->print((char*)buff);
-		gd->screen->get_keypress();
-		*/
+		 sprintf((char*)buff, "Written CRC %04X, %i bytes", output_crc, size);
+		 gd->screen->set_style(STYLE_TITLE);
+		 gd->screen->set_cursor(gd->screen->get_screen_height(), 1);
+		 gd->screen->print((char*)buff);
+		 gd->screen->get_keypress();
+		 */
 
 		offset += size;
 		statbuff.st_size -= size;
 
-		if(size == 0 || statbuff.st_size == 0)
+		OpWindowPercentageBuffer(w, x->op.udtCopy.source_length, offset);
+
+		if (size == 0 || statbuff.st_size == 0)
 			flag = 1;
 	}
-
-
 
 #ifndef __WIN32__
 	close(ifd);
@@ -442,7 +478,7 @@ int Ops_CopyFile(uGlobalData *gd, uFileOperation *x)
 	return x->result_code;
 }
 
-int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
+int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x, uWindow *w)
 {
 	struct stat statbuff;
 	struct stat dbuff;
@@ -452,8 +488,9 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 
 	stat(x->op.udtDelete.source_path, &dbuff);
 
+
 	// make sure we are in the path of the file to copy and its valid
-	if(stat(src, &statbuff) == -1)
+	if (stat(src, &statbuff) == -1)
 	{
 		x->result_code = -1;
 		x->result_msg = strdup(strerror(errno));
@@ -463,7 +500,7 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 
 #ifndef __WIN32__
 	// parse through the symlink?
-	if(S_ISLNK(statbuff.st_mode) != 0)
+	if (S_ISLNK(statbuff.st_mode) != 0)
 	{
 		x->result_code = -1;
 		x->result_msg = strdup("Symlinks not yet handled.");
@@ -471,6 +508,7 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 		return x->result_code;
 	}
 #endif
+
 
 	// non-regular copy
 	if (!S_ISREG(statbuff.st_mode) != 0 && S_ISDIR(statbuff.st_mode) == 0)
@@ -483,13 +521,15 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 
 	x->op.udtDelete.source_length = statbuff.st_size;
 
+
 #ifndef __WIN32__
 	chmod(x->op.udtDelete.source_path, dbuff.st_mode | S_IWUSR | S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH | S_IRUSR);
 	chmod(src, statbuff.st_mode | S_IWUSR | S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH | S_IRUSR);
 #endif
 
+
 	// GO!
-	if( ALFC_unlink(src) != 0)
+	if (ALFC_unlink(src) != 0)
 	{
 #ifndef __WIN32__
 		chmod(x->op.udtDelete.source_path, dbuff.st_mode);
@@ -511,8 +551,7 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x)
 	return x->result_code;
 }
 
-
-int Ops_MoveFile(uGlobalData *gd, uFileOperation *x)
+int Ops_MoveFile(uGlobalData *gd, uFileOperation *x, uWindow *w)
 {
 	uFileOperation *z;
 
@@ -524,17 +563,16 @@ int Ops_MoveFile(uGlobalData *gd, uFileOperation *x)
 	z->op.udtCopy.dest_path = x->op.udtMove.dest_path;
 	z->op.udtCopy.dest_filename = x->op.udtMove.dest_filename;
 
-	Ops_CopyFile(gd, z);
+	Ops_CopyFile(gd, z, w);
 
 	x->result_code = z->result_code;
 	x->result_msg = z->result_msg;
 
-
-	if(z->result_code == 0)
+	if (z->result_code == 0)
 	{
 		x->op.udtMove.source_length = z->op.udtCopy.source_length;
 
-		if(x->result_msg != NULL)
+		if (x->result_msg != NULL)
 			free(x->result_msg);
 
 		memset(z, 0x0, sizeof(uFileOperation));
@@ -543,7 +581,7 @@ int Ops_MoveFile(uGlobalData *gd, uFileOperation *x)
 		z->op.udtDelete.source_path = x->op.udtMove.source_path;
 		z->op.udtDelete.source_filename = x->op.udtMove.source_filename;
 
-		Ops_DeleteFile(gd, z);
+		Ops_DeleteFile(gd, z, w);
 
 		x->result_code = z->result_code;
 		x->result_msg = z->result_msg;
@@ -554,10 +592,8 @@ int Ops_MoveFile(uGlobalData *gd, uFileOperation *x)
 	return x->result_code;
 }
 
-
 int ops_MakeDirectory(uGlobalData *gd, uFileOperation *x)
 {
 	return 0;
 }
-
 
