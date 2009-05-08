@@ -18,8 +18,9 @@ static int intUpdates;
 static void gui_cls(void);
 static void gui_setcursor(int row, int col);
 
+static int intStyleMode;
 
-struct udtStyles
+static struct udtStyles
 {
 	int style;
 	int s_on;
@@ -35,6 +36,30 @@ struct udtStyles
 
 };
 
+static int style_data_dir[][3] = {
+		{ STYLE_DIR_EXEC, 		CLR_BR_GREEN, 	CLR_BLACK },
+		{ STYLE_DIR_LINK, 		CLR_YELLOW, 	CLR_BLACK },
+		{ STYLE_DIR_IMAGE, 		CLR_BR_CYAN, 	CLR_BLACK },
+		{ STYLE_DIR_DIR, 		CLR_BR_BLUE, 	CLR_BLACK },
+		{ STYLE_DIR_DOCUMENT, 	CLR_MAGENTA, 	CLR_BLACK },
+		{ STYLE_DIR_ARCHIVE, 	CLR_RED, 		CLR_BLACK },
+		{ STYLE_DIR_BACKUP, 	CLR_DK_GREY,	CLR_BLACK },
+
+		{ -1, -1, -1 }
+};
+
+static int style_data_view[][3] = {
+		{ STYLE_VIEW_EDIT_EOL, 		CLR_BR_GREEN, 	CLR_BLACK },
+		{ -1, -1, -1 }
+};
+
+static int style_data_base[][3] = {
+		{ STYLE_TITLE, 			CLR_WHITE, 	CLR_BLUE },
+		{ STYLE_NORMAL, 		CLR_GREY, 	CLR_BLACK },
+		{ STYLE_HIGHLIGHT, 		CLR_WHITE, 	CLR_RED },
+
+		{ -1, -1, -1 }
+};
 
 rgbcolor xc_colors[32];
 
@@ -255,27 +280,84 @@ static void init_style(int style, uint32_t fg, uint32_t bg)
 	styles[style].bg = convert_colour(bg);
 }
 
-static void gui_init_style(int style, uint32_t fg, uint32_t bg)
+static void gui_update_style(int style, uint32_t fg, uint32_t bg)
 {
-	init_style(style, fg, bg);
+	int i;
+
+	if(style < STYLE_00 && style > 0)
+	{
+		for(i=0; style_data_base[i][0] != -1; i++)
+		{
+			if(style_data_base[i][0] == style)
+			{
+				style_data_base[i][1] = fg;
+				style_data_base[i][2] = bg;
+				init_style(style, fg, bg);
+				return;
+			}
+		}
+	}
+
+	if(intStyleMode == 0)
+	{
+		for(i=0; style_data_dir[i][0] != -1; i++)
+		{
+			if(style_data_dir[i][0] == style)
+			{
+				style_data_dir[i][1] = fg;
+				style_data_dir[i][2] = bg;
+				init_style(style, fg, bg);
+				return;
+			}
+		}
+	}
+	else if(intStyleMode == 1)
+	{
+		for(i=0; style_data_view[i][0] != -1; i++)
+		{
+			if(style_data_view[i][0] == style)
+			{
+				style_data_view[i][1] = fg;
+				style_data_view[i][2] = bg;
+				init_style(style, fg, bg);
+				return;
+			}
+		}
+	}
 }
 
 static void init_dir_styles(uScreenDriver *scr)
 {
-	init_style(STYLE_DIR_EXEC, 		CLR_BR_GREEN, CLR_BLACK);				// exec
-	init_style(STYLE_DIR_LINK, 		CLR_YELLOW, CLR_BLACK);					// link
+	int i;
 
-	init_style(STYLE_DIR_IMAGE, 	CLR_BR_CYAN, CLR_BLACK);				// image
-	init_style(STYLE_DIR_DIR, 		CLR_BR_BLUE, CLR_BLACK);				// dir
-	init_style(STYLE_DIR_DOCUMENT, 	CLR_MAGENTA, CLR_BLACK);				// document
-	init_style(STYLE_DIR_ARCHIVE, 	CLR_RED, CLR_BLACK);					// archive
-	init_style(STYLE_DIR_BACKUP, 	CLR_DK_GREY, CLR_BLACK);				// archive
+	intStyleMode = 0;
+	for(i=0; style_data_dir[i][0] != -1; i++)
+	{
+		init_style(style_data_dir[i][0], style_data_dir[i][1], style_data_dir[i][2]);
+	}
 }
 
 static void init_view_styles(uScreenDriver *scr)
 {
-	init_style(STYLE_VIEW_EDIT_EOL, CLR_BR_GREEN, CLR_BLACK);	// end of line marker in viewer...
+	int i;
+
+	intStyleMode = 1;
+	for(i=0; style_data_dir[i][0] != -1; i++)
+	{
+		init_style(style_data_view[i][0], style_data_view[i][1], style_data_view[i][2]);
+	}
 }
+
+static void init_base_styles(uScreenDriver *scr)
+{
+	int i;
+
+	for(i=0; style_data_base[i][0] != -1; i++)
+	{
+		init_style(style_data_base[i][0], style_data_base[i][1], style_data_base[i][2]);
+	}
+}
+
 
 static int gui_screen_init(uScreenDriver *scr)
 {
@@ -298,15 +380,12 @@ static int gui_screen_init(uScreenDriver *scr)
 
 	gui_init_colours();
 
-	init_style(STYLE_NORMAL,	CLR_GREY, 		CLR_BLACK);
-	init_style(STYLE_TITLE,  	CLR_WHITE, 		CLR_RED);
-	init_style(STYLE_HIGHLIGHT, CLR_GREY, 		CLR_BLUE);
+	init_base_styles(scr);
+	init_dir_styles(scr);
 
 	init_style(STYLE_TITLE, scr->gd->clr_title_fg, scr->gd->clr_title_bg);					// title bar
 	init_style(STYLE_NORMAL, scr->gd->clr_foreground, scr->gd->clr_background);				// default
 	init_style(STYLE_HIGHLIGHT, scr->gd->clr_hi_foreground, scr->gd->clr_hi_background);	// highlight line
-
-	init_dir_styles(scr);
 
 	scr->set_style(STYLE_NORMAL);
 	gui_cls();
@@ -401,7 +480,7 @@ uScreenDriver screen =
 	gui_setcursor,
 	gui_erase_eol,
 	gui_draw_frame,
-	gui_init_style,
+	gui_update_style,
 	gui_print_hline,
 	gui_print_vline,
 	gui_set_updates,

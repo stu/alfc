@@ -3023,14 +3023,13 @@ int ALFC_main(int start_mode, char *view_file)
 			}
 
 			ALFC_GetUserInfo(gdata);
+			ExecStartupScript(gdata);
 
 			if (gdata->mode == eMode_Directory)
 			{
 				StartDirectoryMode(gdata, start_left, start_right);
 				DrawAll(gdata);
 			}
-
-			ExecStartupScript(gdata);
 
 			if (gdata->mode == eMode_Viewer && view_file != NULL)
 			{

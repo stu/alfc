@@ -501,6 +501,10 @@ int gme_SetColour(lua_State *L)
 			gd->clr_title_bg = c;
 			gd->screen->init_style(STYLE_TITLE, gd->clr_title_fg, gd->clr_title_bg);
 			break;
+
+		default:
+			return luaL_error(L, "unknown style %i", style);
+			break;
 	}
 
 	return 0;
@@ -1885,7 +1889,7 @@ static uWindow *draw_ops_box(uGlobalData *gd)
 	w->width = width;
 	w->height = height;
 
-	gd->screen->set_style(STYLE_HIGHLIGHT);
+	gd->screen->set_style(STYLE_TITLE);
 	gd->screen->draw_border(w);
 
 	memset(buff, ' ', 128);
@@ -1896,8 +1900,6 @@ static uWindow *draw_ops_box(uGlobalData *gd)
 		gd->screen->set_cursor(1 + w->offset_row + q, 2 + w->offset_col);
 		gd->screen->print_abs(buff);
 	}
-
-	gd->screen->set_style(STYLE_TITLE);
 
 	return w;
 }
@@ -1964,7 +1966,7 @@ int gme_DoFileOps(lua_State *L)
 
 		// we know its min of 30
 		sprintf(buffx, " File Operation %5i/%-5i ", i, dlist_size(gd->lstFileOps));
-		gd->screen->set_style(STYLE_HIGHLIGHT);
+		gd->screen->set_style(STYLE_TITLE);
 		gd->screen->set_cursor(1 + w->offset_row, 2 + w->offset_col);
 		gd->screen->print_abs(buffx);
 
@@ -1974,40 +1976,36 @@ int gme_DoFileOps(lua_State *L)
 		{
 			case eOp_Delete:
 				UpdateOpBuff(buffx, w->width - 3, "Delete ", x->op.udtDelete.source_filename);
-				gd->screen->set_style(STYLE_HIGHLIGHT);
+				gd->screen->set_style(STYLE_TITLE);
 				gd->screen->set_cursor(2 + w->offset_row, 3 + w->offset_col);
 				gd->screen->print_abs(buffx);
-				gd->screen->set_style(STYLE_TITLE);
 				gd->screen->update_window();
 				Ops_DeleteFile(gd, x, w);
 				break;
 
 			case eOp_Copy:
 				UpdateOpBuff(buffx, w->width - 3, "Copy ", x->op.udtCopy.source_filename);
-				gd->screen->set_style(STYLE_HIGHLIGHT);
+				gd->screen->set_style(STYLE_TITLE);
 				gd->screen->set_cursor(2 + w->offset_row, 3 + w->offset_col);
 				gd->screen->print_abs(buffx);
-				gd->screen->set_style(STYLE_TITLE);
 				gd->screen->update_window();
 				Ops_CopyFile(gd, x, w);
 				break;
 
 			case eOp_Move:
 				UpdateOpBuff(buffx, w->width - 3, "Move ", x->op.udtMove.source_filename);
-				gd->screen->set_style(STYLE_HIGHLIGHT);
+				gd->screen->set_style(STYLE_TITLE);
 				gd->screen->set_cursor(2 + w->offset_row, 3 + w->offset_col);
 				gd->screen->print_abs(buffx);
-				gd->screen->set_style(STYLE_TITLE);
 				gd->screen->update_window();
 				Ops_MoveFile(gd, x, w);
 				break;
 
 			case eOp_SymLink:
 				UpdateOpBuff(buffx, w->width - 3, "Symlink ", x->op.udtSymlink.source_filename);
-				gd->screen->set_style(STYLE_HIGHLIGHT);
+				gd->screen->set_style(STYLE_TITLE);
 				gd->screen->set_cursor(2 + w->offset_row, 3 + w->offset_col);
 				gd->screen->print_abs(buffx);
-				gd->screen->set_style(STYLE_TITLE);
 				gd->screen->update_window();
 				Ops_Symlink(gd, x, w);
 				break;
@@ -2125,7 +2123,6 @@ int gme_DoFileOps(lua_State *L)
 	}
 
 	free(buffx);
-	gd->screen->get_keypress();
 
 	dlist_empty(gd->lstFileOps);
 

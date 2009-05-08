@@ -217,7 +217,7 @@ static char* BustNodeChops(uIM_Node *node, char *p)
 
 	// skip initial
 	q++;
-
+    count = 0;
 	while (IsCRLF(*q) == 0)
 	{
 		if (*q == '%')
@@ -485,7 +485,7 @@ static void WriteToDisk(uIM_GuideHeader *x, char *ofn)
 		e = dlist_next(e);
 
 		buff2 = reparse(n->data, strlen((char*) n->data) + 1);
-
+        clen = 0;
 		inlen = 4 * strlen((char*) buff2);
 		if (inlen < 16384)
 			inlen = 16384;
