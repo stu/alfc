@@ -395,3 +395,12 @@ task :make =>  ["clean", "bin2c.o", "auxfiles"] do
 
 end
 
+desc "Install linux in /usr/local/bin"
+task :install do
+    sys "sudo cp alfc /usr/local/bin"
+    sys "sudo mkdir -p /usr/local/share/alfc"
+    sys "sudo cp *.gd /usr/local/share/alfc"
+end
+
+
+

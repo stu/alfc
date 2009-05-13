@@ -30,6 +30,11 @@ end
 	BindKey(ALFC_KEY_F1, "Help", [[ViewFile("$ALFC/help.txt")]])
 	BindKey(ALFC_KEY_F2, "Menu", [[Menu()]])
 	BindKey(ALFC_KEY_F3, "View", [[ViewFile(GetHighlightedFilename())]])
+	BindKey(ALFC_KEY_F4, "Edit", [[EditFile(GetHighlightedFilename())]])
+	BindKey(ALFC_KEY_F5, "Copy", [[:tc]])
+	BindKey(ALFC_KEY_F7, "Create Dir", [[:md]])
+	BindKey(ALFC_KEY_F6, "Delete", [[:td]])
+	BindKey(ALFC_KEY_F8, "Move", [[:tm]])
 
 	--BindKey(ALFC_KEY_F02, "Same", [[:s]])
 	--BindKey(ALFC_KEY_F03, "History", [[ViewHistory()]])
@@ -39,13 +44,17 @@ end
 
 	BindKey(ALFC_KEY_F12, "Tag", [[TagHighlightedFile()]])
 
-	
 	BindKey(ALFC_KEY_ALT + string.byte("H"), "Toggle Hidden", [[ToggleHidden()]])
 
+	-- extra's for the ofm1999 standard
+	BindKey(ALFC_KEY_CTRL + string.byte("R"), "Refresh", [[:c]])
+	BindKey(ALFC_KEY_CTRL + string.byte("U"), "Swap", [[local a = GetCurrentWorkingDirectory(); SwitchPanes(); local b = GetCurrentWorkingDirectory(); SetCurrentWorkingDirectory(a); SwitchPanes(); SetCurrentWorkingDirectory(b);]])
+
+
 	-- Bind ALT-C, ALT-D, ALT-M for copy/delete/move
-	BindKey(ALFC_KEY_ALT + string.byte("C"), "Copy Tagged", [[:tc]])
-	BindKey(ALFC_KEY_ALT + string.byte("D"), "Del Tagged", [[:td]])
-	BindKey(ALFC_KEY_ALT + string.byte("M"), "Move Tagged", [[:tm]])
+	--BindKey(ALFC_KEY_ALT + string.byte("C"), "Copy Tagged", [[:tc]])
+	--BindKey(ALFC_KEY_ALT + string.byte("D"), "Del Tagged", [[:td]])
+	--BindKey(ALFC_KEY_ALT + string.byte("M"), "Move Tagged", [[:tm]])
 	if SystemType() == "UNIX" then
 		BindKey(ALFC_KEY_ALT + string.byte("L"), "Symlink Tagged", [[:sym]])
 	end
