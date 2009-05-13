@@ -1,3 +1,7 @@
+//
+// SGEO : simple hack to dump a font as png.
+//
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
