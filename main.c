@@ -1682,11 +1682,15 @@ void DrawStatusInfoLine(uGlobalData *gd)
 	char *p;
 	char ssize[64];
 	char ssize2[64];
-
+	int maxwidth;
 	char *x1, *x2;
 
 	assert(gd!=NULL);
-	buff = malloc(4 + m);
+	maxwidth = m + 4;
+	if(maxwidth < 100)
+		maxwidth = 100;
+
+	buff = malloc(maxwidth);
 
 	memset(buff, ' ', m);
 
@@ -1701,7 +1705,7 @@ void DrawStatusInfoLine(uGlobalData *gd)
 	x1 = PrintNumber(dlist_size(GetActFullList(gd)));
 	x2 = PrintNumber(GetActWindow(gd)->hidden_count);
 
-	sprintf(buff, "Tagged : %i file%c (%s) : Total Dir Size (%s), Total Files (%s), Hidden Files (%s)", GetActWindow(gd)->tagged_count, GetActWindow(gd)->tagged_count == 1 ? 0 : 's', ssize, ssize2, x1, x2);
+	sprintf(buff, "Tagged : %i file%c (%s) : Size %s, #Files %s, #Hidden %s", GetActWindow(gd)->tagged_count, GetActWindow(gd)->tagged_count == 1 ? 0 : 's', ssize, ssize2, x1, x2);
 	p = strchr(buff, 0x0);
 	*p = ' ';
 	buff[m] = 0;
