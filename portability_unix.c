@@ -6,6 +6,7 @@
 #include <X11/Xlibint.h>
 #endif
 
+const char *ALFC_str_pathsep = "/";
 const char ALFC_pathsep = '/';
 const char ALFC_path_varset = ':';
 

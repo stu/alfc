@@ -4,6 +4,7 @@
 static char *alfc_script_home;
 static char *last_error;
 
+const char *ALFC_str_pathsep = "\\";
 const char ALFC_pathsep = '\\';
 const char ALFC_path_varset = ';';
 

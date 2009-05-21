@@ -741,6 +741,79 @@ int gmec_globmatch(lua_State *L)
 	return 1;
 }
 
+static char* ScanPathForExec(char *path, char *exec)
+{
+	char *q = strdup(path);
+	char *z = q;
+	char *p = z;
+
+	while(p != NULL)
+	{
+		struct stat buff;
+		char *x;
+
+		p = strchr(z, ALFC_path_varset);
+		if(p != NULL)
+			*p = 0;
+
+		x = malloc(strlen(z) + strlen(exec) + 4 );
+		strcpy(x, z);
+		if(x[0] != 0)
+			strcat(x, ALFC_str_pathsep);
+		strcat(x, exec);
+
+		LogInfo("path test : %s\n", x);
+
+		if(ALFC_stat(x, &buff) == 0)
+		{
+			free(q);
+			//free(x);
+			return x;//strdup(z);
+		}
+
+		free(x);
+
+		if(p != NULL)
+			z = p+=1;
+	}
+
+	free(q);
+
+	return NULL;
+}
+
+static char** decompose_args(char *cli)
+{
+	char *p, *q;
+	char **args;
+	int i;
+
+	args = calloc(1, 64 * sizeof(char*));
+
+	p = cli;
+	for(i=0; i<63 && p != NULL; i++)
+	{
+		q = strchr(p, ' ');
+		if(q == NULL)
+			q = strchr(p, 0x0);
+
+		if(q != p)
+		{
+			args[i] = calloc(1, (q - p) + 4);
+			memmove(args[i], p, q-p);
+
+			while(*q == ' ')
+				q++;
+		}
+
+		if(*p == 0x0)
+			p = NULL;
+		else
+			p = q;
+	}
+
+	return args;
+}
 
 /****f* LuaAPICommon/exec
  * FUNCTION
@@ -766,12 +839,24 @@ int gmec_exec(lua_State *L)
 	int meta;
 	int rc;
 
+	char *exec_name;
 	char *path;
+	char **args;
 
 	rc = 0;
 
 	GET_LUA_STRING(cmd, 1);
+	args = decompose_args(cmd.data);
 	meta = HaveShellMetaCharacters(cmd.data);
+
+	exec_name = strdup(args[0]);
+	path = strchr(exec_name, ' ');
+	if(path != NULL)
+	{
+		*path = 0;
+		exec_name = realloc(exec_name, strlen(exec_name) + 1);
+	}
+	LogInfo("exec_name is [%s] meta=%i\n", exec_name, meta);
 
 	if (meta == 1)
 	{
@@ -787,16 +872,32 @@ int gmec_exec(lua_State *L)
 	else
 	{
 		// exec binary?
-
 		path = getenv("PATH");
 		if (path == NULL)
 			path = ALFC_get_basepath();
 
+		path = ScanPathForExec(path, exec_name);
+		if(path != NULL)
+		{
+			LogInfo("found exec at %s\n", path);
+			//rc = execle(path, exec_name, cmd.data + 1 + strlen(exec_name), NULL, ALFC_get_basepath());
+
+			rc = execve(path, args, __environ);
+			if(rc == -1)
+				LogInfo("exec error %s\n", ALFC_get_last_error(errno));
+		}
+		else
+		{
+			LogInfo("exec not found\n");
+			rc = -1;
+		}
 
 		// split it with ALFC_path_varset
 		// run exec on name in each path if it does not contain path in its name
 		// until we hit a good one
 	}
+
+	free(exec_name);
 
 	lua_pushnumber(L, rc);
 	return 1;

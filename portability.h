@@ -22,6 +22,7 @@ extern char* ALFC_get_basepath(void);
 extern int ALFC_startup(void);
 extern int ALFC_shutdown(void);
 
+extern const char *ALFC_str_pathsep;
 extern const char ALFC_pathsep;
 extern const char ALFC_path_varset;
 
