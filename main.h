@@ -284,6 +284,7 @@ struct udtScreenDriver
 	int (*screen_isresized)(void);
 	int (*screen_isshutdown)(void);
 	void (*update_window)(void);
+	void (*trigger_redraw)(void);
 };
 
 #define WINDOW_LEFT	0

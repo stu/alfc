@@ -14,6 +14,7 @@ static int intCurCol;
 static int intCurRow;
 static int intStyle;
 static int intUpdates;
+static int intResized;
 
 static void gui_cls(void);
 static void gui_setcursor(int row, int col);
@@ -210,7 +211,15 @@ static int gui_isshutdown(void)
 
 static int gui_resized(void)
 {
-	return window_resized();
+	int rc = window_resized() | intResized;
+	intResized = 0;
+
+	return rc;
+}
+
+static void gui_trigger_redraw(void)
+{
+	intResized = 1;
 }
 
 static uint32_t gui_get_keypress(void)
@@ -489,5 +498,6 @@ uScreenDriver screen =
 	init_view_styles,
 	gui_resized,
 	gui_isshutdown,
-	gui_update_window
+	gui_update_window,
+	gui_trigger_redraw
 };

@@ -978,7 +978,7 @@ int gmec_exec(lua_State *L)
 
 	free(exec_name);
 
-	gd->screen->update_window();
+	gd->screen->trigger_redraw();
 
 	sigign();
 	lua_pushnumber(L, rc);
