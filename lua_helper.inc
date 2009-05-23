@@ -6,6 +6,39 @@
 
 #include "headers.h"
 
+static char* reparse(char *in)
+{
+	char *x = malloc((strlen(in)+1) * 2);
+	char *p = in;
+	char *q = x;
+
+	while(*p != 0)
+	{
+		switch(*p)
+		{
+			case '%':
+				*q ++ = '\\';
+				*q ++ = *p;
+				break;
+
+			case '\"':
+				*q ++ = *p;
+				*q ++ = *p;
+				*q ++ = *p;
+				*q ++ = *p;
+				break;
+
+			default:
+				*q++ = *p;
+				break;
+
+		}
+		*q = 0;
+		p++;
+	}
+
+	return x;
+}
 
 /* build with lua_helper.lua in tools */
 int ExecuteString(uGlobalData *gb, char *sn)
@@ -17,7 +50,9 @@ int ExecuteString(uGlobalData *gb, char *sn)
 	lua_State *l;
 	int v;
 
-	maxsize = strlen(sn);
+	char *new_sn = reparse(sn);
+
+	maxsize = strlen(new_sn);
 	outbuff = malloc(64 + maxsize);
 
 	if(outbuff == NULL)
@@ -26,7 +61,7 @@ int ExecuteString(uGlobalData *gb, char *sn)
 		return -1;
 	}
 
-	memmove(outbuff, sn, maxsize + 1);
+	memmove(outbuff, new_sn, maxsize + 1);
 
 	l = lua_open();
 	RegisterLuaFuncs(gb, l);
@@ -34,7 +69,7 @@ int ExecuteString(uGlobalData *gb, char *sn)
 	v = luaL_loadbuffer(l, (char*)outbuff, maxsize, "BUFFER");
 	if(v != 0)
 	{
-		LogError("cant load buffer, error %s\nBuffer = %s\n", lua_tostring(l, -1), sn);
+		LogError("cant load buffer, error %s\nBuffer = %s\n", lua_tostring(l, -1), new_sn);
 		rc = -1;
 	}
 	else

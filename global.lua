@@ -12,6 +12,66 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	cmds = {}		-- for quick commands
 	ftypes = {}		-- allows colouring of filetypes via plugin
 
+	function execute(text)
+		local strCLI = "" .. text
+
+		debug_msg("xx == " .. text)
+
+		local _a_fn = GetHighlightedFilename()
+		local _a_d = GetCurrentWorkingDirectory()
+		local _a_t = GetTaggedFileList()
+		if #_a_t > 0 then
+			local _a_s = _a_t
+		else
+			local _a_s = _a_fn
+		end
+
+		SwitchPanes()
+			local _n_fn = GetHighlightedFilename()
+			local _n_d = GetCurrentWorkingDirectory()
+			local _n_t = GetTaggedFileList()
+			local _n_s
+			if #_n_t > 0 then
+				local _n_s = _n_t
+			else
+				local _n_s = _n_fn
+			end
+		SwitchPanes()
+
+
+-- take from the ofm2004 standard page
+-- * "%f" The current file name.
+-- * "%F" The current file in the unselected panel.
+-- * "%d" The current directory name.
+-- * "%D" The directory name of the unselected panel.
+-- * "%t" The currently tagged files.
+-- * "%T" The tagged files in the unselected panel.
+-- * "%u" and "%U" Similar to the %t and %T macros, but after the operation
+--        all selected files are untagged. That means that this macro can be
+--        used only once per menu entry (or extension entry), because on the
+--        second and subsequent invocations there will be no tagged files.
+-- * "%s" and "%S"  The tagged files if there are any. Otherwise the current file.
+-- * "%cd" This is a special macro that is used to change the current directory to
+--         the directory specified in front of it. This is used primarily as an
+--         interface to the VFS.
+-- * "%view" the invocation of the internal viewer. An argument to force the
+--           viewer in a particular mode can be passed: ASCII to force the
+--           viewer into ASCII mode; hex to force the viewer into hex mode;
+-- * "%%" The % character
+-- * "%{some text}" Popup an input box and prompts for the substitution.
+--                  The user should be able to cancel input ( ESC or F10 recommended).
+
+		strCLI = string.gsub(strCLI, " %f", _a_fn)
+		strCLI = string.gsub(strCLI, " %F", _n_fn)
+		strCLI = string.gsub(strCLI, " %d", _a_d)
+		strCLI = string.gsub(strCLI, " %D", _n_d)
+
+		-- how to pass in %t?? etc
+
+		debug_msg(strCLI);
+		--exec(strCLI)
+	end
+
 
 	function findpattern(text, pattern, start)
 		local p
