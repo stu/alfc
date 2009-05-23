@@ -945,6 +945,8 @@ int gmec_exec(lua_State *L)
 					tcsetpgrp(2, child_pid);
 
 					signal(SIGTTOU, SIG_DFL);
+
+					gd->screen->going_exec();
 					rc = execve(path, args, __environ);
 
 					if (rc == -1)
@@ -979,6 +981,8 @@ int gmec_exec(lua_State *L)
 	free(exec_name);
 
 	gd->screen->trigger_redraw();
+	gd->screen->update_window();
+
 
 	sigign();
 	lua_pushnumber(L, rc);

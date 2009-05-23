@@ -4,8 +4,8 @@ import "md5"
 _VER_MAJ = 0
 _VER_MIN = 1
 
-DRIVER="GUI"	# NCURSES, GUI
-#DRIVER="NCURSES"
+#DRIVER="GUI"	# NCURSES, GUI
+DRIVER="NCURSES"
 
 
 y = RUBY_PLATFORM.scan(/(mswin32|mingw32|bccwin32|msdosdjgpp|os2|amigaos|cygwin)/)
@@ -160,6 +160,8 @@ CC = "gcc"
 CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DNMEMWATCH " + PORT_CFLAGS
 LIBS = ""
 
+header_files = %w(main.h)
+
 default_files = %w(global.lua viewer.lua startup.lua shutdown.lua options.ini core_extract.lua
 			core_hash.lua viewer_languages.lua filemanager_menu.lua)
 
@@ -184,7 +186,7 @@ desc "Build the app"
 task :all => ["auxfiles", "appx", "help"] do
 end
 
-task "auxfiles" => ["fixversion", "defaults.h" ] do
+task "auxfiles" => ["fixversion", "defaults.h", "headers" ] do
 end
 
 task "fixversion" do
@@ -195,6 +197,9 @@ task "fixversion" do
 
 	# now build lua helper files
 	sys "#{var[:lua]} lua_helper.lua"
+end
+
+task :headers => header_files do |t|
 end
 
 file "#{var[:bin2c]}" => %w(bin2c.o) do |t|
@@ -256,7 +261,7 @@ task "docs" do
 
 	print "Updating Lua API documentation (latex) :: "
 	sys "robodoc --latex --doc ./doc/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
-	
+
 	print "Updating Lua API documentation (docbook xml) :: "
 	sys "robodoc --dbxml --doc ./doc/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
 end
@@ -299,6 +304,12 @@ gen Rule, '.o' => '.c' do |t|
 	sys "#{CC} #{CFLAGS} -c -o #{t.name} #{t.source}"
 end
 
+gen Rule, '.h' => '.h' do |t|
+	x = Dir["*.{o,obj}"]
+    if x.length > 0
+        sys.rm_f x
+    end
+end
 
 
 ##############################################################################

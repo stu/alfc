@@ -471,6 +471,11 @@ static void gui_update_window(void)
 	update_window();
 }
 
+static void gui_going_exec(void)
+{
+	//
+}
+
 uScreenDriver screen =
 {
 	NULL,
@@ -499,5 +504,6 @@ uScreenDriver screen =
 	gui_resized,
 	gui_isshutdown,
 	gui_update_window,
-	gui_trigger_redraw
+	gui_trigger_redraw,
+	gui_going_exec
 };

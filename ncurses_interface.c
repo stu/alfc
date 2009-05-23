@@ -417,6 +417,7 @@ static int nc_screen_init(uScreenDriver *scr)
 	 tattr.c_cc[VTIME]=0;
 	 tcsetattr(STDIN_FILENO, TCSAFLUSH, &tattr);
 	 */
+
 	// initialise ncurses
 	initscr();
 
@@ -615,6 +616,12 @@ static void nc_trigger_redraw(void)
 	intResized = 1;
 }
 
+// need this for our exec
+static void nc_going_exec(void)
+{
+	endwin();
+}
+
 uScreenDriver screen =
 	{
 	NULL,
@@ -643,5 +650,6 @@ uScreenDriver screen =
 	        nc_resized,
 	        nc_isshutdown,
 	        nc_updatewindow,
-	        nc_trigger_redraw
+	        nc_trigger_redraw,
+	        nc_going_exec
 	};
