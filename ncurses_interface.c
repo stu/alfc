@@ -522,7 +522,7 @@ static void nc_set_updates(int set)
 
 static void nc_updatewindow(void)
 {
-	//
+	doupdate();
 }
 
 uScreenDriver screen =

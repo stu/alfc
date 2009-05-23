@@ -7,6 +7,10 @@
 
 #include "headers.h"
 
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
 static int HaveShellMetaCharacters(char *s)
 {
 	while (*s != 0)
@@ -194,7 +198,7 @@ int gmec_Version(lua_State *L)
  *	o 2 = eMode_Viewer
  * EXAMPLE
  if GetMode() == eMode_Viewer then
-	 debug_msg("Script is running inside the viewer")
+ debug_msg("Script is running inside the viewer")
  end
  * SEE ALSO
  * VersionDate, VersionTime, Version, VersionMinor, VersionMajor, VersionBuild, VersionString
@@ -562,9 +566,9 @@ void push_file(lua_State *L, uDirEntry *de, int idx, char *path)
 {
 	char *buff_date;
 	char date_fmt[8] =
-	{
-	et_Year4, et_Month, et_Day, ' ', et_Hour24, et_Min, et_Sec, 0
-	};
+		{
+		et_Year4, et_Month, et_Day, ' ', et_Hour24, et_Min, et_Sec, 0
+		};
 
 	lua_pushnumber(L, idx);
 	lua_newtable(L);
@@ -715,7 +719,7 @@ int gmec_SystemType(lua_State *L)
  *	o -1 - does not match
  * EXAMPLE
  if globmatch("readme.txt", "*.txt") == 1 then
-	 debug_msg("matches *.txt pattern")
+ debug_msg("matches *.txt pattern")
  end
  * AUTHOR
  *	Stu George
@@ -747,24 +751,24 @@ static char* ScanPathForExec(char *path, char *exec)
 	char *z = q;
 	char *p = z;
 
-	while(p != NULL)
+	while (p != NULL)
 	{
 		struct stat buff;
 		char *x;
 
 		p = strchr(z, ALFC_path_varset);
-		if(p != NULL)
+		if (p != NULL)
 			*p = 0;
 
 		x = malloc(strlen(z) + strlen(exec) + 4 );
 		strcpy(x, z);
-		if(x[0] != 0)
+		if (x[0] != 0)
 			strcat(x, ALFC_str_pathsep);
 		strcat(x, exec);
 
-		LogInfo("path test : %s\n", x);
+		//LogInfo("path test : %s\n", x);
 
-		if(ALFC_stat(x, &buff) == 0)
+		if (ALFC_stat(x, &buff) == 0)
 		{
 			free(q);
 			//free(x);
@@ -773,8 +777,8 @@ static char* ScanPathForExec(char *path, char *exec)
 
 		free(x);
 
-		if(p != NULL)
-			z = p+=1;
+		if (p != NULL)
+			z = p += 1;
 	}
 
 	free(q);
@@ -791,28 +795,56 @@ static char** decompose_args(char *cli)
 	args = calloc(1, 64 * sizeof(char*));
 
 	p = cli;
-	for(i=0; i<63 && p != NULL; i++)
+	for (i = 0; i < 63 && p != NULL; i++)
 	{
 		q = strchr(p, ' ');
-		if(q == NULL)
+		if (q == NULL)
 			q = strchr(p, 0x0);
 
-		if(q != p)
+		if (q != p)
 		{
 			args[i] = calloc(1, (q - p) + 4);
-			memmove(args[i], p, q-p);
+			memmove(args[i], p, q - p);
 
-			while(*q == ' ')
+			while (*q == ' ')
 				q++;
 		}
 
-		if(*p == 0x0)
+		if (*p == 0x0)
 			p = NULL;
 		else
 			p = q;
 	}
 
 	return args;
+}
+
+void sigchild(int sig)
+{
+	int status = 0;
+
+	signal(SIGCHLD, sigchild);
+	waitpid(-1, &status, WNOHANG | WUNTRACED);
+}
+
+static void sigign()
+{
+	signal(SIGTERM, SIG_IGN);
+	signal(SIGQUIT, SIG_IGN);
+	signal(SIGINT, SIG_IGN);
+	signal(SIGCHLD, sigchild);
+	signal(SIGTTOU, SIG_IGN);
+	signal(SIGTSTP, SIG_IGN);
+}
+
+// reset sig handlers
+static void sigdfl(void)
+{
+	signal(SIGTERM, SIG_DFL);
+	signal(SIGQUIT, SIG_DFL);
+	signal(SIGINT, SIG_DFL);
+	signal(SIGCHLD, SIG_DFL);
+	signal(SIGTSTP, SIG_DFL);
 }
 
 /****f* LuaAPICommon/exec
@@ -843,7 +875,17 @@ int gmec_exec(lua_State *L)
 	char *path;
 	char **args;
 
+	pid_t pid;
+	pid_t main_pid;
+
+	uGlobalData *gd;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
 	rc = 0;
+
+	sigign();
 
 	GET_LUA_STRING(cmd, 1);
 	args = decompose_args(cmd.data);
@@ -851,12 +893,13 @@ int gmec_exec(lua_State *L)
 
 	exec_name = strdup(args[0]);
 	path = strchr(exec_name, ' ');
-	if(path != NULL)
+	if (path != NULL)
 	{
 		*path = 0;
 		exec_name = realloc(exec_name, strlen(exec_name) + 1);
 	}
-	LogInfo("exec_name is [%s] meta=%i\n", exec_name, meta);
+
+	//LogInfo("exec_name is [%s] meta=%i\n", exec_name, meta);
 
 	if (meta == 1)
 	{
@@ -877,28 +920,67 @@ int gmec_exec(lua_State *L)
 			path = ALFC_get_basepath();
 
 		path = ScanPathForExec(path, exec_name);
-		if(path != NULL)
+		if (path != NULL)
 		{
-			LogInfo("found exec at %s\n", path);
-			//rc = execle(path, exec_name, cmd.data + 1 + strlen(exec_name), NULL, ALFC_get_basepath());
+			int child_pid;
+			int status = 0;
 
-			rc = execve(path, args, __environ);
-			if(rc == -1)
-				LogInfo("exec error %s\n", ALFC_get_last_error(errno));
+			LogInfo("found exec at %s\n", path);
+
+			main_pid = getpid();
+			tcsetpgrp(2, main_pid);
+			signal(SIGCHLD, SIG_IGN);
+			pid = vfork();
+			//LogInfo("pid = %i\n", pid);
+			if (pid != -1)
+			{
+				if (pid == 0)
+				{
+					//rc = execle(path, exec_name, cmd.data + 1 + strlen(exec_name), NULL, ALFC_get_basepath());
+
+					sigdfl();
+
+					child_pid = getpid();
+					setpgid(child_pid, child_pid);
+					tcsetpgrp(2, child_pid);
+
+					signal(SIGTTOU, SIG_DFL);
+					rc = execve(path, args, __environ);
+
+					if (rc == -1)
+						LogInfo("exec error %s\n", ALFC_get_last_error(errno));
+
+					_exit(0x7F);
+				}
+				else
+				{
+					//LogInfo("exec not found\n");
+					rc = -1;
+				}
+
+				// split it with ALFC_path_varset
+				// run exec on name in each path if it does not contain path in its name
+				// until we hit a good one
+
+				waitpid(pid, &status, WUNTRACED);
+				signal(SIGCHLD, sigchild);
+				tcsetpgrp(2, main_pid);
+				killpg(pid, SIGCONT);
+
+				if (
+				WIFSTOPPED(status))
+					rc = -pid;
+			}
 		}
 		else
-		{
-			LogInfo("exec not found\n");
 			rc = -1;
-		}
-
-		// split it with ALFC_path_varset
-		// run exec on name in each path if it does not contain path in its name
-		// until we hit a good one
 	}
 
 	free(exec_name);
 
+	gd->screen->update_window();
+
+	sigign();
 	lua_pushnumber(L, rc);
 	return 1;
 }

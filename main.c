@@ -1794,6 +1794,7 @@ void DrawCLI(uGlobalData *gd)
 	gd->screen->set_cursor(gd->screen->get_screen_height() - 1, 4);
 
 	gd->screen->print(gd->command);
+	gd->screen->print("~");
 }
 
 void DrawFilter(uGlobalData *gd)
