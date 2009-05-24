@@ -15,8 +15,6 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	function execute(text)
 		local strCLI = "" .. text
 
-		debug_msg("xx == " .. text)
-
 		local _a_fn = GetHighlightedFilename()
 		local _a_d = GetCurrentWorkingDirectory()
 		local _a_t = GetTaggedFileList()
@@ -61,15 +59,14 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 -- * "%{some text}" Popup an input box and prompts for the substitution.
 --                  The user should be able to cancel input ( ESC or F10 recommended).
 
-		strCLI = string.gsub(strCLI, " %f", _a_fn)
-		strCLI = string.gsub(strCLI, " %F", _n_fn)
-		strCLI = string.gsub(strCLI, " %d", _a_d)
-		strCLI = string.gsub(strCLI, " %D", _n_d)
+		strCLI = string.gsub(strCLI, "@f", _a_fn)
+		strCLI = string.gsub(strCLI, "@F", _n_fn)
+		strCLI = string.gsub(strCLI, "@d", _a_d)
+		strCLI = string.gsub(strCLI, "@D", _n_d)
 
 		-- how to pass in %t?? etc
-
-		debug_msg(strCLI);
-		--exec(strCLI)
+		debug_msg("exec [" .. strCLI .."]");
+		exec(strCLI)
 	end
 
 
@@ -639,7 +636,8 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		end
 
 		if finished == false then
-			debug_msg("Unknown command : " .. cmd)
+			execute(string.sub(command, 2, #command))
+			--debug_msg("Unknown command : " .. cmd)
 		end
 
 	end

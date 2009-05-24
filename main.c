@@ -231,7 +231,6 @@ void about_window(uGlobalData *gd)
 	int width;
 	char *p, *q;
 
-
 	// big enough to hold string...
 	buff = malloc(1024);
 	sprintf(buff, "\n"
@@ -487,8 +486,7 @@ uint32_t fletcher32(uint16_t *data, size_t len)
 		{
 			sum1 += *data++;
 			sum2 += sum1;
-		}
-		while (--tlen);
+		} while (--tlen);
 
 		sum1 = (sum1 & 0xffff) + (sum1 >> 16);
 		sum2 = (sum2 & 0xffff) + (sum2 >> 16);
@@ -788,13 +786,12 @@ void CalcDirStats(uGlobalData *gd, uWindow *w, DList *lstFiles)
 		if (ALFC_IsHidden(de->name, de->attrs) == 0)
 			w->hidden_count += 1;
 
-
 #ifndef __WIN32__
 		// test link to see if its a directory...
 		if (S_ISLNK(de->attrs) != 0)
-		w->total_size += de->lnk_size;
+			w->total_size += de->lnk_size;
 		else
-		w->total_size += de->size;
+			w->total_size += de->size;
 #else
 		w->total_size += de->size;
 #endif
@@ -841,7 +838,6 @@ DList* GetFiles(uGlobalData *gd, char *path)
 				de = malloc(sizeof(uDirEntry));
 				memset(de, 0x0, sizeof(uDirEntry));
 
-
 				// setup the defaults
 				de->attrs = buff.st_mode;
 				de->size = buff.st_size;
@@ -854,7 +850,6 @@ DList* GetFiles(uGlobalData *gd, char *path)
 				de->time = ALFC_GetFileTime(de);
 
 				free(fname);
-
 
 #ifndef __WIN32__
 				// test link to see if its a directory...
@@ -1004,7 +999,6 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 	if (de->tagged == 1)
 		buff[0] = '+';
 
-
 #ifndef __WIN32__
 	if (de->lnk != NULL)
 	{
@@ -1019,7 +1013,7 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 			style = STYLE_DIR_EXEC;
 		}
 		else
-		*p++ = '@';
+			*p++ = '@';
 
 		strcat(buff2 + 1, de->name);
 		strcat(buff2, " -> ");
@@ -1056,12 +1050,10 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 			{
 				uint64_t xx = de->size;
 
-
 #ifndef __WIN32__
 				if (S_ISLNK(de->attrs&S_IFLNK) != 0)
-				xx = de->lnk_size;
+					xx = de->lnk_size;
 #endif
-
 
 #if __WORDSIZE == 64
 				sprintf(buff + size_off, "%10lu", xx);
@@ -1074,7 +1066,7 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 				xx = de->size;
 #ifndef __WIN32__
 				if (S_ISLNK(de->attrs&S_IFLNK) != 0)
-				xx = de->lnk_size;
+					xx = de->lnk_size;
 #endif
 
 				compress_size(buff + size_off, xx);
@@ -1158,7 +1150,6 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	win->screen->set_style(STYLE_TITLE);
 	win->screen->draw_border(win);
 
-
 	//path = ConvertDirectoryName(dpath);
 	path = replace(dpath, '\\', '/');
 	if (strlen(path) < win->width - 6)
@@ -1211,7 +1202,6 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 		i += 1;
 	}
 
-
 	// set cursor to lower corner of screen...
 	win->screen->set_cursor(win->screen->get_screen_height(), win->screen->get_screen_width());
 }
@@ -1223,7 +1213,6 @@ static char* PrintNumber(uint64_t num)
 	char *p;
 	char *q;
 	int i;
-
 
 #if __WORDSIZE == 64
 	sprintf(x, "%lu", num);
@@ -1253,8 +1242,7 @@ static char* PrintNumber(uint64_t num)
 		if (i % 3 == 0)
 			*q-- = ',';
 		;
-	}
-	while (p >= x);
+	} while (p >= x);
 
 	while (*q == ' ')
 		q++;
@@ -1312,7 +1300,6 @@ static void DrawFileInfo(uWindow *win)
 
 	buff = malloc(4096);
 
-
 	// do filename (-20 for file size)
 
 	size_offset = win->screen->get_screen_width() - (20 + 15);
@@ -1348,7 +1335,6 @@ static void DrawFileInfo(uWindow *win)
 
 		free(buff2);
 
-
 		// do size : "Size: 1,123,123,123"
 		memmove(buff + size_offset, "Size: ", 6);
 		if (ALFC_IsDir(de->attrs) != 0)
@@ -1365,37 +1351,37 @@ static void DrawFileInfo(uWindow *win)
 		memmove(buff + attr_offset, "Attr: ---------", 15);
 
 		if ((de->attrs & S_IRUSR) == S_IRUSR)
-		buff[attr_offset + 6] = 'r';
+			buff[attr_offset + 6] = 'r';
 		if ((de->attrs & S_IWUSR) == S_IWUSR)
-		buff[attr_offset + 7] = 'w';
+			buff[attr_offset + 7] = 'w';
 		if ((de->attrs & S_IXUSR) == S_IXUSR)
-		buff[attr_offset + 8] = 'x';
+			buff[attr_offset + 8] = 'x';
 
 		if ((de->attrs & S_IRGRP) == S_IRGRP)
-		buff[attr_offset + 9] = 'r';
+			buff[attr_offset + 9] = 'r';
 		if ((de->attrs & S_IWGRP) == S_IWGRP)
-		buff[attr_offset + 10] = 'w';
+			buff[attr_offset + 10] = 'w';
 		if ((de->attrs & S_IXGRP) == S_IXGRP)
-		buff[attr_offset + 11] = 'x';
+			buff[attr_offset + 11] = 'x';
 
 		if ((de->attrs & S_IROTH) == S_IROTH)
-		buff[attr_offset + 12] = 'r';
+			buff[attr_offset + 12] = 'r';
 		if ((de->attrs & S_IWOTH) == S_IWOTH)
-		buff[attr_offset + 13] = 'w';
+			buff[attr_offset + 13] = 'w';
 		if ((de->attrs & S_IXOTH) == S_IXOTH)
-		buff[attr_offset + 14] = 'x';
+			buff[attr_offset + 14] = 'x';
 #else
 		memmove(buff + attr_offset, "Attr: -----", 11);
 		if ((de->attrs & FILE_ATTRIBUTE_HIDDEN) == FILE_ATTRIBUTE_HIDDEN)
-			buff[attr_offset + 6] = 'H';
+		buff[attr_offset + 6] = 'H';
 		if ((de->attrs & FILE_ATTRIBUTE_SYSTEM) == FILE_ATTRIBUTE_SYSTEM)
-			buff[attr_offset + 7] = 'S';
+		buff[attr_offset + 7] = 'S';
 		if ((de->attrs & FILE_ATTRIBUTE_COMPRESSED) == FILE_ATTRIBUTE_COMPRESSED)
-			buff[attr_offset + 8] = 'C';
+		buff[attr_offset + 8] = 'C';
 		if ((de->attrs & FILE_ATTRIBUTE_ARCHIVE) == FILE_ATTRIBUTE_ARCHIVE)
-			buff[attr_offset + 9] = 'A';
+		buff[attr_offset + 9] = 'A';
 		if ((de->attrs & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY)
-			buff[attr_offset + 10] = 'R';
+		buff[attr_offset + 10] = 'R';
 #endif
 	}
 
@@ -1500,7 +1486,8 @@ char* ConvertKeyToName(int key)
 {
 	char *s;
 
-	struct udtKeyNames {
+	struct udtKeyNames
+	{
 		int key;
 		char *name;
 	} keys[] =
@@ -1687,7 +1674,7 @@ void DrawStatusInfoLine(uGlobalData *gd)
 
 	assert(gd!=NULL);
 	maxwidth = m + 4;
-	if(maxwidth < 100)
+	if (maxwidth < 100)
 		maxwidth = 100;
 
 	buff = malloc(maxwidth);
@@ -1773,7 +1760,6 @@ void SetActivePane(uGlobalData *gd, int p)
 	DrawActive(gd);
 	DrawFilter(gd);
 }
-
 
 static void exec_internal_command(uGlobalData *gd, char *command)
 {
@@ -1964,7 +1950,6 @@ int scroll_down(uGlobalData *gd)
 	size_off = CalcSizeOff(w, w->width - 3);
 	date_off = CalcDateOff(w, size_off);
 	max_namelen = date_off - 2;
-
 
 	// hl is 0 based
 	if ((w->highlight_line + 1 < scroll_depth) || (w->top_line + 1 + w->highlight_line >= dlist_size(GetActList(gd)) - 4))
@@ -2249,7 +2234,6 @@ int change_dir(uGlobalData *gd, char *dir)
 {
 	char *cpath;
 
-
 	//cpath = ConvertDirectoryName( dir );
 	cpath = replace(dir, '\\', '/');
 
@@ -2271,7 +2255,6 @@ int updir(uGlobalData *gd)
 {
 	char *cpath;
 	char *scan;
-
 
 	//cpath = ConvertDirectoryName(  GetActDPath(gd) );
 	cpath = replace(GetActDPath(gd), '\\', '/');
@@ -2925,6 +2908,26 @@ static int ScanMenuOpen(uGlobalData *gd, uint32_t key)
 	return -1;
 }
 
+static void run_exec_command(uGlobalData *gd, char *sCmd)
+{
+	AddHistory(gd, sCmd);
+
+	// exec string via lua...
+	if (sCmd[0] == ':')
+		exec_internal_command(gd, sCmd);
+	else if (sCmd[0] == '@')
+	{
+		char *fn = ConvertDirectoryName(sCmd + 1);
+		ExecuteScript(gd, fn);
+		free(fn);
+	}
+	else
+	{
+		ExecuteString(gd, sCmd);
+		//exec_internal_command(gd, sCmd);
+	}
+}
+
 int ALFC_main(int start_mode, char *view_file)
 {
 	uGlobalData *gdata;
@@ -2934,11 +2937,9 @@ int ALFC_main(int start_mode, char *view_file)
 
 	ALFC_startup();
 
-
 #ifndef __WIN32__
 	setenv("ALFC", "$HOME/.alfc/scripts", 0);
 #endif
-
 
 #ifdef MEMWATCH
 	//remove("memwatch.log");
@@ -2976,7 +2977,6 @@ int ALFC_main(int start_mode, char *view_file)
 		gdata->screen->print(" Welcome to Another Linux File Commander ");
 		BuildWindowLayout(gdata);
 
-
 		// screen too small to show nds columns
 		// date coumns waste too much space.
 		// todo - separate the date/time columns??
@@ -3003,7 +3003,6 @@ int ALFC_main(int start_mode, char *view_file)
 		}
 
 		LogWrite_SetFlags(LogWrite_GetFlags() & ~LOG_STDERR);
-
 
 		// load it, if it fails, try looking in home as a fallback
 		rc = LoadGlobalScript(gdata, INI_get(gdata->optfile, "scripts", "global_funcs"));
@@ -3080,22 +3079,7 @@ int ALFC_main(int start_mode, char *view_file)
 
 						if (kb != NULL)
 						{
-							AddHistory(gdata, kb->sCommand);
-
-
-							// exec string via lua...
-							if (kb->sCommand[0] == ':')
-								exec_internal_command(gdata, kb->sCommand);
-							else if (kb->sCommand[0] == '@')
-							{
-								char *fn = ConvertDirectoryName(kb->sCommand + 1);
-								ExecuteScript(gdata, fn);
-								free(fn);
-							}
-							else
-							{
-								ExecuteString(gdata, kb->sCommand);
-							}
+							run_exec_command(gdata, kb->sCommand);
 						}
 						else
 						{
@@ -3113,22 +3097,7 @@ int ALFC_main(int start_mode, char *view_file)
 								case ALFC_KEY_ENTER:
 									if (gdata->command_length > 0)
 									{
-										AddHistory(gdata, gdata->command);
-
-
-										// exec string via lua...
-										if (gdata->command[0] == ':')
-											exec_internal_command(gdata, gdata->command);
-										else if (gdata->command[0] == '@')
-										{
-											char *fn = ConvertDirectoryName(gdata->command + 1);
-											ExecuteScript(gdata, fn);
-											free(fn);
-										}
-										else
-										{
-											ExecuteString(gdata, gdata->command);
-										}
+										run_exec_command(gdata, gdata->command);
 
 										gdata->command_length = 0;
 										gdata->command[gdata->command_length] = 0;
@@ -3173,7 +3142,6 @@ int ALFC_main(int start_mode, char *view_file)
 									if (key == 0)
 										break;
 
-
 									// terminal could send ^H (0x08) or ASCII DEL (0x7F)
 									if (key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
 									{
@@ -3214,7 +3182,6 @@ int ALFC_main(int start_mode, char *view_file)
 			SaveMRU(gdata, gdata->lstMRURight, "mru_right");
 
 			RememberDirectories(gdata);
-
 
 			// cleanup...
 			SaveHistory(gdata);
@@ -3353,7 +3320,6 @@ int ALFC_main(int start_mode, char *view_file)
 
 	ALFC_shutdown();
 	LogWrite_Shutdown();
-
 
 #ifdef MEMWATCH
 	//mwTerm();
