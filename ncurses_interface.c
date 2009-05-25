@@ -284,7 +284,7 @@ static uint32_t nc_get_keypress(void)
 		if ((ch < 256) && isalpha(ch))
 		{
 			ch = toupper(ch);
-			key = ALFC_KEY_CTRL + ((ch - 'A') + 1);
+			key = ALFC_KEY_CTRL + toupper(ch) - 1; //((ch - 'A') + 1);
 		}
 		else
 			key = 0;
@@ -353,7 +353,7 @@ static uint32_t nc_get_keypress(void)
 
 			default:
 				if ((ch > 0) && (ch <= 26))
-					key = ALFC_KEY_CTRL + ch; // CTRL keys
+					key = ALFC_KEY_CTRL + ch + 'A' - 1; // CTRL keys
 		}
 	}
 

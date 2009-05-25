@@ -40,7 +40,6 @@ end
 	--BindKey(ALFC_KEY_F03, "History", [[ViewHistory()]])
 
 	BindKey(ALFC_KEY_ALT + string.byte("X"), "Quit", [[:q]])
-	--BindKey(ALFC_KEY_CTRL + string.byte("X"), "Quit", [[:q]])
 
 	BindKey(ALFC_KEY_F12, "Tag", [[TagHighlightedFile()]])
 
@@ -48,7 +47,7 @@ end
 
 	-- extra's for the ofm1999 standard
 	BindKey(ALFC_KEY_CTRL + string.byte("R"), "Refresh", [[:c]])
-	BindKey(ALFC_KEY_CTRL + string.byte("U"), "Swap", [[local a = GetCurrentWorkingDirectory(); SwitchPanes(); local b = GetCurrentWorkingDirectory(); SetCurrentWorkingDirectory(a); SwitchPanes(); SetCurrentWorkingDirectory(b);]])
+	BindKey(ALFC_KEY_CTRL + string.byte("U"), "Swap", [[:swap]])
 
 
 	-- Bind ALT-C, ALT-D, ALT-M for copy/delete/move
