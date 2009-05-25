@@ -2379,8 +2379,6 @@ int gme_HistoryUp(lua_State *L)
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
 
-	LogInfo("call history up\n");
-
 	i = gd->hist_idx;
 	i -= 1;
 	if (i < 0)

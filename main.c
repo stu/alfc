@@ -2923,8 +2923,8 @@ static void run_exec_command(uGlobalData *gd, char *sCmd)
 	}
 	else
 	{
-		ExecuteString(gd, sCmd);
-		//exec_internal_command(gd, sCmd);
+		//ExecuteString(gd, sCmd);
+		exec_internal_command(gd, sCmd);
 	}
 }
 

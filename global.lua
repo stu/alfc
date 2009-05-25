@@ -65,8 +65,12 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		strCLI = string.gsub(strCLI, "@D", _n_d)
 
 		-- how to pass in %t?? etc
-		debug_msg("exec [" .. strCLI .."]");
-		exec(strCLI)
+		--debug_msg("exec [" .. strCLI .."]");
+		if FunctionExists(strCLI) == 0 then
+			ExecuteString(strCLI)
+		else
+			exec(strCLI)
+		end
 	end
 
 
@@ -636,7 +640,11 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		end
 
 		if finished == false then
-			execute(string.sub(command, 2, #command))
+			if string.sub(command, 1, 1) == ":" then
+				execute(string.sub(command, 2, #command))
+			else
+				execute(command)
+			end
 			--debug_msg("Unknown command : " .. cmd)
 		end
 

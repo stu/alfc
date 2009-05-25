@@ -925,7 +925,7 @@ int gmec_exec(lua_State *L)
 			int child_pid;
 			int status = 0;
 
-			LogInfo("found exec at %s\n", path);
+			//LogInfo("found exec at %s\n", path);
 
 			main_pid = getpid();
 			tcsetpgrp(2, main_pid);
@@ -972,6 +972,9 @@ int gmec_exec(lua_State *L)
 				if (
 				WIFSTOPPED(status))
 					rc = -pid;
+
+
+				gd->screen->get_keypress();
 			}
 		}
 		else
@@ -983,9 +986,84 @@ int gmec_exec(lua_State *L)
 	gd->screen->trigger_redraw();
 	gd->screen->update_window();
 
-
 	sigign();
 	lua_pushnumber(L, rc);
+	return 1;
+}
+
+int gmec_FunctionExists(lua_State* L)
+{
+	struct lstr f;
+	uGlobalData *gd;
+	char *q;
+	char *p;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(f, 1);
+
+	q = strdup(f.data);
+
+	p = q;
+	while (*p != 0)
+	{
+		switch (*p)
+		{
+			case ' ':
+			case '\t':
+			case '|':
+			case '^':
+			case ';':
+			case '&':
+			case '(':
+			case ')':
+			case '<':
+			case '>':
+			case '[':
+			case ']':
+			case '*':
+			case '?':
+			case '\'':
+			case '\"':
+			case '\\':
+			case '`':
+			case '$':
+			case '~':
+				*p = 0;
+				break;
+
+			default:
+				p++;
+		}
+	}
+
+	lua_getglobal(L, q);
+
+	if (lua_isfunction(L,lua_gettop(L)))
+		lua_pushnumber(L, 0);
+	else
+		lua_pushnumber(L, -1);
+
+	free(q);
+
+	// do I need a pop here??
+
+	return 1;
+}
+
+int gmec_ExecuteString(lua_State *L)
+{
+	struct lstr str;
+	uGlobalData *gd;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(str, 1);
+
+	ExecuteString(gd, str.data);
+
 	return 1;
 }
 
