@@ -78,4 +78,4 @@ end
 				{ key = ALFC_KEY_F1, name = "Help", code = [[ViewFile("help.txt")]] },
 			})
 
-	CreateMenu(ALFC_KEY_ALT + string.byte("1"), "Left Panel", BuildMenu(WINDOW_RIGHT))
+	CreateMenu(ALFC_KEY_ALT + string.byte("2"), "Right Panel", BuildMenu(WINDOW_RIGHT))

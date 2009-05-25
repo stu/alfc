@@ -747,15 +747,15 @@ int gmec_globmatch(lua_State *L)
 
 static char* ScanPathForExec(char *path, char *exec)
 {
+	struct stat buff;
+	char *x;
+
 	char *q = strdup(path);
 	char *z = q;
 	char *p = z;
 
 	while (p != NULL)
 	{
-		struct stat buff;
-		char *x;
-
 		p = strchr(z, ALFC_path_varset);
 		if (p != NULL)
 			*p = 0;
@@ -766,7 +766,7 @@ static char* ScanPathForExec(char *path, char *exec)
 			strcat(x, ALFC_str_pathsep);
 		strcat(x, exec);
 
-		//LogInfo("path test : %s\n", x);
+		LogInfo("path test : %s\n", x);
 
 		if (ALFC_stat(x, &buff) == 0)
 		{
@@ -779,6 +779,16 @@ static char* ScanPathForExec(char *path, char *exec)
 
 		if (p != NULL)
 			z = p += 1;
+	}
+
+	free(q);
+
+	q = malloc(8 + strlen(exec));
+	sprintf(q, ".%s%s", ALFC_str_pathsep, exec);
+	LogInfo("path test : %s\n", q);
+	if(ALFC_stat(q, &buff) == 0)
+	{
+		return q;
 	}
 
 	free(q);

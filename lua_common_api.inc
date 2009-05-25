@@ -69,6 +69,9 @@ void RegisterCommonFuncs(uGlobalData *gd, lua_State *l)
 	lua_pushnumber(l, ALFC_KEY_ALT); lua_setglobal(l, "ALFC_KEY_ALT");
 	lua_pushnumber(l, ALFC_KEY_CTRL); lua_setglobal(l, "ALFC_KEY_CTRL");
 
+	lua_pushnumber(l, WINDOW_LEFT); lua_setglobal(l, "WINDOW_LEFT");
+	lua_pushnumber(l, WINDOW_RIGHT); lua_setglobal(l, "WINDOW_RIGHT");
+
 	lua_pushnumber(l, eMode_Directory); lua_setglobal(l, "eMode_Directory");
 	lua_pushnumber(l, eMode_Viewer); lua_setglobal(l, "eMode_Viewer");
 
