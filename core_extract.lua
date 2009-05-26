@@ -29,9 +29,9 @@ cmds[":x "] = function (command)
 
 	-- zip, arj, rar, zoo, lha
 	-- switches force overwrite on extraction
-	decomp[".zip"] = { exec = "unzip", parms = "-o" }
+	decomp[".zip"] = { exec = "unzip", parms = "-o" }  -- -d outputdir
 	decomp[".rar"] = { exec = "unrar", parms = "x -o+" }
-	decomp[".zoo"] = { exec = "zoo", parms = "xO" }
+	decomp[".zoo"] = { exec = "zoo", parms = "x.O" } --
 	decomp[".lha"] = { exec = "lha", parms = "xf" }
 	decomp[".arc"] = { exec = "arc", parms = "xo" }
 	-- arj allows us to reset the file attributes on overwriting "-ha"
@@ -43,15 +43,33 @@ cmds[":x "] = function (command)
 	end
 
 	for k,v in pairs(flist) do
+		local q = '\"'
 		if v.directory == 0 then
 			ext = findpattern(v.name, "[.]")
 			if decomp[ext] ~= nil then
-				debug_msg("" .. decomp[ext].exec .. " " .. decomp[ext].parms .. " " .. v.path .. pathsep .. v.name .. " ")
+				local dcount = 0
+				local dname = string.sub(v.name, 1, #v.name - #ext)
+				if CreateDirectory(dname) == -1 then
+					for dcount = 1,9999 do
+						if CreateDirectory( dname .. string.sub("0000" .. dcount, -4)) == 0 then
+							dname = dname .. string.sub("0000" .. dcount, -4)
+							dcount = 9999
+							break
+						end
+					end
+				end
+
+				local xdir = GetCurrentWorkingDirectory()
+
+				SetCurrentWorkingDirectory(dname)
+				dname = ("" .. decomp[ext].exec .. " " .. decomp[ext].parms .. " " .. q .. v.path .. pathsep .. v.name .. q .." ")
+				--debug_msg(dname)
+				execute(dname)
+				SetCurrentWorkingDirectory(xdir)
 			else
 				debug_msg("Don't know how to extract " .. v.name)
 			end
 		end
-
 	end
 end
 

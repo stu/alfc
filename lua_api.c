@@ -832,8 +832,11 @@ int gme_GetHighlightedFilename(lua_State *L)
 	assert(gd != NULL);
 
 	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
+	if(de != NULL)
+		lua_pushstring(L, de->name);
+	else
+		lua_pushstring(L, "");
 
-	lua_pushstring(L, de->name);
 	return 1;
 }
 

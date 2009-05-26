@@ -30,7 +30,7 @@ static int HaveShellMetaCharacters(char *s)
 			case '*':
 			case '?':
 			case '\'':
-			case '\"':
+			//case '\"':
 			case '\\':
 			case '`':
 			case '$':
@@ -766,7 +766,7 @@ static char* ScanPathForExec(char *path, char *exec)
 			strcat(x, ALFC_str_pathsep);
 		strcat(x, exec);
 
-		LogInfo("path test : %s\n", x);
+		//LogInfo("path test : %s\n", x);
 
 		if (ALFC_stat(x, &buff) == 0)
 		{
@@ -785,7 +785,7 @@ static char* ScanPathForExec(char *path, char *exec)
 
 	q = malloc(8 + strlen(exec));
 	sprintf(q, ".%s%s", ALFC_str_pathsep, exec);
-	LogInfo("path test : %s\n", q);
+	//LogInfo("path test : %s\n", q);
 	if(ALFC_stat(q, &buff) == 0)
 	{
 		return q;
