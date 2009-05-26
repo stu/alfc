@@ -65,7 +65,7 @@ cmds[":x "] = function (command)
 				dname = ("" .. decomp[ext].exec .. " " .. decomp[ext].parms .. " " .. q .. v.path .. pathsep .. v.name .. q .." ")
 				--debug_msg(dname)
 				execute(dname)
-				SetCurrentWorkingDirectory(xdir)
+				SetCurrentWorkingDirectory(".")
 			else
 				debug_msg("Don't know how to extract " .. v.name)
 			end
