@@ -30,7 +30,7 @@ static int HaveShellMetaCharacters(char *s)
 			case '*':
 			case '?':
 			case '\'':
-			//case '\"':
+				//case '\"':
 			case '\\':
 			case '`':
 			case '$':
@@ -786,7 +786,7 @@ static char* ScanPathForExec(char *path, char *exec)
 	q = malloc(8 + strlen(exec));
 	sprintf(q, ".%s%s", ALFC_str_pathsep, exec);
 	//LogInfo("path test : %s\n", q);
-	if(ALFC_stat(q, &buff) == 0)
+	if (ALFC_stat(q, &buff) == 0)
 	{
 		return q;
 	}
@@ -801,29 +801,53 @@ static char** decompose_args(char *cli)
 	char *p, *q;
 	char **args;
 	int i;
+	int quote;
 
 	args = calloc(1, 64 * sizeof(char*));
 
 	p = cli;
-	for (i = 0; i < 63 && p != NULL; i++)
+	quote = 0;
+	i = 0;
+
+	args[i] = calloc(1, 1024);
+	q = args[i];
+
+	while (*p != 0)
 	{
-		q = strchr(p, ' ');
-		if (q == NULL)
-			q = strchr(p, 0x0);
-
-		if (q != p)
+		if(*p == '\'' || *p == '\"')
 		{
-			args[i] = calloc(1, (q - p) + 4);
-			memmove(args[i], p, q - p);
+			char c = *p++;
 
-			while (*q == ' ')
-				q++;
+			while(*p != c)
+			{
+				*q++ = *p++;
+			}
+
+			p++;
+		}
+		else if(*p == ' ' || *p == '\t')
+		{
+			args[i] = realloc(args[i], strlen(args[i]) + 1);
+			i++;
+			args[i] = calloc(1, 1024);
+			q = args[i];
+
+			while(*p == ' ' || *p == '\t')
+				p++;
+		}
+		else
+		{
+			*q++ = *p++;
 		}
 
-		if (*p == 0x0)
-			p = NULL;
-		else
-			p = q;
+		assert(i < 64);
+	}
+
+
+	if(strlen(args[i]) == 0)
+	{
+		free(args[i]);
+		args[i] = NULL;
 	}
 
 	return args;
@@ -982,7 +1006,6 @@ int gmec_exec(lua_State *L)
 				if (
 				WIFSTOPPED(status))
 					rc = -pid;
-
 
 				gd->screen->get_keypress();
 			}
