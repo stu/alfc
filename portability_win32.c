@@ -119,6 +119,9 @@ uint32_t ALFC_GetFileAttrs(uDirEntry *de)
 			z = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_ARCHIVE;
 	}
 
+	if(de->name[0] == '.')
+		z |= FILE_ATTRIBUTE_HIDDEN;
+
 	free(x);
 
 	return z;

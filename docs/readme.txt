@@ -65,6 +65,10 @@ Current speed keyed commands
 
 :sym - Symlink files or directories. Not available on WIN32 platforms
 
+:swap - swap panels
+
+:x - extract archive
+
 
 Internal Viewer Commands
 ========================
@@ -83,6 +87,11 @@ Config
 
 document whole dang options file....
 
+Windows Notes
+=============
+On windows, any file that starts with a dot eg ".netbeans" will have
+its attribute shown as hidden, even when it does not have a hidden 
+attribute.
 
 
 Credits
@@ -98,10 +107,10 @@ Core
 	- shell support
 	- favourites list
 	- shortcuts
-		%f - active filename
-		%d - active directory
-		%F - pasive filename
-		%D - passive directory
+		@f - active filename
+		@d - active directory
+		@F - pasive filename
+		@D - passive directory
 
 	- confirmation overwite on copy/delete
 	- verbose copy/move/delete display??

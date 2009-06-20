@@ -9,7 +9,12 @@
 
 #include <signal.h>
 #include <sys/types.h>
+
+#ifndef __WIN32__
 #include <sys/wait.h>
+#else
+#include <process.h>
+#endif
 
 static int HaveShellMetaCharacters(char *s)
 {
@@ -785,7 +790,7 @@ static char* ScanPathForExec(char *path, char *exec)
 
 	q = malloc(8 + strlen(exec));
 	sprintf(q, ".%s%s", ALFC_str_pathsep, exec);
-	//LogInfo("path test : %s\n", q);
+	LogInfo("path test : %s\n", q);
 	if (ALFC_stat(q, &buff) == 0)
 	{
 		return q;
@@ -853,32 +858,37 @@ static char** decompose_args(char *cli)
 	return args;
 }
 
+#ifndef __WIN32__
 void sigchild(int sig)
 {
 	int status = 0;
-
 	signal(SIGCHLD, sigchild);
 	waitpid(-1, &status, WNOHANG | WUNTRACED);
 }
+#endif
 
 static void sigign()
 {
 	signal(SIGTERM, SIG_IGN);
-	signal(SIGQUIT, SIG_IGN);
 	signal(SIGINT, SIG_IGN);
+#ifndef __WIN32__
+	signal(SIGQUIT, SIG_IGN);
 	signal(SIGCHLD, sigchild);
 	signal(SIGTTOU, SIG_IGN);
 	signal(SIGTSTP, SIG_IGN);
+#endif
 }
 
 // reset sig handlers
 static void sigdfl(void)
 {
-	signal(SIGTERM, SIG_DFL);
-	signal(SIGQUIT, SIG_DFL);
 	signal(SIGINT, SIG_DFL);
+	signal(SIGTERM, SIG_DFL);
+#ifndef __WIN32__
+	signal(SIGQUIT, SIG_DFL);
 	signal(SIGCHLD, SIG_DFL);
 	signal(SIGTSTP, SIG_DFL);
+#endif
 }
 
 /****f* LuaAPICommon/exec
@@ -957,36 +967,44 @@ int gmec_exec(lua_State *L)
 		if (path != NULL)
 		{
 			int child_pid;
+#ifndef __WIN32__
 			int status = 0;
-
+#endif
 			//LogInfo("found exec at %s\n", path);
-
 			main_pid = getpid();
+#ifndef __WIN32__
 			tcsetpgrp(2, main_pid);
 			signal(SIGCHLD, SIG_IGN);
 			pid = vfork();
+#else
+			pid = 0;
+#endif
+
 			//LogInfo("pid = %i\n", pid);
 			if (pid != -1)
 			{
 				if (pid == 0)
 				{
-					//rc = execle(path, exec_name, cmd.data + 1 + strlen(exec_name), NULL, ALFC_get_basepath());
-
 					sigdfl();
 
 					child_pid = getpid();
+#ifndef __WIN32__
 					setpgid(child_pid, child_pid);
 					tcsetpgrp(2, child_pid);
-
 					signal(SIGTTOU, SIG_DFL);
-
+#endif
 					gd->screen->going_exec();
-					rc = execve(path, args, __environ);
 
+#ifndef __WIN32__
+					rc = execve(path, args, __environ);
+#else
+					rc = _spawnve(_P_WAIT, path, (const char**)args, (const char**)_environ);
+#endif
 					if (rc == -1)
 						LogInfo("exec error %s\n", ALFC_get_last_error(errno));
-
+#ifndef __WIN32__
 					_exit(0x7F);
+#endif
 				}
 				else
 				{
@@ -997,7 +1015,7 @@ int gmec_exec(lua_State *L)
 				// split it with ALFC_path_varset
 				// run exec on name in each path if it does not contain path in its name
 				// until we hit a good one
-
+#ifndef __WIN32__
 				waitpid(pid, &status, WUNTRACED);
 				signal(SIGCHLD, sigchild);
 				tcsetpgrp(2, main_pid);
@@ -1006,6 +1024,7 @@ int gmec_exec(lua_State *L)
 				if (
 				WIFSTOPPED(status))
 					rc = -pid;
+#endif
 
 				gd->screen->get_keypress();
 			}

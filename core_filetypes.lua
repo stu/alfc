@@ -7,12 +7,12 @@ function DecomposeFiletypes()
     filetypes.exec = {}
     filetypes.exec.extensions = {"*.exe", "*.com", "*.bat" }
     filetypes.exec.type = FILETYPE_EXEC
-    filetypes.exec.colr = "bright green"
+    filetypes.exec.color = "bright green"
 
     filetypes.movies = {}
     filetypes.movies.extensions = { "*.avi", "*.wmv", "*.mpg" }
     filetypes.movies.type = FILETYPE_MOVIE
-    filetypes.movies.colr = "yellow"
+    filetypes.movies.color = "yellow"
 
 	filetypes.images = {}
 	filetypes.images.extensions = { "*.gif", "*.png", "*.jpg", "*.pcx", "*.lbm", "*.psd", "*.raw", "*.nef", "*.jpeg", "*.jpe" }
@@ -21,7 +21,7 @@ function DecomposeFiletypes()
 
 	filetypes.archives = {}
 	filetypes.archives.extensions = { "*.tar", "*.taz", "*.tar.gz", "*.tar.bz", "*.tar.bz2", "*.tgz", "*.tbz",
-										"*.zip", "*.lha", "*.rar", "*.arc", "*.pak", "*.sit", "*.hqx" }
+										"*.zip", "*.lha", "*.rar", "*.arc", "*.pak", "*.sit", "*.hqx", "*.zoo" }
 	filetypes.archives.type = FILETYPE_ARCHIVE
     filetypes.archives.color = "red"
 

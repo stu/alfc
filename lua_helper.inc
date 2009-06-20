@@ -70,11 +70,11 @@ int ExecuteString(uGlobalData *gb, char *sn)
 	l = lua_open();
 	RegisterLuaFuncs(gb, l);
 
-	LogInfo("exec : %s\n", outbuff);
+	//LogInfo("exec : %s\n", outbuff);
 	v = luaL_loadbuffer(l, (char*)outbuff, maxsize, "BUFFER");
 	if(v != 0)
 	{
-		LogError("cant load buffer, error %s\nBuffer = %s\n", lua_tostring(l, -1), new_sn);
+		LogError("cant load buffer, error %s\nBuffer = [%s]\n", lua_tostring(l, -1), new_sn);
 		rc = -1;
 	}
 	else
