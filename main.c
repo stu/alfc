@@ -953,7 +953,7 @@ static void compress_size(char *buff, uint64_t xx)
 					sprintf(buff, "%4u.%igb", (uint32_t) xx, round);
 				else
 				{
-					sprintf(buff, "%4u.%itb", (uint32_t) (xx / (1024* 1024 )), round);
+					sprintf(buff, "%4u.%itb", (uint32_t) (xx / (1024 * 1024)), round);
 				}
 			}
 		}
@@ -2073,29 +2073,32 @@ int SetHighlightedFile(uGlobalData *gd, int idx)
 
 	if (idx != -1)
 	{
-		int new_top;
-		int new_hl;
+		int new_top = 0;
+		int new_hl = idx;
 		int size;
 
 		size = dlist_size(GetActList(gd));
-		if (depth > size)
+
+		if (size >= depth)
+		{
 			depth = size;
 
-		if (idx > depth / 2)
-		{
-			new_top = idx - depth / 2;
-			new_hl = depth - (depth / 2) - (depth % 2);
-
-			if (idx + depth / 2 > size)
+			if (idx > depth / 2 && depth)
 			{
-				new_top = size - depth;
-				new_hl = idx - new_top;
+				new_top = idx - depth / 2;
+				new_hl = depth - (depth / 2) - (depth % 2);
+
+				if (idx + depth / 2 > size)
+				{
+					new_top = size - depth;
+					new_hl = idx - new_top;
+				}
 			}
-		}
-		else
-		{
-			new_top = 0;
-			new_hl = idx;
+			else
+			{
+				new_top = 0;
+				new_hl = idx;
+			}
 		}
 
 		assert(new_top >=0);
@@ -2256,7 +2259,6 @@ int updir(uGlobalData *gd)
 	char *cpath;
 	char *scan;
 
-	//cpath = ConvertDirectoryName(  GetActDPath(gd) );
 	cpath = replace(GetActDPath(gd), '\\', '/');
 
 	if (chdir(cpath) != 0)
