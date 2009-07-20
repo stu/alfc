@@ -1,6 +1,6 @@
 -- This function takes a list of files, applies a map to each one for an md5 has sum
 
-cmds[":md5 "] = function()
+AddCommand(":md5 ", "Hash highlighted files vis MD5", function()
 	local buff = {}
 	local k, v, t
 
@@ -28,8 +28,12 @@ cmds[":md5 "] = function()
 
 	ViewLuaTable("MD5Sum Hash Buffer", buff);
 end
+)
 
-cmds[":sha "] = function()
+-- alternate way to express it
+cmds[":sha "] = {}
+cmds[":sha "].desc = "Hash highlighted files vis SHA-160"
+cmds[":sha "].func = function()
 	local buff = {}
 	local k, v, t
 
@@ -58,8 +62,9 @@ cmds[":sha "] = function()
 	ViewLuaTable("SHA1Sum Hash Buffer", buff);
 end
 
-
-cmds[":ripemd "] = function()
+cmds[":ripemd "] = {}
+cmds[":ripemd "].desc = "Hash highlighted files vis RIPEMD"
+cmds[":ripemd "].func = function()
 	local buff = {}
 	local k, v, t
 

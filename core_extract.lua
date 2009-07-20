@@ -1,5 +1,6 @@
 
-cmds[":x "] = function (command)
+AddCommand(":ex ", "Extract archives", function(command)
+--cmds[":ex "].func = function (command)
 	local ext
 	local flist
 	local k,v
@@ -46,36 +47,31 @@ cmds[":x "] = function (command)
 		local q = '\"'
 		if v.directory == 0 then
 			ext = findpattern(v.name, "[.]")
-
-			while #ext > 0 do
-				if decomp[ext] ~= nil then
-					local dcount = 0
-					local dname = string.sub(v.name, 1, #v.name - #ext)
-					if CreateDirectory(dname) == -1 then
-						for dcount = 1,9999 do
-							if CreateDirectory( dname .. string.sub("0000" .. dcount, -4)) == 0 then
-								dname = dname .. string.sub("0000" .. dcount, -4)
-								dcount = 9999
-								break
-							end
+			if decomp[ext] ~= nil then
+				local dcount = 0
+				local dname = string.sub(v.name, 1, #v.name - #ext)
+				if CreateDirectory(dname) == -1 then
+					for dcount = 1,9999 do
+						if CreateDirectory( dname .. string.sub("0000" .. dcount, -4)) == 0 then
+							dname = dname .. string.sub("0000" .. dcount, -4)
+							dcount = 9999
+							break
 						end
 					end
-
-					local xdir = GetCurrentWorkingDirectory()
-
-					SetCurrentWorkingDirectory(dname)
-					dname = ("" .. decomp[ext].exec .. " " .. decomp[ext].parms .. " " .. q .. v.path .. pathsep .. v.name .. q .." ")
-					--debug_msg(dname)
-					execute(dname)
-					SetCurrentWorkingDirectory(".")
-					return
-				else
-					debug_msg("Don't know how to extract " .. v.name .. " with " .. ext)
-					ext = findpattern(string.sub(ext, 2, #ext), "[.]")
 				end
+
+				local xdir = GetCurrentWorkingDirectory()
+
+				SetCurrentWorkingDirectory(dname)
+				dname = ("" .. decomp[ext].exec .. " " .. decomp[ext].parms .. " " .. q .. v.path .. pathsep .. v.name .. q .." ")
+				--debug_msg(dname)
+				execute(dname)
+				SetCurrentWorkingDirectory(".")
+			else
+				debug_msg("Don't know how to extract " .. v.name)
 			end
 		end
 	end
 end
-
+)
 

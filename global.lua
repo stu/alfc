@@ -12,6 +12,12 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	cmds = {}		-- for quick commands
 	ftypes = {}		-- allows colouring of filetypes via plugin
 
+	function AddCommand(k, d, f)
+		cmds[k] = {}
+		cmds[k].desc = d
+		cmds[k].func = f
+	end
+
 	function execute(text)
 		local strCLI = "" .. text
 
@@ -276,6 +282,18 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		end
 
 	end
+
+	function __CreateDir(command)
+        local cmd = command
+        if #trim(command) == 0 then
+            return
+        end
+
+        if( SetCurrentWorkingDirectory(command) == -1) then
+            CreateDirectory(trim(command))
+            SetCurrentWorkingDirectory(".")
+        end
+    end
 
 	function __ChangeDir(command)
 		local cmd = command
@@ -630,10 +648,9 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		finished = false
 		cmd = command .. " "
 
-
 		for k,v in pairs(cmds) do
 			if string.sub(cmd, 1, #k) == k then
-				v(string.sub(cmd, #k+1, #cmd-1))
+				v.func(string.sub(cmd, #k+1, #cmd-1))
 				finished = true
 				break
 			end
@@ -766,32 +783,30 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	end
 
 	cmds = {}
-	cmds[":q "] = __QuitApp
-	cmds[":f "] = __Filter
-	cmds[":f+ "] = __FilterAdd
-	cmds[":g "] = __Glob
-	cmds[":g+ "] = __GlobAdd
-	cmds[":s "] = __MakeInactivePaneSame
-	cmds[":j "] = __Jump
-	cmds[":c "] = __ChangeDir
-	cmds[":so "] = __SortOrder
-
-	cmds[":td "] = __TagDelete
-	cmds[":tc "] = __TagCopy
-	cmds[":tm "] = __TagMove
-
-	cmds[":tf "] = __TagFilter
-	cmds[":tg "] = __TagGlob
-	cmds[":ta "] = __TagAll
-	cmds[":taf "] = __TagAllFiles
-	cmds[":tad "] = __TagAllDirs
-	cmds[":tu "] = __TagUnTagAll
-	cmds[":t! "] = __TagFlip
-
-	cmds[":swap "] = __SwapPanels
+	AddCommand(":q ", "Quit ALFC", __QuitApp)
+	AddCommand(":f ", "Filter file list with regexp", __Filter)
+	AddCommand(":f+ ","Add regexp to filter list",	__FilterAdd)
+	AddCommand(":g ","Filter file list with glob", __Glob)
+	AddCommand(":g+ ","Add glob to filter list",__GlobAdd)
+	AddCommand(":s ","Make both panels same", __MakeInactivePaneSame)
+	AddCommand(":j ","Jump", __Jump)
+	AddCommand(":cd ","Change directory", __ChangeDir)
+	AddCommand(":md ","Create directory", __CreateDir)
+	AddCommand(":so ","Set sort order", __SortOrder)
+	AddCommand(":td ","Delete tagged files", __TagDelete)
+	AddCommand(":tc ","Copy tagged files", __TagCopy)
+	AddCommand(":tm ","Move tagged files", __TagMove)
+	AddCommand(":tf ","Tag files via regexp", __TagFilter)
+	AddCommand(":tg ","Tag files via glob", __TagGlob)
+	AddCommand(":ta ","Tag all files AND directories", __TagAll)
+	AddCommand(":taf ","Tag all files (but not dirs)", __TagAllFiles)
+	AddCommand(":tad ","Tag all directories (but not files)", __TagAllDirs)
+	AddCommand(":tu ","Untag all", __TagUnTagAll)
+	AddCommand(":t! ","Flip tags",	__TagFlip)
+	AddCommand(":swap ","Swap active panels", __SwapPanels)
 
 	if SystemType() ~= "WIN32" then
-		cmds[":sym"] = __TagSymlink
+		AddCommand(":sym","Symlink files", __TagSymlink)
 	end
 
 	LoadPlugins()
@@ -801,4 +816,6 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 	_G["DIR_BOOTSTRAP"] = 1
 end -- _G["BOOTSTRAP"]
+
+
 

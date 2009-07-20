@@ -5,6 +5,12 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 	bookmarks = {}
 	lang = {}
 
+	function AddCommand(k, d, f)
+		cmds[k] = {}
+		cmds[k].desc = d
+		cmds[k].func = f
+	end
+
 	function findpattern(text, pattern, start)
 		local p
 		p = string.find(text, pattern, start)
@@ -97,16 +103,16 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 
 		for k,v in pairs(cmds) do
 			if string.sub(cmd, 1, #k) == k then
-				v(string.sub(cmd, #k, #cmd))
+				v.func(string.sub(cmd, #k, #cmd))
 				break
 			end
 		end
 	end
 
-	cmds[":q "] = __QuitApp
-	cmds[":t "] = __Tabs
-	cmds[":g "] = __Jump
-	cmds[":b "] = __Bookmark
+	AddCommand(":q ", "Quit", __QuitApp)
+	AddCommand(":t ", "Set tabs", __Tabs)
+	AddCommand(":g ", "Go to line or bookmark", __Jump)
+	AddCommand(":b ", "Bookmark line", __Bookmark)
 
 	LoadPlugins()
 
