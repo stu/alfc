@@ -2191,6 +2191,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 
 		free(gd->right_dir);
 		gd->right_dir = GetCurrentWorkingDirectory();
+
 		AddMRU(gd, gd->lstMRURight, gd->right_dir);
 		if (gd->lstFullRight != NULL)
 		{
@@ -2832,6 +2833,9 @@ void DrawAll(uGlobalData *gd)
 static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start_right)
 {
 	char *x;
+	char *orig_dir;
+
+	orig_dir = GetCurrentWorkingDirectory();
 
 	gdata->selected_window = WINDOW_LEFT;
 	gdata->lstFilterLeft = malloc(sizeof(DList));
@@ -2839,6 +2843,7 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 	gdata->lstGlobLeft = malloc(sizeof(DList));
 	dlist_init(gdata->lstGlobLeft, FreeGlob);
 	free(gdata->left_dir);
+
 	if (start_left != NULL)
 		gdata->left_dir = strdup(start_left);
 	else
@@ -2859,8 +2864,11 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 		gdata->left_dir = GetCurrentWorkingDirectory();
 		godir(gdata, gdata->left_dir);
 	}
-
 	assert(gdata->lstLeft != NULL);
+
+	/* now do right window stuff */
+
+	chdir(orig_dir);
 
 	gdata->selected_window = WINDOW_RIGHT;
 	gdata->lstFilterRight = malloc(sizeof(DList));
@@ -2868,6 +2876,7 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 	gdata->lstGlobRight = malloc(sizeof(DList));
 	dlist_init(gdata->lstGlobRight, FreeGlob);
 	free(gdata->right_dir);
+
 	if (start_right != NULL)
 		gdata->right_dir = strdup(start_right);
 	else
@@ -2879,10 +2888,10 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 
 	if (gdata->right_dir == NULL)
 		gdata->right_dir = GetCurrentWorkingDirectory();
-
 	if (godir(gdata, gdata->right_dir) == -1)
+	{
 		godir(gdata, ConvertDirectoryName("$HOME"));
-
+	}
 	if (gdata->lstRight == NULL)
 	{
 		gdata->right_dir = GetCurrentWorkingDirectory();
@@ -2892,6 +2901,8 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 
 	gdata->selected_window = WINDOW_LEFT;
 	chdir(gdata->left_dir);
+
+	free(orig_dir);
 }
 
 static int ScanMenuOpen(uGlobalData *gd, uint32_t key)

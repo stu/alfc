@@ -14,10 +14,12 @@ int rlmain(int argc, char *argv[])
 			if(1+i < argc && strcmp("-l", argv[i]) == 0)
 			{
 				start_left = argv[i+1];
+				i += 1;
 			}
-			if(1+i < argc && strcmp("-r", argv[i]) == 0)
+			else if(1+i < argc && strcmp("-r", argv[i]) == 0)
 			{
 				start_right = argv[i+1];
+				i += 1;
 			}
 			else if(strcmp("-?", argv[i]) == 0 || strcmp("--help", argv[i]) == 0)
 			{
