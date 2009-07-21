@@ -65,6 +65,11 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 -- * "%{some text}" Popup an input box and prompts for the substitution.
 --                  The user should be able to cancel input ( ESC or F10 recommended).
 
+        _a_fn = string.gsub(_a_fn, " ", "\\ ")
+        _n_fn = string.gsub(_n_fn, " ", "\\ ")
+        _a_d = string.gsub(_a_d, " ", "\\ ")
+        _n_d = string.gsub(_n_d, " ", "\\ ")
+
 		strCLI = string.gsub(strCLI, "@f", _a_fn)
 		strCLI = string.gsub(strCLI, "@F", _n_fn)
 		strCLI = string.gsub(strCLI, "@d", _a_d)
