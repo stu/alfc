@@ -60,8 +60,8 @@ case y.to_s
 
 		if DRIVER=="NCURSES"
 			var[:libs] = "-lncurses -llua5.1"
-			PORTABILITY_OBJS = %w( portability_unix.o ncurses_interface.o)
-			GPORTABILITY_OBJS = %w( portability_unix.o ncurses_interface.o)
+			PORTABILITY_OBJS = %w( portability_unix.o ncurses_main.o ncurses_interface.o)
+			GPORTABILITY_OBJS = %w( portability_unix.o ncurses_guide.o ncurses_interface.o)
 			GLIBS = "-lz -lbz2"
 		else
 			var[:libs] = "-llua5.1 -lX11"

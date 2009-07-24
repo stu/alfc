@@ -123,7 +123,7 @@ char* ConvertDirectoryName(const char *x)
 static void syntax(void)
 {
 	printf("guide guidename title/index/page\n");
-	printf("\neg:gdump alfc.gd main/about/credits\n");
+	printf("\neg:guide alfc.gd main/about/credits\n");
 
 	exit(0);
 }
@@ -567,7 +567,11 @@ int ALFC_main(int start_mode, char *view_file)
 						}
 						break;
 
+					case 'Q':
+					case 'q':
+					case ALFC_KEY_F12:
 					case ALFC_KEY_ESCAPE:
+					case 0x21B: // ESC-ESC
 						qflag = 1;
 						break;
 
@@ -584,6 +588,8 @@ int ALFC_main(int start_mode, char *view_file)
 
 		FreeGuide(hdr);
 	}
+
+	gdata->screen->deinit();
 
 	while (count > 0)
 		free(page[--count]);
