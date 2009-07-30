@@ -1943,7 +1943,7 @@ int scroll_down(uGlobalData *gd)
 
 	w = GetActWindow(gd);
 
-	if (w->top_line + w->highlight_line + 1 == dlist_size(GetActList(gd)))
+	if (w->top_line + w->highlight_line + 1 >= dlist_size(GetActList(gd)))
 		return -1;
 
 	scroll_depth = get_scroll_depth(w);
@@ -2081,17 +2081,17 @@ int SetHighlightedFile(uGlobalData *gd, int idx)
 
 		if (size >= depth)
 		{
-			depth = size;
-
 			if (idx > depth / 2 && depth)
 			{
-				new_top = idx - depth / 2;
-				new_hl = depth - (depth / 2) - (depth % 2);
-
-				if (idx + depth / 2 > size)
+				if (idx + (depth / 2) > size)
 				{
 					new_top = size - depth;
 					new_hl = idx - new_top;
+				}
+				else
+				{
+					new_top = idx - depth / 2;
+					new_hl = idx - new_top; //(size - (depth / 2)) - (depth % 2);
 				}
 			}
 			else
