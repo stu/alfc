@@ -46,7 +46,7 @@ end
 	BindKey(ALFC_KEY_ALT + string.byte("H"), "Toggle Hidden", [[ToggleHidden()]])
 
 	-- extra's for the ofm1999 standard
-	BindKey(ALFC_KEY_CTRL + string.byte("R"), "Refresh", [[:c]])
+	BindKey(ALFC_KEY_CTRL + string.byte("R"), "Refresh", [[:cd]])
 	BindKey(ALFC_KEY_CTRL + string.byte("U"), "Swap", [[:swap]])
 
 
