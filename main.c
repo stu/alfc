@@ -26,6 +26,25 @@ void ToggleHidden(uGlobalData *gd)
 	}
 }
 
+int GetHiddenFlag(uGlobalData *gd)
+{
+	int hidden = IsTrue(INI_get(gd->optfile, "options", "show_hidden"));
+
+	return hidden;
+}
+
+void SetHiddenFlag(uGlobalData *gd, int hidden)
+{
+	if (hidden == 0)
+	{
+		INI_UpdateItem(gd->optfile, "options", "show_hidden", "true");
+	}
+	else
+	{
+		INI_UpdateItem(gd->optfile, "options", "show_hidden", "false");
+	}
+}
+
 static void FreeSubMenu(uSubMenu *m)
 {
 	if (m->code != NULL)

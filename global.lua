@@ -406,6 +406,11 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		for k,v in ipairs(lstF) do
 			if v.tagged == 1 then
 				if v.directory == 1 then
+					local hflag
+
+					hflag = GetHiddenFlag()
+					SetHiddenFlag(0)
+
 					path1 = GetCurrentWorkingDirectory()
 
 					SetCurrentWorkingDirectory(v.name)
@@ -421,6 +426,8 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 					if TagAll() > 0 then
 						err = err + __TagCopyX(command, buff)
 					end
+
+					SetHiddenFlag(hflag)
 
 					SetCurrentWorkingDirectory(path1)
 					SwitchPanes()
@@ -473,6 +480,10 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 				if v.directory == 1 then
 					local path1
 					local path2
+					local hflag
+
+					hflag = GetHiddenFlag()
+					SetHiddenFlag(0)
 
 					path1 = GetCurrentWorkingDirectory()
 					SwitchPanes()
@@ -486,6 +497,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 						err = err + __TagMoveX(command, buff)
 					end
 
+					SetHiddenFlag(hflag)
 					ChangeDirUp()
 					RemoveDirectory(v.name)
 					SetCurrentWorkingDirectory(path1)
@@ -539,6 +551,10 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 			if v.tagged == 1 then
 				if v.directory == 1 and v.link == 0 then
 					local path1
+					local hflag
+
+					hflag = GetHiddenFlag()
+					SetHiddenFlag(0)
 
 					path1 = GetCurrentWorkingDirectory()
 					SetCurrentWorkingDirectory(v.name)
@@ -546,6 +562,8 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 					if TagAll() > 0 then
 						err = err + __TagDeleteX(command, buff)
 					end
+
+					SetHiddenFlag(hflag)
 
 					ChangeDirUp()
 					RemoveDirectory(v.name)

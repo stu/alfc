@@ -34,10 +34,8 @@ int gme_map(lua_State *L)
 {
 	int i, n;
 
-
 	/* 1st argument must be a table (t) */
 	luaL_checktype(L, 1, LUA_TTABLE);
-
 
 	/* 2nd argument must be a function (f) */
 	luaL_checktype(L, 2, LUA_TFUNCTION);
@@ -832,7 +830,7 @@ int gme_GetHighlightedFilename(lua_State *L)
 	assert(gd != NULL);
 
 	de = GetHighlightedFile(GetActList(gd), GetActWindow(gd)->highlight_line, GetActWindow(gd)->top_line);
-	if(de != NULL)
+	if (de != NULL)
 		lua_pushstring(L, de->name);
 	else
 		lua_pushstring(L, "");
@@ -1029,7 +1027,6 @@ int gme_TagFile(lua_State *L)
 			if (IsVisible(gd, count) == 1)
 			{
 				count -= GetActWindow(gd)->top_line;
-
 
 				// redraw filepane
 				if (count == GetActWindow(gd)->highlight_line)
@@ -2563,6 +2560,21 @@ int gme_SetFileType(lua_State *L)
 	return 0;
 }
 
+/****f* LuaAPI/ToggleHidden
+ * FUNCTION
+ *	Sets the show hidden files flag
+ *
+ * SYNOPSIS
+ ToggleHidden()
+ * RESULT
+ *  Flips the flag and causes a screen refresh
+ *
+ * SEE ALSO
+ * 	ToggleHidden, SetHiddenFlag, GetHiddenFlag
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gme_ToggleHidden(lua_State *L)
 {
 	uGlobalData *gd;
@@ -2577,6 +2589,69 @@ int gme_ToggleHidden(lua_State *L)
 	UpdateDir(gd, NULL);
 
 	DrawAll(gd);
+
+	return 0;
+}
+
+/****f* LuaAPI/GetHiddenFlag
+ * FUNCTION
+ *	Gets the show hidden files flag
+ *
+ * SYNOPSIS
+ flag = GetHiddenFlag()
+ * RESULT
+ *	o flag (number) --
+ *		o 0 = Show hidden files
+ *		o -1 = Don't show hidden files
+ *
+ * SEE ALSO
+ * 	ToggleHidden, SetHiddenFlag, GetHiddenFlag
+ * AUTHOR
+ *	Stu George
+ ******
+ */
+int gme_GetHiddenFlag(lua_State *L)
+{
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+
+	lua_pushnumber(L, GetHiddenFlag(gd));
+
+	return 1;
+}
+
+
+/****f* LuaAPI/SetHiddenFlag
+ * FUNCTION
+ *	Sets the show hidden files flag
+ *
+ * SYNOPSIS
+ SetHiddenFlag(0)
+ * INPUTS
+ *	o flag (number) --
+ *		o 0 = Show hidden files
+ *		o -1 = Don't show hidden files
+ * NOTES
+ * 	Does not cause a screen refresh when option changes.
+ *
+ * SEE ALSO
+ * 	ToggleHidden, SetHiddenFlag, GetHiddenFlag
+ * AUTHOR
+ *	Stu George
+ ******
+ */
+
+int gme_SetHiddenFlag(lua_State *L)
+{
+	int flag;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	flag = luaL_checknumber(L, 1);
+	SetHiddenFlag(gd, flag);
 
 	return 0;
 }

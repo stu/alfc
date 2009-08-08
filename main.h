@@ -465,6 +465,8 @@ extern int ALFC_main(int start_mode, char *view_file);
 extern void DrawCLI(uGlobalData *gd);
 
 extern void ToggleHidden(uGlobalData *gd);
+extern void SetHiddenFlag(uGlobalData *gd, int hidden);
+extern int GetHiddenFlag(uGlobalData *gd);
 
 extern char *start_left;
 extern char *start_right;
