@@ -70,7 +70,7 @@ case y.to_s
 			GLIBS = "-lz -lbz2"
 		end
 
-		PORT_CFLAGS=""
+		PORT_CFLAGS="-D__USE_LARGEFILE64=1 -D_FILE_OFFSET_BITS=64"
 end
 
 
