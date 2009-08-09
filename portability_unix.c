@@ -101,8 +101,8 @@ int ALFC_rmdir(char *s)
 	if(p > x)
 		*p = 0;
 
-	stat(x, &pbuff);
-	stat(s, &dbuff);
+	ALFC_stat(x, &pbuff);
+	ALFC_stat(s, &dbuff);
 
 	chmod(x, pbuff.st_mode | S_IWUSR | S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH | S_IRUSR);
 	chmod(s, dbuff.st_mode | S_IWUSR | S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH | S_IRUSR);
@@ -134,7 +134,8 @@ int ALFC_shutdown(void)
 
 int ALFC_unlink(char *s)
 {
-	return unlink(s);
+	// SGEO 20090808 - switch unlink to remove to handle dangling symlinks
+	return remove(s);
 }
 
 char* ALFC_get_last_error(int err)

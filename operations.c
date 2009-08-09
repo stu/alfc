@@ -480,7 +480,7 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x, uWindow *w)
 
 
 	// make sure we are in the path of the file to copy and its valid
-	if (stat(src, &statbuff) == -1)
+	if (ALFC_stat(src, &statbuff) == -1)
 	{
 		x->result_code = -1;
 		x->result_msg = strdup(strerror(errno));
@@ -492,10 +492,19 @@ int Ops_DeleteFile(uGlobalData *gd, uFileOperation *x, uWindow *w)
 	// parse through the symlink?
 	if (S_ISLNK(statbuff.st_mode) != 0)
 	{
-		x->result_code = -1;
-		x->result_msg = strdup("Symlinks not yet handled.");
-		free(src);
-		return x->result_code;
+		if( unlink(src) != 0)
+		{
+			x->result_code = -1;
+			x->result_msg = strdup("Symlinks not yet handled.");
+			free(src);
+			return x->result_code;
+		}
+		else
+		{
+			x->result_code = 0;
+			x->result_msg = strdup("OK");
+			return x->result_code;
+		}
 	}
 #endif
 

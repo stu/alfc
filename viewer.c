@@ -884,7 +884,7 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 	gd->screen->print(" Welcome to Another Linux File Commander ");
 
 	if(LoadLine != NULL)
-		stat(fn, &stats);
+		ALFC_stat(fn, &stats);
 
 	if(LoadLine != NULL || S_ISDIR(stats.st_mode) == 0)
 	{
