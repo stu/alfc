@@ -927,7 +927,7 @@ static int CalcSizeOff(uWindow *w, int end)
 	if (w->gd->compress_filesize == 0)
 		return end - 10;
 	else
-		return end - 8;
+		return end - 7;
 }
 
 static int CalcDateOff(uWindow *w, int end)
@@ -946,7 +946,7 @@ static void compress_size(char *buff, uint64_t xx)
 
 	if (xx < 1024)
 	{
-		sprintf(buff, "%6uby", (uint32_t) xx);
+		sprintf(buff, "%7u", (uint32_t) xx);
 	}
 	else
 	{
@@ -954,7 +954,7 @@ static void compress_size(char *buff, uint64_t xx)
 		xx /= 1024;
 		if (xx < 1024)
 		{
-			sprintf(buff, "%4u.%ikb", (uint32_t) xx, round);
+			sprintf(buff, "%4u.%iK", (uint32_t) xx, round);
 		}
 		else
 		{
@@ -962,17 +962,17 @@ static void compress_size(char *buff, uint64_t xx)
 			xx /= 1024;
 			if (xx < 1024)
 			{
-				sprintf(buff, "%4u.%imb", (uint32_t) xx, round);
+				sprintf(buff, "%4u.%iM", (uint32_t) xx, round);
 			}
 			else
 			{
 				round = ((xx * 10) / 1024) % 10;
 				xx /= 1024;
 				if (xx < 1024)
-					sprintf(buff, "%4u.%igb", (uint32_t) xx, round);
+					sprintf(buff, "%4u.%iG", (uint32_t) xx, round);
 				else
 				{
-					sprintf(buff, "%4u.%itb", (uint32_t) (xx / (1024 * 1024)), round);
+					sprintf(buff, "%4u.%iT", (uint32_t) (xx / (1024 * 1024)), round);
 				}
 			}
 		}
