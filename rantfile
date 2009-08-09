@@ -160,7 +160,7 @@ CC = "gcc"
 CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DNMEMWATCH " + PORT_CFLAGS
 LIBS = ""
 
-header_files = %w(main.h)
+header_files = %w(rantfile main.h)
 
 default_files = %w(global.lua viewer.lua startup.lua shutdown.lua options.ini core_extract.lua
 			core_hash.lua viewer_languages.lua filemanager_menu.lua)
@@ -311,6 +311,12 @@ gen Rule, '.h' => '.h' do |t|
     end
 end
 
+gen Rule, 'rantfile' => 'rantfile' do
+    x = Dir["*.{o,obj}"]
+    if x.length > 0
+        sys.rm_f x
+    end
+end
 
 ##############################################################################
 desc "Create Makefile"
@@ -412,6 +418,4 @@ task :install do
     sys "sudo mkdir -p /usr/local/share/alfc"
     sys "sudo cp *.gd /usr/local/share/alfc"
 end
-
-
 
