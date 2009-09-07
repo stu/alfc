@@ -1074,11 +1074,12 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 					xx = de->lnk_size;
 #endif
 
-#if __WORDSIZE == 64
-				sprintf(buff + size_off, "%10lu", xx);
-#else
-				sprintf(buff + size_off, "%10llu", xx);
-#endif
+				sprintf(buff + size_off, "%10" PRIu64, xx);
+//#if __WORDSIZE == 64
+//				sprintf(buff + size_off, "%10lu", xx);
+//#else
+//				sprintf(buff + size_off, "%10llu", xx);
+//#endif
 			}
 			else
 			{
@@ -1233,15 +1234,16 @@ static char* PrintNumber(uint64_t num)
 	char *q;
 	int i;
 
-#if __WORDSIZE == 64
-	sprintf(x, "%lu", num);
-#else
-#ifdef __WIN32__
-	sprintf(x, "%I64u", num);
-#else
-	sprintf(x, "%llu", num);
-#endif
-#endif
+	sprintf(x, "%" PRIu64, num);
+//#if __WORDSIZE == 64
+//	sprintf(x, "%lu", num);
+//#else
+//#ifdef __WIN32__
+//	sprintf(x, "%I64u", num);
+//#else
+//	sprintf(x, "%llu", num);
+//#endif
+//#endif
 
 	memset(y, ' ', 32);
 	y[31] = 0;
