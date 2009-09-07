@@ -32,8 +32,8 @@ end
 	BindKey(ALFC_KEY_F3, "View", [[ViewFile(GetHighlightedFilename())]])
 	BindKey(ALFC_KEY_F4, "Edit", [[EditFile(GetHighlightedFilename())]])
 	BindKey(ALFC_KEY_F5, "Copy", [[:tc]])
-	BindKey(ALFC_KEY_F7, "Create Dir", [[:md]])
 	BindKey(ALFC_KEY_F6, "Delete", [[:td]])
+    BindKey(ALFC_KEY_F7, "Create Dir", [[:md]])
 	BindKey(ALFC_KEY_F8, "Move", [[:tm]])
 
 	--BindKey(ALFC_KEY_F02, "Same", [[:s]])

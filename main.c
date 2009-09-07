@@ -1711,7 +1711,7 @@ void DrawStatusInfoLine(uGlobalData *gd)
 	x1 = PrintNumber(dlist_size(GetActFullList(gd)));
 	x2 = PrintNumber(GetActWindow(gd)->hidden_count);
 
-	sprintf(buff, "Tagged : %i file%c (%s) : Size %s, #Files %s, #Hidden %s", GetActWindow(gd)->tagged_count, GetActWindow(gd)->tagged_count == 1 ? 0 : 's', ssize, ssize2, x1, x2);
+	sprintf(buff, "Tagged : %i file%c (%s) : Size %s, %s Files, %s Hidden", GetActWindow(gd)->tagged_count, GetActWindow(gd)->tagged_count == 1 ? 0 : 's', ssize, ssize2, x1, x2);
 	p = strchr(buff, 0x0);
 	*p = ' ';
 	buff[m] = 0;

@@ -22,8 +22,8 @@ case y.to_s
 
 		if DRIVER=="NCURSES"
 			var[:libs] = "-lpdcurses -llua -lregex -liberty -lkernel32"
-			PORTABILITY_OBJS = %w( portability_win32.o ncurses_interface.o)
-			GPORTABILITY_OBJS = %w( portability_win32.o ncurses_interface.o)
+			PORTABILITY_OBJS = %w( portability_win32.o ncurses_main.o ncurses_interface.o)
+			GPORTABILITY_OBJS = %w( portability_win32.o ncurses_guide.o ncurses_interface.o)
 		else
 			var[:libs] = "-llua -lregex -liberty -lkernel32 -mwindows"
 			PORTABILITY_OBJS = %w( portability_win32.o gui_interface.o gui_main.o guicore.o)
