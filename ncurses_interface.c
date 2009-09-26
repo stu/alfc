@@ -208,8 +208,11 @@ static void nc_print_string(const char *s)
 		}
 		s++;
 	}
-	doupdate();
-	refresh();
+	if (intUpdates == 1)
+	{
+		doupdate();
+		refresh();
+	}
 }
 
 static void nc_print_string_abs(const char *s)
@@ -226,8 +229,12 @@ static void nc_print_string_abs(const char *s)
 
 		s++;
 	}
-	doupdate();
-	refresh();
+
+	if (intUpdates == 1)
+	{
+		doupdate();
+		refresh();
+	}
 }
 
 static uint32_t nc_get_keypress(void)
@@ -554,13 +561,18 @@ static int nc_isshutdown(void)
 	return 0;
 }
 
-
 static void nc_set_updates(int set)
 {
 	if (set == 0)
 		intUpdates = 0;
 	else
 		intUpdates = 1;
+
+	if(intUpdates == 1)
+	{
+		refresh();
+		doupdate();
+	}
 }
 
 static void nc_updatewindow(void)
@@ -586,27 +598,27 @@ uScreenDriver screen =
 	driver_name,
 
 	nc_screen_init, // init screen
-	        nc_screen_deinit, // uninit
-	        nc_cls, // clear scren
-	        nc_get_screen_height,
-	        nc_get_screen_width,
-	        nc_get_keypress,
-	        nc_print_string,
-	        nc_print_string_abs,
-	        nc_set_style,
-	        setcursor,
-	        erase_eol,
-	        nc_draw_frame,
-	        nc_init_style,
-	        nc_print_hline,
-	        nc_print_vline,
-	        nc_set_updates,
+	    nc_screen_deinit, // uninit
+	    nc_cls, // clear scren
+	    nc_get_screen_height,
+	    nc_get_screen_width,
+	    nc_get_keypress,
+	    nc_print_string,
+	    nc_print_string_abs,
+	    nc_set_style,
+	    setcursor,
+	    erase_eol,
+	    nc_draw_frame,
+	    nc_init_style,
+	    nc_print_hline,
+	    nc_print_vline,
+	    nc_set_updates,
 
-	        init_dir_styles,
-	        init_view_styles,
-	        nc_resized,
-	        nc_isshutdown,
-	        nc_updatewindow,
-	        nc_trigger_redraw,
-	        nc_going_exec
+	    init_dir_styles,
+	    init_view_styles,
+	    nc_resized,
+	    nc_isshutdown,
+	    nc_updatewindow,
+	    nc_trigger_redraw,
+	    nc_going_exec
 	};

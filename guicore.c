@@ -745,7 +745,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE x, LPSTR y, int z)
 
 	hinst = inst;
 	driver_redraw = 0;
-
+	count = 0;
 
 	q = y;
 	p = q;

@@ -219,6 +219,8 @@ void DrawMenu(uGlobalData *gd, int menu_to_open)
 						menu_sub_idx = 0;
 					break;
 
+				case ALFC_KEY_ALT + 0x1B:
+				case ALFC_KEY_CTRL + 0x1B:
 				case ALFC_KEY_ESCAPE:
 					return;
 					break;
@@ -229,6 +231,7 @@ void DrawMenu(uGlobalData *gd, int menu_to_open)
 					break;
 
 				default:
+					LogInfo("Key was %08X\n", key);
 					break;
 			}
 		}

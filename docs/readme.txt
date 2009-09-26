@@ -104,14 +104,9 @@ ToDo list for next release
 Core
 	- Viewer (HEX)
 	- Editor (both for text/hex)
-	- shell support
+	- better shell support
 	- favourites list
-	- shortcuts
-		@f - active filename
-		@d - active directory
-		@F - pasive filename
-		@D - passive directory
-
+    - online documentation
 	- confirmation overwite on copy/delete
 	- verbose copy/move/delete display??
 		would preclude rewriting the recursive code...
@@ -121,10 +116,7 @@ Files
 	- Rename Files
 
 Directories
-	- Create Directory
-	- Delete Directory
-	- Rename Directory
-
+    - Better create/delete/rename/move control (dialogues?)
 
 Birth and Rebirth
 
