@@ -47,6 +47,21 @@ static int HaveShellMetaCharacters(char *s)
 	return 0;
 }
 
+static int HaveShellMetaCharactersArgs(char *args[])
+{
+	int j = 0;
+
+	while (args[j] != NULL)
+	{
+		if (HaveShellMetaCharacters(args[j]) == 1)
+			return 1;
+
+		j += 1;
+	}
+
+	return 0;
+}
+
 /****f* LuaAPICommon/VersionDate
  * FUNCTION
  *	Returns the build date
@@ -819,25 +834,32 @@ static char** decompose_args(char *cli)
 
 	while (*p != 0)
 	{
-		if(*p == '\'' || *p == '\"')
+		if (*p == '\\')
+		{
+			p++;
+			*q++ = *p++;
+		}
+		else if (*p == '\'' || *p == '\"')
 		{
 			char c = *p++;
 
-			while(*p != c)
+			while (*p != c)
 			{
 				*q++ = *p++;
 			}
 
 			p++;
 		}
-		else if(*p == ' ' || *p == '\t')
+		else if (*p == ' ' || *p == '\t')
 		{
+
 			args[i] = realloc(args[i], strlen(args[i]) + 1);
+
 			i++;
 			args[i] = calloc(1, 1024);
 			q = args[i];
 
-			while(*p == ' ' || *p == '\t')
+			while (*p == ' ' || *p == '\t')
 				p++;
 		}
 		else
@@ -848,8 +870,9 @@ static char** decompose_args(char *cli)
 		assert(i < 64);
 	}
 
+	args[i] = realloc(args[i], strlen(args[i]) + 1);
 
-	if(strlen(args[i]) == 0)
+	if (strlen(args[i]) == 0)
 	{
 		free(args[i]);
 		args[i] = NULL;
@@ -933,7 +956,8 @@ int gmec_exec(lua_State *L)
 
 	GET_LUA_STRING(cmd, 1);
 	args = decompose_args(cmd.data);
-	meta = HaveShellMetaCharacters(cmd.data);
+	//meta = HaveShellMetaCharacters(cmd.data);
+	meta = HaveShellMetaCharactersArgs(args);
 
 	exec_name = strdup(args[0]);
 	path = strchr(exec_name, ' ');
@@ -953,7 +977,7 @@ int gmec_exec(lua_State *L)
 		shell = getenv("SHELL");
 		if (shell != NULL)
 		{
-
+			LogInfo("exec meta on cmd.data (%s)\n", cmd.data);
 		}
 	}
 	else
