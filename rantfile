@@ -163,7 +163,7 @@ LIBS = ""
 header_files = %w(rantfile main.h)
 
 default_files = %w(global.lua viewer.lua startup.lua shutdown.lua options.ini core_extract.lua
-			core_hash.lua viewer_languages.lua filemanager_menu.lua)
+			core_hash.lua viewer_languages.lua filemanager_menu.lua hints.lua)
 
 alfc = %w( dlist.o logwrite.o ini.o
 			version.o main.o memwatch.o lua_helper.o
@@ -216,6 +216,7 @@ file "defaults.h" => [var[:bin2c]] + default_files do |t|
 	sys "#{var[:bin2c]} core_hash.lua core_hash_lua >> defaults.h"
 	sys "#{var[:bin2c]} viewer_languages.lua viewer_languages_lua >> defaults.h"
 	sys "#{var[:bin2c]} filemanager_menu.lua filemanager_menu_lua >> defaults.h"
+	sys "#{var[:bin2c]} hints.lua hints_lua >> defaults.h"
 if DRIVER=="GUI"
 	sys "#{var[:bin2c]} font.rlf gui_data_font > gui_fonts.h"
 	sys "#{var[:bin2c]} font_small.rlf gui_data_font_small >> gui_fonts.h"

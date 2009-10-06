@@ -10,6 +10,101 @@ int intFlag = 0;
 
 char* gstr_WindowTitle = "Another Linux File Commander";
 
+void msgbox(uGlobalData *gd, char *str)
+{
+	uint32_t key;
+	uWindow *w;
+
+	char *buff;
+	char buff2[128];
+
+	int height;
+	int width;
+	char *p, *q;
+
+
+	// big enough to hold string...
+	buff = malloc(64 + strlen(str));
+	sprintf(buff, "%s\n", str);
+
+	height = 0;
+	width = 0;
+
+	p = buff;
+	while (*p != 0)
+	{
+		q = strchr(p, '\n');
+
+		if (q != NULL)
+		{
+			if (width < q - p)
+				width = q - p;
+			p = q + 1;
+		}
+		else
+		{
+			q = strchr(p, 0);
+			if (width < q - p)
+				width = q - p;
+			p = q;
+		}
+
+		height += 1;
+
+	};
+
+	width += 4;
+	height += 2;
+
+	w = calloc(1, sizeof(uWindow));
+	w->gd = gd;
+	w->screen = gd->screen;
+
+	w->offset_row = (gd->screen->get_screen_height() - height) / 2;
+	w->offset_col = (gd->screen->get_screen_width() - width) / 2;
+	w->width = width;
+	w->height = height;
+
+	gd->screen->set_style(STYLE_HIGHLIGHT);
+	gd->screen->draw_border(w);
+
+	gd->screen->set_style(STYLE_HIGHLIGHT);
+
+	p = buff;
+	height = 0;
+
+	while (*p != 0)
+	{
+		q = strchr(p, '\n');
+		if (q != NULL)
+			*q = 0;
+
+		memset(buff2, ' ', w->width);
+		memmove(buff2 + ((w->width - 2) - strlen(p)) / 2, p, strlen(p));
+		buff2[w->width - 2] = 0;
+
+		gd->screen->set_cursor(2 + w->offset_row + height, 2 + w->offset_col);
+		gd->screen->print_abs(buff2);
+
+		if (q != NULL)
+			p = q + 1;
+		else
+			p = strchr(p, 0);
+
+		height += 1;
+	}
+
+	gd->screen->set_cursor(gd->screen->get_screen_height(), gd->screen->get_screen_width());
+
+	key = gd->screen->get_keypress();
+
+	free(w);
+	free(buff);
+
+	gd->screen->set_style(STYLE_TITLE);
+}
+
+
 void DrawNoFile(uWindow *w, int style)
 {
 	char *buff;

@@ -2655,3 +2655,22 @@ int gme_SetHiddenFlag(lua_State *L)
 
 	return 0;
 }
+
+int gme_msgbox(lua_State *L)
+{
+	uGlobalData *gd;
+	struct lstr info;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(info, 1);
+
+	msgbox(gd, info.data);
+
+	if(gd->lstFullLeft != NULL && gd->lstFullRight != NULL)
+		DrawAll(gd);
+
+	return 0;
+}
+
