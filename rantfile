@@ -59,12 +59,12 @@ case y.to_s
 		var[:gdump] = "gdump"
 
 		if DRIVER=="NCURSES"
-			var[:libs] = "-lncurses -llua5.1"
+			var[:libs] = "-lm -lncurses -llua5.1"
 			PORTABILITY_OBJS = %w( portability_unix.o ncurses_main.o ncurses_interface.o)
 			GPORTABILITY_OBJS = %w( portability_unix.o ncurses_guide.o ncurses_interface.o)
 			GLIBS = "-lz -lbz2"
 		else
-			var[:libs] = "-llua5.1 -lX11"
+			var[:libs] = "-lm -llua5.1 -lX11"
 			PORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_main.o guicore.o)
 			GPORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_guide.o guicore.o)
 			GLIBS = "-lz -lbz2"
