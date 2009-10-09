@@ -637,6 +637,11 @@ void SetQuitAppFlag(int flag)
 	intFlag = flag;
 }
 
+int GetQuitAppFlag(void)
+{
+	return intFlag;
+}
+
 static uGlobalData* NewGlobalData(void)
 {
 	return calloc(1, sizeof(uGlobalData));

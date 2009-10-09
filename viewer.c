@@ -894,7 +894,7 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 		DisplayCLI(v);
 
 		v->quit_flag = 0;
-		while(v->quit_flag == 0)
+		while(v->quit_flag == 0 && GetQuitAppFlag() == 0)
 		{
 			uint32_t key;
 

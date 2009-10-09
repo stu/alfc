@@ -1143,3 +1143,50 @@ int gmec_ExecuteString(lua_State *L)
 	return 1;
 }
 
+/****f* LuaAPICommon/SetQuitAppFlag
+ * FUNCTION
+ *	Sets the flag to tell the application to quit.
+ * SYNOPSIS
+ SetQuitAppFlag()
+ * INPUTS
+ *	o None
+ * RESULTS
+ *   o None
+ * NOTES
+ * 	This does not cause the app to quit there and then, it will most likely fiinish whatever
+ * 	processing it was doing and once it gets back to the main screen, will quit out.
+ * SEE ALSO
+ * GetQuitAppFlag, SetQuitAppFlag
+ * AUTHOR
+ *	Stu George
+ ******
+ */
+int gmec_SetQuitAppFlag(lua_State *L)
+{
+	SetQuitAppFlag(1);
+	return 0;
+}
+
+/****f* LuaAPICommon/SetQuitAppFlag
+ * FUNCTION
+ *	Sets the flag to tell the application to quit.
+ * SYNOPSIS
+ SetQuitAppFlag()
+ * INPUTS
+ *	o None
+ * RESULTS
+ *   o None
+ * NOTES
+ * 	This does not cause the app to quit there and then, it will most likely fiinish whatever
+ * 	processing it was doing and once it gets back to the main screen, will quit out.
+ * SEE ALSO
+ * GetQuitAppFlag, SetQuitAppFlag
+ * AUTHOR
+ *	Stu George
+ ******
+ */
+int gmec_GetQuitAppFlag(lua_State *L)
+{
+	lua_pushnumber(L, GetQuitAppFlag());
+	return 1;
+}

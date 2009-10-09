@@ -67,8 +67,12 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 	-- This is an internal function that parses the internal
 	-- command line
 	-- eg: it turns ":q" into QuitApp etc..
-	function __QuitApp()
+	function __CloseViewer()
 		QuitViewer()
+	end
+
+	function __QuitApp()
+		SetQuitAppFlag(1)
 	end
 
 	function __Tabs(command)
@@ -117,7 +121,8 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 	LoadPlugins()
 
 	BindKey(ALFC_KEY_ALT + string.byte("A"), "About", [[About()]])
-	BindKey(ALFC_KEY_F3, "Quit", [[:q]])
+	BindKey(ALFC_KEY_F3, "Close Viewer", [[QuitViewer()]])
+	BindKey(ALFC_KEY_ALT + string.byte("X"), "Quit", [[:q]])
 
 
 	OnLoad()

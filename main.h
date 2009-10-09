@@ -434,6 +434,7 @@ extern int GetFileIndex(DList *lstFiles, char *name);
 extern int SetHighlightedFile(uGlobalData *gd, int idx);
 extern uDirEntry* GetFileByName(DList *lstFiles, char *name);
 extern void SetQuitAppFlag(int flag);
+extern int GetQuitAppFlag(void);
 extern void SwitchPanes(uGlobalData *gd);
 extern void SetActivePane(uGlobalData *gd, int p);
 

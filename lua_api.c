@@ -570,27 +570,6 @@ int gme_SetRuntimeOption_CompressFilesize(lua_State *L)
 	return 0;
 }
 
-/****f* LuaAPI/SetQuitAppFlag
- * FUNCTION
- *	Sets the flag to tell the application to quit.
- * SYNOPSIS
- SetQuitAppFlag()
- * INPUTS
- *	o None
- * RESULTS
- *   o None
- * NOTES
- * 	This does not cause the app to quit there and then, it will most likely fiinish whatever
- * 	processing it was doing and once it gets back to the main screen, will quit out.
- * AUTHOR
- *	Stu George
- ******
- */
-int gme_SetQuitAppFlag(lua_State *L)
-{
-	SetQuitAppFlag(1);
-	return 0;
-}
 
 /****f* LuaAPI/SwitchPanes
  * FUNCTION
@@ -2656,6 +2635,19 @@ int gme_SetHiddenFlag(lua_State *L)
 	return 0;
 }
 
+/****f* LuaAPI/msgbox
+ * FUNCTION
+ *	Shows a message box on the screen
+ *
+ * INPUTS
+ *	o msg (string )
+ * NOTES
+ * 	msg is split across linefeeds and centered.
+ *
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gme_msgbox(lua_State *L)
 {
 	uGlobalData *gd;

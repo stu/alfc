@@ -16,20 +16,22 @@ if GetUserID() == 0 or GetUserGroup() == 0 then
 	SetColour(highlight_background, "blue")
 end
 
--- display hints first time loaded
-if GetOption("options", "hints") == "true" then
-	local h
+if GetMode() == eMode_Directory then
+	-- display hints first time loaded
+	if GetOption("options", "hints") == "true" then
+		local h
 
-	IncludeFile("hints.lua")
+		IncludeFile("hints.lua")
 
-	-- convert to number
-	h = 0 + GetOption("options", "current_hint")
+		-- convert to number
+		h = 0 + GetOption("options", "current_hint")
 
-	if h < 1 or h > #hints then
-		h = 1
+		if h < 1 or h > #hints then
+			h = 1
+		end
+
+		SetOption("options","current_hint", "" .. (1 + h))
+
+		msgbox(hints[h])
 	end
-
-	SetOption("options","current_hint", "" .. (1 + h))
-
-	msgbox(hints[h])
 end
