@@ -24,7 +24,8 @@ if GetMode() == eMode_Directory then
 		IncludeFile("$HOME/.alfc/hints.lua")
 
 		-- convert to number
-		h = 0 + GetOption("options", "current_hint")
+		h = "0" .. GetOption("options", "current_hint")
+		h = 0 + h
 
 		if h < 1 or h > #hints then
 			h = 1
