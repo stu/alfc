@@ -3285,7 +3285,7 @@ int ALFC_main(int start_mode, char *view_file)
 									break;
 
 								case ALFC_KEY_ENTER:
-									if (gdata->command_length > 0)
+									//if (gdata->command_length > 0)
 									{
 										run_exec_command(gdata, gdata->command);
 

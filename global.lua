@@ -682,6 +682,14 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		local finished
 		local k, v
 
+		-- if empty string and we hit enter, fire whats under active cursor
+		if #command == 0 then
+			-- works with param replacement for execute
+			command = "@f"
+			execute(command)
+			return
+		end
+
 		finished = false
 		cmd = command .. " "
 
