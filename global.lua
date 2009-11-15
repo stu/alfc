@@ -43,6 +43,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		SwitchPanes()
 
 
+
 -- take from the ofm2004 standard page
 -- * "%f" The current file name.
 -- * "%F" The current file in the unselected panel.

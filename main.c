@@ -1590,7 +1590,7 @@ void DrawActive(uGlobalData *gd)
 	gd->screen->set_cursor(gd->screen->get_screen_height(), gd->screen->get_screen_width());
 }
 
-static void BuildWindowLayoutLeft(uWindow *w)
+static void BuildWindowLayoutLeft(uWindow *w, char* set_to_highlight)
 {
 	int mw = w->gd->screen->get_screen_width() - 0;
 
@@ -1601,9 +1601,16 @@ static void BuildWindowLayoutLeft(uWindow *w)
 
 	w->top_line = 0;
 	w->highlight_line = 0;
+
+	if (set_to_highlight)
+	{
+		int idx = GetFileIndex(GetActList(w->gd), set_to_highlight);
+		if (idx >= 0)
+			SetHighlightedFile(w->gd, idx);
+	}
 }
 
-static void BuildWindowLayoutRight(uWindow *w)
+static void BuildWindowLayoutRight(uWindow *w, char* set_to_highlight)
 {
 	w->offset_row = 0;
 	w->offset_col = w->gd->screen->get_screen_width() / 2;
@@ -1612,6 +1619,13 @@ static void BuildWindowLayoutRight(uWindow *w)
 
 	w->top_line = 0;
 	w->highlight_line = 0;
+
+	if (set_to_highlight != NULL)
+	{
+		int idx = GetFileIndex(GetActList(w->gd), set_to_highlight);
+		if (idx >= 0)
+			SetHighlightedFile(w->gd, idx);
+	}
 }
 
 static void BuildWindowLayout(uGlobalData *gd)
@@ -1625,7 +1639,7 @@ static void BuildWindowLayout(uGlobalData *gd)
 
 	w->gd = gd;
 	w->screen = gd->screen;
-	BuildWindowLayoutLeft(w);
+	BuildWindowLayoutLeft(w, NULL);
 	gd->win_left = w;
 
 	if (gd->win_right == NULL)
@@ -1636,7 +1650,7 @@ static void BuildWindowLayout(uGlobalData *gd)
 	w->gd = gd;
 	w->screen = gd->screen;
 
-	BuildWindowLayoutRight(w);
+	BuildWindowLayoutRight(w, NULL);
 	gd->win_right = w;
 }
 
@@ -3241,9 +3255,22 @@ int ALFC_main(int start_mode, char *view_file)
 				key = 0;
 				if (gdata->screen->screen_isresized() != 0)
 				{
+					uDirEntry *deR, *deL;
+
+					deR = NULL;
+					deL = NULL;
+
+					if(GetActList(gdata	) != NULL)
+					{
+						if(gdata->selected_window == WINDOW_LEFT)
+							deL = GetHighlightedFile(GetActList(gdata), GetActWindow(gdata)->highlight_line, GetActWindow(gdata)->top_line);
+						else
+							deR = GetHighlightedFile(GetActList(gdata), GetActWindow(gdata)->highlight_line, GetActWindow(gdata)->top_line);
+					}
+
 					gdata->screen->cls();
-					BuildWindowLayoutLeft(gdata->win_left);
-					BuildWindowLayoutRight(gdata->win_right);
+					BuildWindowLayoutLeft(gdata->win_left, deL == NULL ? NULL : deL->name);
+					BuildWindowLayoutRight(gdata->win_right, deR == NULL ? NULL : deR->name);
 					gdata->screen->set_style(STYLE_NORMAL);
 					gdata->screen->cls();
 					DrawAll(gdata);
@@ -3291,8 +3318,7 @@ int ALFC_main(int start_mode, char *view_file)
 
 										gdata->command_length = 0;
 										gdata->command[gdata->command_length] = 0;
-
-										DrawCLI(gdata);
+										DrawAll(gdata);
 									}
 									break;
 
