@@ -1592,7 +1592,12 @@ void DrawActive(uGlobalData *gd)
 
 static void BuildWindowLayoutLeft(uWindow *w, char* set_to_highlight)
 {
+	int oact;
+
 	int mw = w->gd->screen->get_screen_width() - 0;
+
+	oact = w->gd->selected_window;
+	w->gd->selected_window = WINDOW_LEFT;
 
 	w->offset_row = 0;
 	w->offset_col = (w->gd->screen->get_screen_width() - mw) / 2;
@@ -1608,10 +1613,17 @@ static void BuildWindowLayoutLeft(uWindow *w, char* set_to_highlight)
 		if (idx >= 0)
 			SetHighlightedFile(w->gd, idx);
 	}
+
+	w->gd->selected_window = oact;
 }
 
 static void BuildWindowLayoutRight(uWindow *w, char* set_to_highlight)
 {
+	int oact;
+
+	oact = w->gd->selected_window;
+	w->gd->selected_window = WINDOW_RIGHT;
+
 	w->offset_row = 0;
 	w->offset_col = w->gd->screen->get_screen_width() / 2;
 	w->width = w->gd->screen->get_screen_width() - w->gd->win_left->width;
@@ -1626,6 +1638,8 @@ static void BuildWindowLayoutRight(uWindow *w, char* set_to_highlight)
 		if (idx >= 0)
 			SetHighlightedFile(w->gd, idx);
 	}
+
+	w->gd->selected_window = oact;
 }
 
 static void BuildWindowLayout(uGlobalData *gd)
@@ -3255,26 +3269,31 @@ int ALFC_main(int start_mode, char *view_file)
 				key = 0;
 				if (gdata->screen->screen_isresized() != 0)
 				{
-					uDirEntry *deR, *deL;
+					char *hr, *hl;
 
-					deR = NULL;
-					deL = NULL;
+					hr = NULL;
+					hl = NULL;
 
 					if(GetActList(gdata	) != NULL)
 					{
-						if(gdata->selected_window == WINDOW_LEFT)
-							deL = GetHighlightedFile(GetActList(gdata), GetActWindow(gdata)->highlight_line, GetActWindow(gdata)->top_line);
-						else
-							deR = GetHighlightedFile(GetActList(gdata), GetActWindow(gdata)->highlight_line, GetActWindow(gdata)->top_line);
+						uDirEntry *deR, *deL;
+
+						deR = NULL;
+						deL = NULL;
+
+						deL = GetHighlightedFile(gdata->lstLeft, gdata->win_left->highlight_line, gdata->win_left->top_line);
+						deR = GetHighlightedFile(gdata->lstRight, gdata->win_right->highlight_line, gdata->win_right->top_line);
+
+						hl = deL->name;
+						hr = deR->name;
 					}
 
 					gdata->screen->cls();
-					BuildWindowLayoutLeft(gdata->win_left, deL == NULL ? NULL : deL->name);
-					BuildWindowLayoutRight(gdata->win_right, deR == NULL ? NULL : deR->name);
+					BuildWindowLayoutLeft(gdata->win_left, hl);
+					BuildWindowLayoutRight(gdata->win_right, hr);
 					gdata->screen->set_style(STYLE_NORMAL);
 					gdata->screen->cls();
 					DrawAll(gdata);
-					continue;
 				}
 				else
 				{
