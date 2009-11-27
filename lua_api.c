@@ -2538,11 +2538,16 @@ int gme_Menu(lua_State *L)
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
 
-	DrawMenu(L, 0);
 	if(gd->mode == eMode_Directory)
+	{
+		DrawMenu(gd, NULL, 0);
 		DrawAll(gd);
+	}
 	else if(gd->mode == eMode_Viewer)
+	{
+		DrawMenu(gd, GetViewerData(L), 0);
 		return ViewerDrawAllLua(L);
+	}
 	else
 		LogInfo("UNKNOWN DRAW ALL ON MENU\n");
 

@@ -1,15 +1,11 @@
 #include "headers.h"
 
-static void update_backscreen(lua_State *L)
+static void update_backscreen(uGlobalData *gd, uViewFile *v)
 {
-	uGlobalData *gd;
-
-	gd = GetGlobalData(L);
-
 	if(gd->mode == eMode_Directory)
 		DrawAll(gd);
 	else if(gd->mode == eMode_Viewer)
-		ViewerDrawAllLua(L);
+		ViewerDrawAll(v);
 	else
 		LogInfo("UNKNOWN DRAW ALL IN MENU");
 }
@@ -64,7 +60,7 @@ static int GetKeyLength(uint32_t key)
 	return xx;
 }
 
-void DrawMenu(lua_State *L, int menu_to_open)
+void DrawMenu(uGlobalData *gd, uViewFile *v, int menu_to_open)
 {
 	char buff[128];
 	int i;
@@ -76,13 +72,7 @@ void DrawMenu(lua_State *L, int menu_to_open)
 	int menu_idx = 0;
 	int menu_sub_idx = 0;
 
-	uGlobalData *gd;
-	uViewFile *v;
-
 	uMenu **menu;
-
-	gd = GetGlobalData(L);
-	v = GetViewerData(L);
 
 	menu = GetActMenu(gd);
 
@@ -219,7 +209,7 @@ void DrawMenu(lua_State *L, int menu_to_open)
 					menu_idx -= 1;
 					if(menu_idx < 0)
 						menu_idx = mcount-1;
-					update_backscreen(L);
+					update_backscreen(gd, v);
 					menu_sub_idx = 0;
 					break;
 
@@ -227,7 +217,7 @@ void DrawMenu(lua_State *L, int menu_to_open)
 					menu_idx += 1;
 					if(menu_idx >= mcount)
 						menu_idx = 0;
-					update_backscreen(L);
+					update_backscreen(gd, v);
 					menu_sub_idx = 0;
 					break;
 

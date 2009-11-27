@@ -3326,7 +3326,7 @@ int ALFC_main(int start_mode, char *view_file)
 					mnu = ScanMenuOpen(gdata, key);
 					if (mnu != -1)
 					{
-						DrawMenu(gdata, mnu);
+						DrawMenu(gdata, NULL, mnu);
 						DrawAll(gdata);
 					}
 					else

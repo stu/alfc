@@ -39,4 +39,13 @@ gcomp.exe
 gdump
 gdump.exe
 *.gd
+*.toc
+*.aux
+*.idx
+*.ilg
+*.ind
+*.pdf
+*.dvi
+*.tex.backup
+
 

@@ -1,0 +1,207 @@
+%% set for XeTex + Latex
+%\documentclass[letterpaper,landscape]{article}
+\documentclass[letterpaper]{article}
+\usepackage[T1]{fontenc} 
+\usepackage{type1cm}
+\usepackage[margin=3cm]{geometry}
+\usepackage{makeidx}
+%\usepackage{2in1, lscape}
+\usepackage{lastpage}
+\usepackage{fancyhdr}
+
+\usepackage{fontspec}
+\usepackage{xunicode}
+\usepackage{xltxtra}
+\setmainfont[Mapping=tex-text]{Palatino Linotype}
+\setmonofont{Monaco}
+
+\pagestyle{fancy}
+\fancyfoot[C]{{\thepage} of \pageref{LastPage}}
+\setlength\headheight{12pt}		% sets page header height
+\setlength\headsep{12bp}		% changes height of title to the line above it
+\makeindex
+%\renewcommand{\labelitem}{$\diamond$}
+%\renewcommand{\thefootnote{\fnsymbol{footnote}}}
+%\usepackage{indentfirst}
+%\setlength{\parskip}{3mm}
+%\setlength{\parindent}{3mm}
+\setlength{\parindent}{0mm}
+
+\def\xbe{Haiku}
+\def\xlin{Linux}
+\def\xmswin{Microsoft Windows}
+\def\xboxsize{4.5in}
+
+\def\xapp{Another Linux File Commander}
+\def\xauthor{Stu George}
+\def\xdeveloper{Bloody Cactus Development Labs}
+\def\xlicense{GNU GPL version 2}
+
+\begin{document}
+
+\title{\xapp}
+\author{\xauthor\\\xdeveloper}
+\date{\today}
+\maketitle
+
+%\begin{abstract}
+%\xapp End User documentation
+%\end{abstract}
+
+\vfill \eject
+
+\tableofcontents
+
+\vfill \eject
+% after we have TOC, change paragraph skip size
+\setlength{\parskip}{3mm}
+\section{Introduction}
+\subsection{Welcome}
+Thank you for using Another Linux File Commander (herein noted as \textsl{ALFC}).
+
+\begin{flushright}
+-- \xauthor
+\end{flushright}
+
+\vfill \eject
+\subsection{What is ALFC?}
+\textsl{ALFC} is what is known as a \textsl{clone} of the famous \textsl{Norton Commander} 
+file management program.
+
+The overall goal is to empower the end user as far as file management goes.
+
+This is done by using what is known as a dual pane file manager, with files listed on the left
+and the right, usually in a source and target configuration. For example, you can copy files from left to right or right to left.
+
+A lot of \textsl{ALFC}'s power comes from its scriptability which is drive by the Lua scripting language.
+
+\subsection{Assumptions}
+This user guide makes the assumption in its text and examples that you have not altered the
+basic out-of-the-box configuration.
+
+We do not assume one particular platform, as \textsl{ALFC} can be run on either \xmswin\ or \xlin, and we will endevour to mark any platform specific examples. \xbe\ is a bit different but close enough to be posix compatible, it just has a different directory layout.
+
+\xlin\ can be used interchangably with most other posix operating systems such as FreeBSD
+
+\vfill \eject
+\section{Configuration}
+\index{Configuration}
+Configuration is achieved through \textsl{ALFC}'s main option file as well as its lua scripting files.
+
+\subsection{Configuration Files}
+\index{Configuration!Config Files}
+\textsl{ALFC} uses one main configuration file for basic options
+
+Newer versions of \xmswin\ from XP and onwards;
+\begin{flushleft}
+\framebox{\parbox{\xboxsize}{WINDOWS XP,VISTA,7\\\texttt{\$USERPROFILE\textbackslash \$USERNAME\textbackslash .alfc
+\\eg: C:\textbackslash Documents and Settings\textbackslash username\textbackslash .alfc}}}
+\end{flushleft}
+
+Older versions of \xmswin such as the Windows 98 and Windows ME family;
+\begin{flushleft}
+\framebox{\parbox{\xboxsize}{WINDOWS 98\\\texttt{\$USERPROFILE\textbackslash .alfc
+\\eg: C:\textbackslash Windows\textbackslash Profiles\textbackslash username\textbackslash .alfc}}}
+\end{flushleft}
+
+Posix and Unix systems store it in the home directory;
+\begin{flushleft}
+\framebox{\parbox{\xboxsize}{LINUX\\\texttt{\$(HOME)/.alfc}}}
+\end{flushleft}
+
+BeOS / Haiku is a little different;
+\begin{flushleft}
+\framebox{\parbox{\xboxsize}{HAIKU\\\texttt{\$(HOME)/.alfc
+\\eg: /boot/home}}}
+\end{flushleft}
+
+
+\section{File Management}
+
+\subsection{File Attributes}
+A file or directory can have several attributes attached to it. Under \xmswin, they can be Archive, Read-Only, 
+Compressed, System and Hidden. Under \xlin, they can be Executable, Readable, Writeable, Hidden.
+
+\subsubsection{Executable}
+Applies to \xlin only.
+
+\subsubsection{Read Only}
+Applies to both \xlin\ and \xmswin. 
+
+\subsubsection{Hidden Files}
+\begin{center}
+\framebox{\parbox{\xboxsize}{WINDOWS\\On \xmswin, any file that starts with a dot eg ".netbeans" will have
+its attribute shown as hidden, even when it does not have a hidden 
+attribute.}}
+\end{center}
+
+\subsubsection{Writable}
+Applies to \xlin\ only.
+
+\subsubsection{System}
+Applies to \xmswin\ only.
+
+\subsubsection{Compressed}
+Applies to \xmswin\ only.
+
+\subsubsection{Archive}
+Applies to \xmswin\ only.
+
+\subsection{Tags, Globs and Filters}
+\subsubsection{Globs}
+\index{Tagging!glob}The term \textsl{Glob} indicates a simple, limited form of pattern matching.
+\begin{center}
+\framebox{\parbox{\xboxsize}{GLOBBING\\\texttt{'*.doc' refers to all files ending in '.doc'. If you wanted}}}
+\end{center}
+
+Globbing has two special characters, the ? and the *;
+ 
+\begin{center}
+    \begin{tabular}{ | l | l | l |}
+    \hline
+    Character & Description & Example \\ \hline
+    ? & Single character & ?at = Cat, Bat, Hat\\ \hline
+    * & Multi character Wildcaard & d*n = don, down, doooooooown, dominican \\ \hline
+    \hline
+    \end{tabular}
+\end{center}
+
+
+\subsubsection{Filters}
+\index{Tagging!filter}
+Filters are a more complex form of pattern matching, known as \index{Tagging!regular expressions}regular expressions.
+
+In filters, the special characters of ?, * and + mean different things compared to the ? and * used in globbing.
+
+
+
+\subsubsection{Tags with Globs and Filters}
+\index{Tagging!tags}
+
+
+\vfill \eject
+\section{Credits}
+\textsl{ALFC} was designed and developed by \xdeveloper\ through fits and spurts of time.
+
+Documentation compiled on \today
+
+Thank you for reading.
+
+\section{Licensing}
+\index{Licensing}
+The binary application, source code and accompanying documention/manuals are all
+available under the \index{GNU GPL}GNU \index{GPL}GPL v2 license.
+
+\subsection{Trademarks}
+\index{Trademarks}
+Windows\textregistered\ is a registered trademark of Microsoft Corporation in the United States and other countries.
+
+Linux\textregistered\ is the registered trademark of Linus Torvalds in the U.S. and other countries.
+
+\setlength{\parindent}{0mm}
+
+\vfill \eject
+\printindex
+
+\end{document}
+
