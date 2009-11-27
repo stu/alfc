@@ -2443,6 +2443,24 @@ int gme_ClearHistory(lua_State *L)
 	return 0;
 }
 
+
+/****f* LuaAPI/AddMenu
+ * FUNCTION
+ *	Adds an item to an existing menu. Requires the MODE to be set by program
+ * SYNOPSIS
+ idx = AddMenu(key, name)
+ * INPUTS
+ *	o key (character) -- (need to insert key listing)
+ *	o name (string) -- Menu Name
+ * RESULTS
+ *	menu idx (integer):
+ *	o idx of menu that was created, used for AddMenuItem
+ * SEE ALSO
+ *	AddMenu, AddMenuItem
+ * AUTHOR
+ *	Stu George
+ ******
+ */
 int gme_AddMenu(lua_State *L)
 {
 	uGlobalData *gd;
@@ -2452,17 +2470,21 @@ int gme_AddMenu(lua_State *L)
 	uint32_t key;
 	int i;
 
+	uMenu **menu;
+
 	key = luaL_checknumber(L, 1);
 	GET_LUA_STRING(name, 2);
 
+	menu = GetActMenu(gd);
+
 	for (i = 0; i < MAX_MENU; i++)
 	{
-		if (gd->menu[i] == NULL)
+		if (menu[i] == NULL)
 		{
-			gd->menu[i] = calloc(1, sizeof(uMenu));
+			menu[i] = calloc(1, sizeof(uMenu));
 			// FIXME: duplicate names
-			gd->menu[i]->name = strdup(name.data);
-			gd->menu[i]->key = key;
+			menu[i]->name = strdup(name.data);
+			menu[i]->key = key;
 
 			lua_pushnumber(L, i);
 			return 1;
@@ -2480,9 +2502,12 @@ int gme_AddMenuItem(lua_State *L)
 	uint32_t key;
 	int idx;
 	int x;
+	uMenu **menu;
 
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
+
+	menu = GetActMenu(gd);
 
 	idx = luaL_checknumber(L, 1);
 	key = luaL_checknumber(L, 2);
@@ -2492,15 +2517,15 @@ int gme_AddMenuItem(lua_State *L)
 	if (idx >= MAX_MENU)
 		return luaL_error(L, "incorrect sub menu index");
 
-	gd->menu[idx]->child = realloc(gd->menu[idx]->child, sizeof(uSubMenu*) * (gd->menu[idx]->count + 1));
-	x = gd->menu[idx]->count;
+	menu[idx]->child = realloc(menu[idx]->child, sizeof(uSubMenu*) * (menu[idx]->count + 1));
+	x = menu[idx]->count;
 
-	gd->menu[idx]->child[x] = calloc(1, sizeof(uSubMenu));
-	gd->menu[idx]->child[x]->key = key;
-	gd->menu[idx]->child[x]->name = strdup(name.data);
-	gd->menu[idx]->child[x]->code = strdup(code.data);
+	menu[idx]->child[x] = calloc(1, sizeof(uSubMenu));
+	menu[idx]->child[x]->key = key;
+	menu[idx]->child[x]->name = strdup(name.data);
+	menu[idx]->child[x]->code = strdup(code.data);
 
-	gd->menu[idx]->count += 1;
+	menu[idx]->count += 1;
 	lua_pushnumber(L, x);
 
 	return 1;
@@ -2509,11 +2534,17 @@ int gme_AddMenuItem(lua_State *L)
 int gme_Menu(lua_State *L)
 {
 	uGlobalData *gd;
+
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
 
-	DrawMenu(gd, 0);
-	DrawAll(gd);
+	DrawMenu(L, 0);
+	if(gd->mode == eMode_Directory)
+		DrawAll(gd);
+	else if(gd->mode == eMode_Viewer)
+		return ViewerDrawAllLua(L);
+	else
+		LogInfo("UNKNOWN DRAW ALL ON MENU\n");
 
 	return 0;
 }

@@ -57,9 +57,12 @@ typedef struct udtViewFile
 
 
 typedef int (*GetLine)(uGlobalData *gd, int intLine, uint8_t *buff, int len);
-
+extern uViewFile* GetViewerData(lua_State *L);
 extern int RegisterViewerData(uViewFile *v, lua_State *l);
 extern int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine);
+extern void ViewerDrawAll(uViewFile *v);
+extern int ViewerDrawAllLua(lua_State *L);
+extern int ExecuteViewerString(uViewFile *v, char *sn);
 
 /* LUA EXT REF */
 /* LUA END EXT REF */

@@ -1,8 +1,17 @@
 #include "headers.h"
 
-static void update_backscreen(uGlobalData *gd)
+static void update_backscreen(lua_State *L)
 {
-	DrawAll(gd);
+	uGlobalData *gd;
+
+	gd = GetGlobalData(L);
+
+	if(gd->mode == eMode_Directory)
+		DrawAll(gd);
+	else if(gd->mode == eMode_Viewer)
+		ViewerDrawAllLua(L);
+	else
+		LogInfo("UNKNOWN DRAW ALL IN MENU");
 }
 
 static int GetKeyLength(uint32_t key)
@@ -55,7 +64,7 @@ static int GetKeyLength(uint32_t key)
 	return xx;
 }
 
-void DrawMenu(uGlobalData *gd, int menu_to_open)
+void DrawMenu(lua_State *L, int menu_to_open)
 {
 	char buff[128];
 	int i;
@@ -67,11 +76,21 @@ void DrawMenu(uGlobalData *gd, int menu_to_open)
 	int menu_idx = 0;
 	int menu_sub_idx = 0;
 
+	uGlobalData *gd;
+	uViewFile *v;
+
+	uMenu **menu;
+
+	gd = GetGlobalData(L);
+	v = GetViewerData(L);
+
+	menu = GetActMenu(gd);
+
 	uint32_t key;
 
 	for(i=0, midx = 0; i < MAX_MENU; i++)
 	{
-		if(gd->menu[i] != NULL)
+		if(menu[i] != NULL)
 		{
 			if(midx == menu_to_open)
 				menu_idx = i;
@@ -93,11 +112,11 @@ void DrawMenu(uGlobalData *gd, int menu_to_open)
 		midx = 0;
 		for(i=0, len=0, mi=0, msi=0; i < MAX_MENU; i++)
 		{
-			if(gd->menu[i] != NULL)
+			if(menu[i] != NULL)
 			{
-				if( len + strlen(gd->menu[i]->name) < w )
+				if( len + strlen(menu[i]->name) < w )
 				{
-					sprintf(buff, " %s ", gd->menu[i]->name);
+					sprintf(buff, " %s ", menu[i]->name);
 
 					if(mi == menu_idx)
 					{
@@ -120,13 +139,13 @@ void DrawMenu(uGlobalData *gd, int menu_to_open)
 						len += strlen(buff);
 
 
-						for(j=0, maxwidth=0; j<gd->menu[i]->count; j++)
+						for(j=0, maxwidth=0; j<menu[i]->count; j++)
 						{
 							int xx;
 
-							xx = strlen(gd->menu[i]->child[j]->name);
+							xx = strlen(menu[i]->child[j]->name);
 							xx += 2;
-							xx += GetKeyLength(gd->menu[i]->child[j]->key);
+							xx += GetKeyLength(menu[i]->child[j]->key);
 
 							if( maxwidth < xx )
 								maxwidth = xx;
@@ -136,24 +155,24 @@ void DrawMenu(uGlobalData *gd, int menu_to_open)
 						w.offset_row = 1;
 						w.offset_col = len2;
 						w.width = maxwidth;
-						w.height = gd->menu[i]->count + 2;
+						w.height = menu[i]->count + 2;
 						w.screen = gd->screen;
 						w.gd = gd;
 						gd->screen->set_style(STYLE_TITLE);
 						gd->screen->draw_border(&w);
 
-						for(j=0; j<gd->menu[i]->count; j++)
+						for(j=0; j<menu[i]->count; j++)
 						{
 							char *p, *q;
 
 							memset(buff, ' ', maxwidth);
 							buff[maxwidth-2] = 0;
 
-							memmove(buff + 1, gd->menu[i]->child[j]->name, strlen(gd->menu[i]->child[j]->name));
+							memmove(buff + 1, menu[i]->child[j]->name, strlen(menu[i]->child[j]->name));
 
 							p = buff + maxwidth - 2;
-							p -= GetKeyLength(gd->menu[i]->child[j]->key);
-							q = ConvertKeyToName(gd->menu[i]->child[j]->key);
+							p -= GetKeyLength(menu[i]->child[j]->key);
+							q = ConvertKeyToName(menu[i]->child[j]->key);
 							sprintf(p, "%s ", q);
 
 							gd->screen->set_cursor(3 + j, 2+len2);
@@ -178,11 +197,16 @@ void DrawMenu(uGlobalData *gd, int menu_to_open)
 
 		key = gd->screen->get_keypress();
 
-		for(i=0; i<gd->menu[midx]->count;  i++)
+		for(i=0; i<menu[midx]->count;  i++)
 		{
-			if(key == gd->menu[midx]->child[i]->key)
+			if(key == menu[midx]->child[i]->key)
 			{
-				ExecuteGlobalString(gd, gd->menu[midx]->child[i]->code);
+				if(gd->mode == eMode_Directory)
+					ExecuteGlobalString(gd, menu[midx]->child[i]->code);
+				else if(gd->mode == eMode_Viewer)
+					ExecuteGlobalViewerString(v, menu[midx]->child[i]->code);
+				else
+					LogInfo("XXX TODO");
 				return;
 			}
 		}
@@ -195,7 +219,7 @@ void DrawMenu(uGlobalData *gd, int menu_to_open)
 					menu_idx -= 1;
 					if(menu_idx < 0)
 						menu_idx = mcount-1;
-					update_backscreen(gd);
+					update_backscreen(L);
 					menu_sub_idx = 0;
 					break;
 
@@ -203,19 +227,19 @@ void DrawMenu(uGlobalData *gd, int menu_to_open)
 					menu_idx += 1;
 					if(menu_idx >= mcount)
 						menu_idx = 0;
-					update_backscreen(gd);
+					update_backscreen(L);
 					menu_sub_idx = 0;
 					break;
 
 				case ALFC_KEY_UP:
 					menu_sub_idx -= 1;
 					if(menu_sub_idx < 0)
-						menu_sub_idx = gd->menu[midx]->count-1;
+						menu_sub_idx = menu[midx]->count-1;
 					break;
 
 				case ALFC_KEY_DOWN:
 					menu_sub_idx += 1;
-					if(menu_sub_idx >= gd->menu[midx]->count)
+					if(menu_sub_idx >= menu[midx]->count)
 						menu_sub_idx = 0;
 					break;
 
@@ -226,7 +250,12 @@ void DrawMenu(uGlobalData *gd, int menu_to_open)
 					break;
 
 				case ALFC_KEY_ENTER:
-					ExecuteGlobalString(gd, gd->menu[midx]->child[menu_sub_idx]->code);
+					if(gd->mode == eMode_Directory)
+						ExecuteGlobalString(gd, menu[midx]->child[menu_sub_idx]->code);
+					else if(gd->mode == eMode_Viewer)
+						ExecuteGlobalViewerString(v, menu[midx]->child[menu_sub_idx]->code);
+					else
+						LogInfo("XXX TODO");
 					return;
 					break;
 

@@ -532,14 +532,14 @@ int gmec_IncludeFile(lua_State *L)
 	v = luaL_loadbuffer(L, (char*) buff, buffsize, s.data);
 	if (v != 0)
 	{
-		LogError("cant include (%s) lua error : %s", s.data, lua_tostring(L, -1));
+		LogError("cant include (%s) lua error : %s\n", s.data, lua_tostring(L, -1));
 	}
 	else
 	{
 		v = lua_pcall(L, 0, 0, 0); // call 'SetGlobals' with 0 arguments and 0 result
 		if (v != 0)
 		{
-			LogError("include (%s) lua error : %s", s.data, lua_tostring(L, -1));
+			LogError("include (%s) lua error : %s\n", s.data, lua_tostring(L, -1));
 		}
 	}
 

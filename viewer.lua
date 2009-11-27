@@ -5,6 +5,15 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 	bookmarks = {}
 	lang = {}
 
+
+	function CreateMenu(key, name, list)
+		local k,v, idx
+		idx = AddMenu(key, name)
+		for k,v in pairs(list) do
+			AddMenuItem(idx, v.key, v.name, v.code)
+		end
+	end
+
 	function AddCommand(k, d, f)
 		cmds[k] = {}
 		cmds[k].desc = d
@@ -38,7 +47,6 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 		for k,v in pairs(lang) do
 			if v.extensions ~= nil then
 				for kk, vv in pairs(v.extensions) do
-					debug_msg("vv=" .. vv .. "ext="..ext)
 					if vv == ext then
 						SetTabSize(tonumber(v.tab))
 						SetFileType(v.name);
@@ -57,7 +65,7 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 
 		for k, v in pairs(lstPlugins) do
 			-- match 'core_' * '.lua'
-			if string.find(v.name, "^(viewer_).*([.]lua)$") ~= nil then
+			if string.find(v.name, "^(view_).*([.]lua)$") ~= nil then
 				IncludeFile(string.gsub(v.path .. pathsep .. v.name, "\\", "/"))
 			end
 		end
@@ -120,12 +128,10 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 
 	LoadPlugins()
 
-	BindKey(ALFC_KEY_ALT + string.byte("A"), "About", [[About()]])
-	BindKey(ALFC_KEY_F3, "Close Viewer", [[QuitViewer()]])
-	BindKey(ALFC_KEY_ALT + string.byte("X"), "Quit", [[:q]])
-
+	IncludeFile("$HOME/.alfc/viewer_menu.lua")
 
 	OnLoad()
+
 
 	-- initialise bootstrap and protect code from being called more than once
 	-- which should not happen anyway but lets define functions and protect...

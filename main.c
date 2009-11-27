@@ -168,25 +168,30 @@ static void FreeSubMenu(uSubMenu *m)
 	free(m);
 }
 
-static void FreeMenus(uGlobalData *gd)
+static void FreeMenuData(uMenu *menu[])
 {
 	int i, j;
 
 	for (i = 0; i < MAX_MENU; i++)
 	{
-		if (gd->menu[i] != NULL)
+		if (menu[i] != NULL)
 		{
-			if (gd->menu[i]->name != NULL)
-				free(gd->menu[i]->name);
+			if (menu[i]->name != NULL)
+				free(menu[i]->name);
 
-			for (j = 0; j < gd->menu[i]->count; j++)
-				FreeSubMenu(gd->menu[i]->child[j]);
+			for (j = 0; j < menu[i]->count; j++)
+				FreeSubMenu(menu[i]->child[j]);
 
-			free(gd->menu[i]->child);
-
-			free(gd->menu[i]);
+			free(menu[i]->child);
+			free(menu[i]);
 		}
 	}
+}
+
+static void FreeMenus(uGlobalData *gd)
+{
+	FreeMenuData(gd->file_menu);
+	FreeMenuData(gd->viewer_menu);
 }
 
 static char* replace(const char *in, char a, char b)
@@ -524,6 +529,18 @@ DList* GetActiveMRU(uGlobalData *gd)
 		return gd->lstMRURight;
 	else
 		return gd->lstMRULeft;
+}
+
+uMenu** GetActMenu(uGlobalData *gd)
+{
+	if(gd->mode == eMode_Directory)
+		return gd->file_menu;
+	else if(gd->mode == eMode_Viewer)
+		return gd->viewer_menu;
+	else
+		LogInfo("UNKNOWN MENU\n");
+
+	return NULL;
 }
 
 static void AddMRU(uGlobalData *gd, DList *lstMRU, char *p)
@@ -3104,15 +3121,18 @@ static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start
 	free(orig_dir);
 }
 
-static int ScanMenuOpen(uGlobalData *gd, uint32_t key)
+int ScanMenuOpen(uGlobalData *gd, uint32_t key)
 {
 	int i;
+	uMenu **menu;
+
+	menu = GetActMenu(gd);
 
 	for (i = 0; i < MAX_MENU; i++)
 	{
-		if (gd->menu[i] != NULL)
+		if (menu[i] != NULL)
 		{
-			if (gd->menu[i]->key == key)
+			if (menu[i]->key == key)
 				return i;
 		}
 	}

@@ -291,7 +291,7 @@ struct udtScreenDriver
 #define WINDOW_LEFT	0
 #define WINDOW_RIGHT 1
 #define MAX_COMMAND_LENGTH	256
-#define MAX_MENU 16
+#define MAX_MENU 32
 
 struct udtGlobals
 {
@@ -371,7 +371,8 @@ struct udtGlobals
 	DList		*lstFileOps;
 	DList 		*lstViewerList;
 
-	uMenu		*menu[MAX_MENU];
+	uMenu		*file_menu[MAX_MENU];
+	uMenu		*viewer_menu[MAX_MENU];
 };
 
 enum
@@ -418,6 +419,7 @@ extern int updir(uGlobalData *gd);
 extern int downdir(uGlobalData *gd);
 extern int change_dir(uGlobalData *gd, char *dir);
 
+extern uMenu** GetActMenu(uGlobalData *gd);
 extern DList* GetActGlob(uGlobalData *gd);
 extern DList* GetActFullList(uGlobalData *gd);
 extern DList* GetActFilter(uGlobalData *gd);
@@ -469,6 +471,8 @@ extern void ToggleHidden(uGlobalData *gd);
 extern void SetHiddenFlag(uGlobalData *gd, int hidden);
 extern int GetHiddenFlag(uGlobalData *gd);
 extern void msgbox(uGlobalData *gd, char *str);
+
+extern int ScanMenuOpen(uGlobalData *gd, uint32_t key);
 
 extern char *start_left;
 extern char *start_right;

@@ -6,13 +6,10 @@
 
 #include "headers.h"
 /*
-
-* comments
-* keywords
-* literals
-* colors
-
-
+ * comments
+ * keywords
+ * literals
+ * colors
  */
 
 static void FreeBufferLines(uViewFile *v)
@@ -657,8 +654,7 @@ static int vw_scroll_left(uViewFile *v)
 	return 0;
 }
 
-
-static int ExecuteViewerString(uViewFile *v, char *sn)
+int ExecuteViewerString(uViewFile *v, char *sn)
 {
 	char *outbuff;
 	int maxsize;
@@ -840,6 +836,12 @@ static int LoadGlobalViewerScript(uViewFile *v, char *sn)
 	return 0;
 }
 
+void ViewerDrawAll(uViewFile *v)
+{
+	DisplayFile(v);
+	DrawMenuLine(v->w->screen, v->lstHotKeys);
+	DisplayCLI(v);
+}
 
 int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 {
@@ -889,9 +891,7 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 	if(LoadLine != NULL || S_ISDIR(stats.st_mode) == 0)
 	{
 		LoadLines(v, LoadLine);
-		DisplayFile(v);
-		DrawMenuLine(v->w->screen, v->lstHotKeys);
-		DisplayCLI(v);
+		ViewerDrawAll(v);
 
 		v->quit_flag = 0;
 		while(v->quit_flag == 0 && GetQuitAppFlag() == 0)
@@ -900,8 +900,11 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 
 			key = gd->screen->get_keypress();
 			uKeyBinding *kb;
+			int mnu;
 
 			v->w->screen->set_cursor(v->w->screen->get_screen_height()-1, 4 + strlen(v->command));
+
+			mnu = ScanMenuOpen(v->gd, key);
 
 			kb = ScanKey(v->lstHotKeys, key);
 			if(kb != NULL)
@@ -926,6 +929,10 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 			{
 				switch(key)
 				{
+					case ALFC_KEY_F12:
+						v->quit_flag = 1;
+						break;
+
 					case ALFC_KEY_DOWN:
 						vw_scroll_down(v);
 						break;
@@ -1066,7 +1073,7 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 
 #define VIEWERDATA "uViewerData"
 static const char *uViewerData_Key = VIEWERDATA;
-static uViewFile* GetViewerData(lua_State *L)
+uViewFile* GetViewerData(lua_State *L)
 {
 	uViewFile *v;
 
@@ -1308,3 +1315,20 @@ int gmev_GetFileType(lua_State *L)
 	return 1;
 }
 
+int ViewerDrawAllLua(lua_State *L)
+{
+	uViewFile *v;
+	v = GetViewerData(L);
+	ViewerDrawAll(v);
+
+	return 0;
+}
+
+int gmev_ViewerDrawAll(lua_State *L)
+{
+	uViewFile *v;
+	v = GetViewerData(L);
+	ViewerDrawAll(v);
+
+	return 0;
+}

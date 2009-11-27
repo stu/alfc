@@ -4,6 +4,7 @@
 extern "C"{
 #endif
 
+extern int ExecuteGlobalViewerString(uViewFile *gb, char *sn);
 extern void RegisterViewerFuncs(uViewFile *gb, lua_State *l);
 
 #ifdef __cplusplus
