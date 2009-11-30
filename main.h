@@ -274,6 +274,7 @@ struct udtScreenDriver
 	void (*erase_eol)(void);
 
 	void (*draw_border)(uWindow *win);
+	void (*window_clear)(uWindow *win);
 	void (*init_style)(int style, uint32_t fg, uint32_t bg);
 	void (*print_hline)(void);
 	void (*print_vline)(void);

@@ -55,7 +55,7 @@
 #include "lua_common_api.h"
 #include "lua_hash.h"
 #include "operations.h"
-
+#include "help.h"
 #include "menu.h"
 
 // screen config

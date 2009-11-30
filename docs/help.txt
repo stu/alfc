@@ -1,101 +1,109 @@
-Another Linux File Commander
-Stu George
-0.0.1-20090415
-----
-%MAIN%Introduction%
-Welcome to Another Linux File Commander (~ALFC~ for short).
+<help>
+<title>Another Linux File Commander</title>
+<author>Stu George</author>
+<version>0.0.1-20090415</version>
+<body>
+<item>Main/Introduction</item>
+
+Welcome to Another Linux File Commander (<b>ALFC</b> for short).
 
 This program is a file management utility patterned after
-a very famous classic program called ~Norton Commander~.
-
-Hence the 'commander' in the title.
+a very famous classic program called <b>Norton Commander</b>
+(Hence the 'Commander' in the title as hommage).
 
 This program is designed to be easy and powerful, giving you
 control back over your filesystem.
 
-%%LIST%MAIN%%
+<list>Main</list>
 
-%MAIN%Date and Time Formats%
+
+<item>Main/Date and Time Formats</item>
 
 ALFC can display the time in the following formats;
-	^HH:mm.ss^ - eg 13:57.03
-	^hh:mm.ss AMPM^ - eg 1:57.03 PM
-	^hh:mm.ssAMPM^ - eg 1:57.03PM
-	^hh:mm.ss^ - eg 1:57.03
-	^HH:mm^ - eg 13:57
-	^hh:mm^ - eg 1:57
-	^hh:mm AMPM^ - eg 1:57 PM
-	^hh:mmAMPM^ - eg 1:57PM
+<pre>
+    HH:mm.ss - eg 13:57.03
+    hh:mm.ss AMPM - eg 1:57.03 PM
+    hh:mm.ssAMPM - eg 1:57.03PM
+    hh:mm.ss - eg 1:57.03
+    HH:mm - eg 13:57
+    hh:mm - eg 1:57
+    hh:mm AMPM - eg 1:57 PM
+    hh:mmAMPM - eg 1:57PM
+</pre>
 
-	Where;
+    Where;
 
-	^HH^ - 24hour format
-	^hh^ - 12hour format
-	^mm^ - minutes
-	^ss^ - seconds
-	^AMPM^ - Displays AM or PM
+<pre>
+    HH - 24hour format
+    hh - 12hour format
+    mm - minutes
+    ss - seconds
+    AMPM - Displays AM or PM
+</pre>
 
 Date formats are as below;
-	^dd/mm/yyyy^ - eg 22/12/2009
-	^dd/mm/yy^ - eg 22/12/09
-	^mm/dd/yyyy^ - eg 12/22/2009
-	^mm/dd/yy^ - eg 12/22/09
-	^mm-dd-yyyy^ - eg 12-22-2009
-	^mm-dd-yy^ - eg 12-22-09
-	^dd-mm-yyyy^ - eg 22-12-2009
-	^dd-mm-yy^ - eg 22-12-09
+<pre>
+    dd/mm/yyyy - eg 22/12/2009
+    dd/mm/yy - eg 22/12/09
+    mm/dd/yyyy - eg 12/22/2009
+    mm/dd/yy - eg 12/22/09
+    mm-dd-yyyy - eg 12-22-2009
+    mm-dd-yy - eg 12-22-09
+    dd-mm-yyyy - eg 22-12-2009
+    dd-mm-yy - eg 22-12-09
 
-	^dd/mmm/yyyy^ - eg 22/dec/2009
-	^dd/mmm/yy^ - eg 22/dec/09
-	^mmm/dd/yyyy^ - eg dec/22/2009
-	^mmm/dd/yy^ - eg dec/22/09
-	^mmm-dd-yyyy^ - eg dec-22-2009
-	^mmm-dd-yy^ - eg dec-22-09
-	^dd-mmm-yyyy^ - eg 22-dec-2009
-	^dd-mmm-yy^ - eg 22-dec-09
+    dd/mmm/yyyy - eg 22/dec/2009
+    dd/mmm/yy - eg 22/dec/09
+    mmm/dd/yyyy - eg dec/22/2009
+    mmm/dd/yy - eg dec/22/09
+    mmm-dd-yyyy - eg dec-22-2009
+    mmm-dd-yy - eg dec-22-09
+    dd-mmm-yyyy - eg 22-dec-2009
+    dd-mmm-yy - eg 22-dec-09
 
-	^dd/mmmm/yyyy^ - eg 22/December/2009
-	^dd/mmmm/yy^ - eg 22/December/09
-	^mmmm/dd/yyyy^ - eg December/22/2009
-	^mmmm/dd/yy^ - eg December/22/09
-	^mmmm-dd-yyyy^ - eg December-22-2009
-	^mmmm-dd-yy^ - eg December-22-09
-	^dd-mmmm-yyyy^ - eg 22-December-2009
-	^dd-mmmm-yy^ - eg 22-December-09
+    dd/mmmm/yyyy - eg 22/December/2009
+    dd/mmmm/yy - eg 22/December/09
+    mmmm/dd/yyyy - eg December/22/2009
+    mmmm/dd/yy - eg December/22/09
+    mmmm-dd-yyyy - eg December-22-2009
+    mmmm-dd-yy - eg December-22-09
+    dd-mmmm-yyyy - eg 22-December-2009
+    dd-mmmm-yy - eg 22-December-09
 
-	^yymmdd^ - eg 091222
-	^yyyymmdd^ - eg 20091222
-	^ddmmyyyy^ - eg 22122009
-	^ddmmmyyyy^ - eg 22dec2009
+    yymmdd - eg 091222
+    yyyymmdd - eg 20091222
+    ddmmyyyy - eg 22122009
+    ddmmmyyyy - eg 22dec2009
+</pre>
 
-	Where;
+    Where;
+<pre>
+      dd - day of month (1-31)
+      mm - month, numericly (1-12)
+     mmm - month as jan/feb/.../dec
+    mmmm - month as whole January, September, etc.
+      yy - two digit year
+    yyyy - four digit year
+</pre>
 
-	  ^dd^ - day of month (1-31)
-	  ^mm^ - month, numericly (1-12)
-	 ^mmm^ - month as jan/feb/.../dec
-	^mmmm^ - month as whole January, September, etc.
-	  ^yy^ - two digit year
-	^yyyy^ - four digit year
+<item>Main/Keyboard Commands</item>
 
-
-
-%MAIN%Keyboard Commands%
-
-%MAIN%About%
+<item>Main/About</item>
 ALFC is a utility program for file and directory management.
 
-%%LINK%MAIN%About%Credits%%
+Read the <link "Credits">Main/About/Credits</link>.
 
 Thanks!
-%MAIN%About%Credits%
+<item>MAIN/About/Credits</item>
 Stu George - Most everything
 Nate       - Originally did the rlcore code.
 Lua Team   - Lua
 
-%VIEW%Intro%
+<item>View/Intro</item>
 This is the inbuilt Viewer command
 
-%VIEW%Keyboard Commands%
+<item>View/Keyboard Commands</item>
 
 blah blah
-
+</body>
+</help>

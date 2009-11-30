@@ -7,105 +7,57 @@ extern "C"
 
 #define GUIDE_MAGIC				0x284C
 
-#define F_ENCRYPTED				0x1000
-
-enum F_COMP
+enum HELP_F_ATTRS
 {
-	F_NONE = 0,
-	F_RLE_COMPRESSION,
-	F_LZSS_COMPRESSION,
-	F_GZIP_COMPRESSION,
-	F_BZIP2_COMPRESSION,
-	F_LZMA_COMPRESSION
+	HLP_F_EMPH = 0x01,
+	HLP_F_LINK
 };
 
-#define F_COMPRESSION_MASK		0x0007
-
-#pragma pack(1)
-struct udtODS_GuideEntry
+enum F_RECORD
 {
-	uint8_t header_count;
-	uint16_t length;
-	uint16_t orig_length;
+	HLP_TITLE = 0x01,
+	HLP_AUTHOR,
+	HLP_VERSION,
+
+	HLP_SECTION,
+	HLP_LINE,
+	HLP_LINE_GZ = HLP_LINE + 0x20,
 };
 
-struct udtODS_GuideHeader
+typedef struct udtHelpPage
 {
-	uint16_t magic;
-	uint16_t version;
-	uint16_t flags;
+	char *name;
 
+	int width;
+	int line_count;
+	uint16_t **lines;
 
-	// flat pointers to null terminated utf-8 strings
-	uint16_t meta_size;
-	uint32_t meta_offset;
+	int link_count;
 
-	uint16_t node_count;
-	uint32_t node_offset;
+	struct udtHelpLink
+	{
+		int id;
+		int row;
+		int col;
+		int length;
+	} **_links;
 
-	uint16_t header_size;
-};
-#pragma pack()
+} uHelpPage;
 
-struct udtIM_GuideLink
+typedef struct udtHelpSection
 {
-	int row;
-	int col;
+	char *name;
+	DList *lstLines;
+} uHelpSection;
 
-	int	node_count;
-	char **nodes;
-
-	char *canonical_link;
-	char *link;
-};
-typedef struct udtIM_GuideLink uIM_GuideLink;
-
-struct udtIM_GuideHeader
+typedef struct udtHelpFile
 {
 	char *title;
 	char *author;
 	char *revision;
-	int version;			// only valid when loaded from disk
-	int flags;				// only valid when loaded from disk
-	DList *lstNodes;
-};
 
-typedef struct udtIM_GuideHeader uIM_GuideHeader;
-
-struct udtIM_Node
-{
-	int node_count;
-	char **nodes;
-
-	int length;
-	uint8_t *data;
-};
-
-typedef struct udtIM_Node uIM_Node;
-
-#define eLF_None 		0x00
-#define eLF_Bold		0x01
-#define eLF_Underline 	0x02
-#define eLF_Reverse		0x04
-#define eLF_Fixed		0x08
-
-#define eLF_FIXMASK	0xFF00
-
-struct udtIM_GuideLine
-{
-	int flags;
-	int length;
-	uint8_t *text;
-};
-typedef struct udtIM_GuideLine uIM_GuideLine;
-
-struct udtIM_GuidePage
-{
-	DList *lstLines;
-	DList *lstLinks;
-};
-typedef struct udtIM_GuidePage uIM_GuidePage;
-
+	DList *lstSections;
+} uHelpFile;
 
 #ifdef __cplusplus
 }

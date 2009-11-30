@@ -5,61 +5,47 @@
 #include <assert.h>
 
 #include "dlist.h"
-#include "lzss.h"
 
 #include "guideheader.h"
 #include "guideload.h"
 
-static void DumpGuide(uIM_GuideHeader *hdr)
+static void DumpGuide(uHelpFile *hlp)
 {
 	DLElement *e;
-	uIM_Node *node;
 
-	printf("%s\n", hdr->title);
-	printf("%s\n", hdr->author);
-	printf("%s\n", hdr->revision);
-	printf("----\n");
+	printf("\\title{%s}\n", hlp->title);
+	printf("\\author{%s}\n", hlp->author);
+	printf("\\version{%s}\n", hlp->revision);
 
-	e = dlist_head(hdr->lstNodes);
+	e = dlist_head(hlp->lstSections);
 
 	while (e != NULL)
 	{
-		int k;
-		char *p;
+		DLElement *el;
 
-		node = dlist_data(e);
+		uHelpSection *sect;
+
+		sect = dlist_data(e);
 		e = dlist_next(e);
 
-		printf("%%");
+		printf("\n\\section{%s}\n", sect->name);
 
-		for (k = 0; k < node->node_count; k++)
+		el = dlist_head(sect->lstLines);
+		while (el != NULL)
 		{
-			if (k > 0)
-				printf("%%");
-
-			printf("%s", node->nodes[k]);
-		}
-		printf("%%\n");
-
-		p = (char*) node->data;
-
-		while (*p != 0)
-		{
-			if (*p == 0x0A)
-				printf("\n");
-			else
-				printf("%c", *p);
-
-			p++;
+			printf("line: %s\n", (char*) dlist_data(el));
+			el = dlist_next(el);
 		}
 	}
+
+	printf("\n");
 
 	fflush(stdout);
 }
 
 int main(int argc, char *argv[])
 {
-	uIM_GuideHeader *hdr;
+	uHelpFile *hlp;
 
 	if (argc != 2)
 	{
@@ -68,9 +54,12 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-	hdr = LoadGuide(argv[1]);
-	if (hdr != NULL)
-		DumpGuide(hdr);
+	hlp = LoadHelpFile(argv[1]);
+	if (hlp != NULL)
+	{
+		DumpGuide(hlp);
+		FreeHelpFile(hlp);
+	}
 
 	return 0;
 }

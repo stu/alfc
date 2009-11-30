@@ -570,7 +570,6 @@ int gme_SetRuntimeOption_CompressFilesize(lua_State *L)
 	return 0;
 }
 
-
 /****f* LuaAPI/SwitchPanes
  * FUNCTION
  *	Just like the user had pressed TAB to toggle between panes.
@@ -2443,7 +2442,6 @@ int gme_ClearHistory(lua_State *L)
 	return 0;
 }
 
-
 /****f* LuaAPI/AddMenu
  * FUNCTION
  *	Adds an item to an existing menu. Requires the MODE to be set by program
@@ -2538,12 +2536,12 @@ int gme_Menu(lua_State *L)
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
 
-	if(gd->mode == eMode_Directory)
+	if (gd->mode == eMode_Directory)
 	{
 		DrawMenu(gd, NULL, 0);
 		DrawAll(gd);
 	}
-	else if(gd->mode == eMode_Viewer)
+	else if (gd->mode == eMode_Viewer)
 	{
 		DrawMenu(gd, GetViewerData(L), 0);
 		return ViewerDrawAllLua(L);
@@ -2631,12 +2629,10 @@ int gme_GetHiddenFlag(lua_State *L)
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
 
-
 	lua_pushnumber(L, GetHiddenFlag(gd));
 
 	return 1;
 }
-
 
 /****f* LuaAPI/SetHiddenFlag
  * FUNCTION
@@ -2696,8 +2692,34 @@ int gme_msgbox(lua_State *L)
 
 	msgbox(gd, info.data);
 
-	if(gd->lstFullLeft != NULL && gd->lstFullRight != NULL)
+	if (gd->lstFullLeft != NULL && gd->lstFullRight != NULL)
 		DrawAll(gd);
+
+	return 0;
+}
+
+int gme_ShowHelp(lua_State *L)
+{
+	uGlobalData *gd;
+	struct lstr help;
+	struct lstr index;
+	char *fn;
+	char *fn2;
+
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+
+	GET_LUA_STRING(help, 1);
+	GET_LUA_STRING(index, 2);
+
+	fn = ConvertDirectoryName(help.data);
+	fn2 = ConvertDirectoryName(fn);
+
+	ShowHelp(gd, fn2, index.data);
+	free(fn);
+	free(fn2);
+
+	DrawAll(gd);
 
 	return 0;
 }

@@ -122,6 +122,25 @@ static void gui_print_vline(void)
 	dr_outchar(179);
 }
 
+
+static void gui_clear_window(uWindow *w)
+{
+	int i;
+	char *buff;
+
+	buff = malloc(w->width+2);
+	memset(buff, ' ', w->width+2);
+	buff[w->width] = 0;
+
+	for (i = 1; i < (w->height - 1); i++)
+	{
+		gui_setcursor(1 + w->offset_row + i, 1 + w->offset_col);
+		w->screen->print(buff);
+	}
+
+	free(buff);
+}
+
 static void gui_draw_frame(uWindow *w)
 {
 	int i;
@@ -392,13 +411,16 @@ static int gui_screen_init(uScreenDriver *scr)
 	init_base_styles(scr);
 	init_dir_styles(scr);
 
+	// init to black
+	init_style(STYLE_TITLE, CLR_GREY, CLR_BLACK);
+	scr->set_style(STYLE_NORMAL);
+	//scr->cls();
+
 	init_style(STYLE_TITLE, scr->gd->clr_title_fg, scr->gd->clr_title_bg);					// title bar
 	init_style(STYLE_NORMAL, scr->gd->clr_foreground, scr->gd->clr_background);				// default
 	init_style(STYLE_HIGHLIGHT, scr->gd->clr_hi_foreground, scr->gd->clr_hi_background);	// highlight line
 
 	scr->set_style(STYLE_NORMAL);
-	gui_cls();
-	//gui_print_string("Another Linux File Commander");
 
 	return 0;
 }
@@ -494,6 +516,7 @@ uScreenDriver screen =
 	gui_setcursor,
 	gui_erase_eol,
 	gui_draw_frame,
+	gui_clear_window,
 	gui_update_style,
 	gui_print_hline,
 	gui_print_vline,

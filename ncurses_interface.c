@@ -166,6 +166,24 @@ static void nc_draw_frame(uWindow *w)
 	//setcolour(STYLE_NORMAL, styles[STYLE_NORMAL].s_on);
 }
 
+static void nc_clear_window(uWindow *w)
+{
+	int i;
+	char *buff;
+
+	buff = malloc(w->width+2);
+	memset(buff, ' ', w->width+2);
+	buff[w->width] = 0;
+
+	for (i = 1; i < (w->height - 1); i++)
+	{
+		setcursor(1 + w->offset_row + i, 1 + w->offset_col);
+		w->screen->print(buff);
+	}
+
+	free(buff);
+}
+
 static void nc_print_string(const char *s)
 {
 	while (*s != 0x0)
@@ -461,6 +479,13 @@ static int nc_screen_init(uScreenDriver *scr)
 	init_pair(CLR_CYAN, COLOR_CYAN, COLOR_BLACK);
 	init_pair(CLR_GREY, COLOR_WHITE, COLOR_BLACK);
 
+	// init to black
+	init_style(STYLE_TITLE, CLR_CYAN, CLR_BLACK);
+	init_style(STYLE_NORMAL, CLR_GREY, CLR_BLACK);
+	init_style(STYLE_HIGHLIGHT, CLR_YELLOW, CLR_BLACK); // highlight line
+	scr->set_style(STYLE_NORMAL);
+	//scr->cls();
+
 	init_style(STYLE_TITLE, scr->gd->clr_title_fg, scr->gd->clr_title_bg); // title bar
 	init_style(STYLE_NORMAL, scr->gd->clr_foreground, scr->gd->clr_background); // default
 	init_style(STYLE_HIGHLIGHT, scr->gd->clr_hi_foreground, scr->gd->clr_hi_background); // highlight line
@@ -468,7 +493,6 @@ static int nc_screen_init(uScreenDriver *scr)
 	init_dir_styles(scr);
 
 	scr->set_style(STYLE_NORMAL);
-	scr->cls();
 
 	return 0;
 }
@@ -568,7 +592,7 @@ static void nc_set_updates(int set)
 	else
 		intUpdates = 1;
 
-	if(intUpdates == 1)
+	if (intUpdates == 1)
 	{
 		refresh();
 		doupdate();
@@ -609,6 +633,7 @@ uScreenDriver screen =
 	    setcursor,
 	    erase_eol,
 	    nc_draw_frame,
+	    nc_clear_window,
 	    nc_init_style,
 	    nc_print_hline,
 	    nc_print_vline,

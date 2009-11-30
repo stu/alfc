@@ -21,11 +21,11 @@ case y.to_s
 		var[:gdump] = "gdump.exe"
 
 		if DRIVER=="NCURSES"
-			var[:libs] = "-lpdcurses -llua -lregex -liberty -lkernel32"
+			var[:libs] = "-lpdcurses -llua -lregex -liberty -lkernel32 -lz"
 			PORTABILITY_OBJS = %w( portability_win32.o ncurses_main.o ncurses_interface.o)
 			GPORTABILITY_OBJS = %w( portability_win32.o ncurses_guide.o ncurses_interface.o)
 		else
-			var[:libs] = "-llua -lregex -liberty -lkernel32 -mwindows"
+			var[:libs] = "-llua -lregex -liberty -lkernel32 -mwindows -lz"
 			PORTABILITY_OBJS = %w( portability_win32.o gui_interface.o gui_main.o guicore.o)
 			GPORTABILITY_OBJS = %w( portability_win32.o gui_interface.o gui_guide.o guicore.o)
 		end
@@ -43,7 +43,7 @@ case y.to_s
 		var[:guide] = "guide.exe"
 		var[:gdump] = "gdump.exe"
 
-		var[:libs] = "-lpdcurses -llua"
+		var[:libs] = "-lpdcurses -llua -lz"
 		PORTABILITY_OBJS = %w( portability_unix.o  ncurses_interface.o)
 		GPORTABILITY_OBJS = %w( portability_unix.o  ncurses_interface.o)
 		PORT_CFLAGS = ""
@@ -59,15 +59,15 @@ case y.to_s
 		var[:gdump] = "gdump"
 
 		if DRIVER=="NCURSES"
-			var[:libs] = "-lm -lncurses -llua5.1"
+			var[:libs] = "-lm -lncurses -llua5.1 -lz"
 			PORTABILITY_OBJS = %w( portability_unix.o ncurses_main.o ncurses_interface.o)
 			GPORTABILITY_OBJS = %w( portability_unix.o ncurses_guide.o ncurses_interface.o)
-			GLIBS = "-lz -lbz2"
+			GLIBS = "-lz"
 		else
-			var[:libs] = "-lm -llua5.1 -lX11"
+			var[:libs] = "-lm -llua5.1 -lX11 -lz"
 			PORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_main.o guicore.o)
 			GPORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_guide.o guicore.o)
-			GLIBS = "-lz -lbz2"
+			GLIBS = "-lz"
 		end
 
 		PORT_CFLAGS="-D__USE_LARGEFILE64=1 -D_FILE_OFFSET_BITS=64"
@@ -170,7 +170,7 @@ alfc = %w( dlist.o logwrite.o ini.o
 			lua_api.o options.o viewer.o
 			lua_helper_viewer.o lua_common.o lua_common_api.o
 			operations.o lua_hash.o md5.o rmd160.o sha1.o
-			menu.o
+			menu.o help.o guideload.o
 			)
 
 if DRIVER=="GUI"
@@ -233,20 +233,21 @@ task :appx => alfc + PORTABILITY_OBJS do |t|
 end
 
 desc "help"
-task :help => ["auxfiles", "#{var[:gdump]}", "#{var[:guide]}", "#{var[:gcomp]}"] do
+#task :help => ["auxfiles", "#{var[:gdump]}", "#{var[:guide]}", "#{var[:gcomp]}"] do
+task :help => ["auxfiles", "#{var[:gdump]}", "#{var[:guide]}"] do
 end
 
-file "#{var[:gcomp]}" => %w(guidecompiler.o dlist.o lzss.o memwatch.o) do |t|
+file "#{var[:gcomp]}" => %w(guidecompiler.o dlist.o memwatch.o logwrite.o) do |t|
 	sys "#{CC} -o #{var[:gcomp]} #{t.prerequisites.join(' ')} #{GLIBS}"
     sys "./#{var[:gcomp]} docs/guide_create.txt guide_create.gd"
     sys "./#{var[:gcomp]} docs/help.txt help.gd"
 end
 
-file "#{var[:gdump]}" => %w(guidedump.o guideload.o dlist.o lzss.o memwatch.o) do |t|
+file "#{var[:gdump]}" => %w(guidedump.o guideload.o dlist.o memwatch.o logwrite.o) do |t|
     sys "#{CC} -o #{var[:gdump]} #{t.prerequisites.join(' ')} #{GLIBS} "
 end
 
-file "#{var[:guide]}" => %w(guide.o guideload.o dlist.o lzss.o version.o memwatch.o) + GPORTABILITY_OBJS do |t|
+file "#{var[:guide]}" => %w(guide.o guideload.o dlist.o version.o memwatch.o logwrite.o) + GPORTABILITY_OBJS do |t|
     sys "#{CC} -o #{var[:guide]} #{t.prerequisites.join(' ')} #{var[:libs]} #{GLIBS}"
 end
 

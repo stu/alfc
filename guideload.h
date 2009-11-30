@@ -4,11 +4,10 @@
 extern "C"{
 #endif
 
-extern void FreePage(uIM_GuidePage *page);
-extern void FreeGuide(uIM_GuideHeader *g);
-extern uIM_GuideHeader* LoadGuide(char *fn);
-extern uIM_GuidePage* ReflowPage(uIM_GuideHeader *hdr, int depth, char **titles, int page_width);
-
+extern void FreeHelpPage(uHelpPage *p);
+extern uHelpFile* LoadHelpFile(char *fn);
+extern void FreeHelpFile(uHelpFile *hlp);
+extern uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width);
 
 #ifdef __cplusplus
 }
