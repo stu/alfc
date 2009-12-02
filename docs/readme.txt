@@ -98,6 +98,15 @@ Credits
 =======
 Stu George - Right now, everything
 
+
+Getting the Source
+==================
+The source is available on Gitorious
+
+    git clone git://gitorious.org/alfc/alfc.git
+
+
+
 ToDo list for next release
 ==========================
 
@@ -123,7 +132,6 @@ Birth and Rebirth
 
 Portability
 ===========
-
 Notes on the MinGW port.
 - MinGW requires the 'regex' package (both bin + dev) to be installed for building.
 for distribution you need the regex dll from the bin package
@@ -141,6 +149,8 @@ And NCurses for the ncurses driver or PDCurses
 
 To build the documentation you need Robodoc installed
 (minimum 4.99.36)
+
+The master build requires the 'rant' gem installed in Ruby.
 
 
 Hints, Tips and Tricks

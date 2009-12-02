@@ -1,4 +1,9 @@
 #!/usr/bin/ruby
+
+#
+# Hacky ruby script to compile the help text into our help file format.
+#
+
 require 'zlib'
 
 def BustAttr(s, a)
