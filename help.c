@@ -3,7 +3,6 @@
 #include "guideheader.h"
 #include "guideload.h"
 
-
 static void display_char(uWindow *w, char c)
 {
 	char x[2];
@@ -33,14 +32,14 @@ static void draw_window(uWindow *w, uHelpPage *page_data)
 	buff = malloc( strlen(page_data->name) + 5);
 
 	q = strchr(page_data->name, ':');
-	if(q != NULL)
+	if (q != NULL)
 	{
 		do
 		{
 			q++;
 			oq = q;
 			q = strchr(q, ':');
-		}while(q != NULL);
+		} while (q != NULL);
 		q = oq;
 	}
 	else
@@ -86,7 +85,7 @@ static void draw_page(uWindow *w, uHelpPage *page_data)
 			style = STYLE_NORMAL;
 			if ((pp[wide] >> 8) == HLP_F_EMPH)
 				style = STYLE_HIGHLIGHT;
-			else if((pp[wide] >> 8) == HLP_F_LINK)
+			else if ((pp[wide] >> 8) == HLP_F_LINK)
 				style = STYLE_DIR_DOCUMENT;
 
 			w->screen->set_style(style);
@@ -123,6 +122,19 @@ static void BuildWindowLayout(uGlobalData *gdata)
 	w->height = w->gd->screen->get_screen_height();
 	w->top_line = 0;
 	w->highlight_line = 0;
+
+	if (w->width - 80 > 20)
+		w->width = 80;
+	else
+		w->width = 60;
+
+	if (w->height - 20 > 8)
+		w->height -= 8;
+	else
+		w->height = 20;
+
+	w->offset_row = (w->gd->screen->get_screen_height() - w->height) / 2;
+	w->offset_col = (w->gd->screen->get_screen_width() - w->width) / 2;
 
 	w->screen->set_style(STYLE_NORMAL);
 	w->screen->window_clear(w);
