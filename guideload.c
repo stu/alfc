@@ -376,6 +376,7 @@ uHelpFile* LoadHelpFile(char *fn)
 
 					default:
 						// unknown record type
+						LogInfo("unknown type %i\n", rec->type);
 						FreeRecord(rec);
 						break;
 				}

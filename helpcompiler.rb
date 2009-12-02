@@ -157,7 +157,7 @@ if __FILE__ == $0
 		if File.exists?(ARGV[0].to_s)
 			txt = IO.readlines(ARGV[0].to_s)
 
-			ofp = File.open(ARGV[1].to_s, "w")
+			ofp = File.open(ARGV[1].to_s, "wb")
 			ofp.putc 0x28
 			ofp.putc 0x4C
 

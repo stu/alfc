@@ -18,11 +18,15 @@ static void draw_window(uWindow *w, uHelpPage *page_data)
 	char *buff;
 	char *q, *oq;
 
-	w->screen->set_style(STYLE_TITLE);
+	w->screen->set_style(STYLE_NORMAL);
 	w->screen->window_clear(w);
+	w->screen->set_style(STYLE_TITLE);
 	w->screen->draw_border(w);
+
 	w->screen->set_cursor(w->offset_row + 1, w->offset_col + 2);
 	w->screen->print(" Guide Reader : ");
+
+	w->screen->set_updates(0);
 
 	assert(page_data->name != NULL);
 
@@ -41,6 +45,8 @@ static void draw_window(uWindow *w, uHelpPage *page_data)
 	}
 	else
 		q = page_data->name;
+
+	w->screen->set_updates(1);
 
 	sprintf(buff, "%s ", q);
 	w->screen->print(buff);
@@ -115,8 +121,9 @@ static void BuildWindowLayout(uGlobalData *gdata)
 	w->top_line = 0;
 	w->highlight_line = 0;
 
-	w->screen->set_style(STYLE_TITLE);
+	w->screen->set_style(STYLE_NORMAL);
 	w->screen->window_clear(w);
+	w->screen->set_style(STYLE_TITLE);
 	w->screen->draw_border(w);
 
 	w->screen->set_cursor(w->offset_row + 1, w->offset_col + 2);
@@ -143,7 +150,7 @@ int ShowHelp(uGlobalData *gdata, char *guide, char *page)
 	gdata->screen->set_style(STYLE_NORMAL);
 	w->screen->set_cursor(2, 2);
 
-	LogInfo("help guide=%s, page=%s\n", guide, page);
+	LogInfo("help guide=%s, page=\"%s\"\n", guide, page);
 
 	hdr = LoadHelpFile(guide);
 

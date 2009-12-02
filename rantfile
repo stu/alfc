@@ -186,7 +186,7 @@ desc "Build the app"
 task :all => ["auxfiles", "appx", "help"] do
 end
 
-task "auxfiles" => ["fixversion", "defaults.h", "headers" ] do
+task "auxfiles" => ["fixversion", "defaults", "headers" ] do
 end
 
 task "fixversion" do
@@ -206,7 +206,10 @@ file "#{var[:bin2c]}" => %w(bin2c.o) do |t|
 	sys "#{CC} -o #{var[:bin2c]} #{t.prerequisites.join(' ')} "
 end
 
-file "defaults.h" => [var[:bin2c]] + default_files do |t|
+task :defaults => ["docs/help", "defaults.h"] do |t|
+end
+
+file "defaults.h" => ["#{var[:bin2c]}"] + default_files  do |t|
 	sys.rm_f "options.o"
 	sys "#{var[:bin2c]} global.lua include_global_lua > defaults.h"
 	sys "#{var[:bin2c]} viewer.lua include_viewer_lua >> defaults.h"
@@ -219,6 +222,7 @@ file "defaults.h" => [var[:bin2c]] + default_files do |t|
 	sys "#{var[:bin2c]} filemanager_menu.lua filemanager_menu_lua >> defaults.h"
 	sys "#{var[:bin2c]} hints.lua hints_lua >> defaults.h"
 	sys "#{var[:bin2c]} viewer_menu.lua viewer_menu_lua >> defaults.h"
+	sys "#{var[:bin2c]} docs/help.hlp help_hlp >> defaults.h"
 if DRIVER=="GUI"
 	sys "#{var[:bin2c]} font.rlf gui_data_font > gui_fonts.h"
 	sys "#{var[:bin2c]} font_small.rlf gui_data_font_small >> gui_fonts.h"
@@ -271,7 +275,7 @@ task "docs" do
 end
 
 desc "Cleanup..."
-task :clean do
+task :clean => "docs/clean" do
 	x = Dir["*.{bak,o,obj,a,gd}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"] + Dir["Makefile"]
 
 	x += Dir["#{var[:gcomp]}"]
@@ -320,6 +324,10 @@ gen Rule, 'rantfile' => 'rantfile' do
     if x.length > 0
         sys.rm_f x
     end
+end
+
+gen Rule, '.hlp' => '.txt' do |t|
+	sys.ruby "../helpcompiler.rb","#{t.source}","#{t.name}"
 end
 
 ##############################################################################
@@ -423,3 +431,4 @@ task :install => "all" do
     sys "sudo cp *.gd /usr/local/share/alfc"
 end
 
+subdirs "docs"

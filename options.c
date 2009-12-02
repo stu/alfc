@@ -409,6 +409,8 @@ void LoadOptions(uGlobalData *gdata)
 		CreateIfNotExist("$HOME/.alfc/hints.lua", hints_lua, hints_lua_SIZE);
 		CreateIfNotExist("$HOME/.alfc/viewer_menu.lua", viewer_menu_lua, viewer_menu_lua_SIZE);
 
+		CreateIfNotExist("$HOME/.alfc/help.hlp", help_hlp, help_hlp_SIZE);
+
 
 		gdata->optfile = INI_load(gdata->optfilename);
 	}

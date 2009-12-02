@@ -1,0 +1,18 @@
+#rantfile -- 07-Jan-2009
+import "md5"
+
+help_file = %w(help.hlp)
+
+desc "Build help files"
+task :help => help_file do
+end
+
+task :clean do
+	x = Dir["*.{bak,o,obj,a,gd,hlp,dvi,aux,pdf,idx,ilg,ind,log,toc}"]
+
+	if x.length > 0
+		sys.rm_rf x
+	end
+end
+
+
