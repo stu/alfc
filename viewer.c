@@ -418,6 +418,8 @@ static int DisplayFile(uViewFile *v)
 
 	ln = v->intTLine;
 
+	v->w->screen->set_updates(0);
+
 	v->w->screen->set_style(STYLE_TITLE);
 	v->w->offset_col += v->nwidth;
 	v->w->width -= v->nwidth;
@@ -445,6 +447,8 @@ static int DisplayFile(uViewFile *v)
 	}
 
 	DisplayStatus(v);
+
+	v->w->screen->set_updates(1);
 
 	return 0;
 }

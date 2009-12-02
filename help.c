@@ -69,6 +69,7 @@ static void draw_page(uWindow *w, uHelpPage *page_data)
 
 	assert(page_data->lines != NULL);
 
+	w->screen->set_updates(0);
 	w->screen->set_style(STYLE_NORMAL);
 
 	while (i < w->height - 2 && line < page_data->line_count)
@@ -98,6 +99,8 @@ static void draw_page(uWindow *w, uHelpPage *page_data)
 		line += 1;
 		i += 1;
 	}
+
+	w->screen->set_updates(1);
 }
 
 static void BuildWindowLayout(uGlobalData *gdata)

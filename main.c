@@ -1311,6 +1311,7 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	win->screen->set_style(STYLE_TITLE);
 	win->screen->draw_border(win);
 
+	win->screen->set_updates(0);
 
 	//path = ConvertDirectoryName(dpath);
 	path = replace(dpath, '\\', '/');
@@ -1373,7 +1374,7 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 		i += 1;
 	}
 
-
+	win->screen->set_updates(1);
 	// set cursor to lower corner of screen...
 	win->screen->set_cursor(win->screen->get_screen_height(), win->screen->get_screen_width());
 }
