@@ -47,5 +47,6 @@ gdump.exe
 *.pdf
 *.dvi
 *.tex.backup
+*.hlp
 
 
