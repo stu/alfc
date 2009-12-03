@@ -81,7 +81,7 @@ This is the inbuilt Viewer command
 
 
 \section{Main}
-Welcome to \emph{Another Linux File Manager}, herein written as \emph{ALFC}.
+Welcome to \emph{Another Linux File Commander}, herein written as \emph{ALFC}.
 
 This is the main help screen. Use the cursor keys to scroll up and down,
 use \emph{ENTER} to select a link to read.
