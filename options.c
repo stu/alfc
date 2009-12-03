@@ -152,7 +152,17 @@ static void CreateBaselineINIFile(uGlobalData *gdata)
 	INI_UpdateItem(gdata->optfile, "options", "remember_dirs", "true");
 	INI_UpdateItem(gdata->optfile, "options", "dates", "dd/mm/yyyy");
 	INI_UpdateItem(gdata->optfile, "options", "times", "hh:mm.ss AMPM");
-	INI_UpdateItem(gdata->optfile, "options", "columns", " name,date,size");
+	INI_UpdateItem(gdata->optfile, "options", "columns", "name,date,size");
+	INI_UpdateItem(gdata->optfile, "options", "hints", "true");
+	INI_UpdateItem(gdata->optfile, "options", "show_hidden", "true");
+	INI_UpdateItem(gdata->optfile, "options", "sort_order", "name_asc");
+	INI_UpdateItem(gdata->optfile, "options", "compress_filesize", "true");
+	INI_UpdateItem(gdata->optfile, "options", "directories_first", "true");
+	INI_UpdateItem(gdata->optfile, "options", "history_count", "128");
+	INI_UpdateItem(gdata->optfile, "options", "mru_count", "4");
+
+	INI_UpdateItem(gdata->optfile, "options", "left_startup", "$HOME");
+	INI_UpdateItem(gdata->optfile, "options", "right_startup", "$HOME");
 
 	INI_UpdateItem(gdata->optfile, "mru_left", "count", "1");
 	INI_UpdateItem(gdata->optfile, "mru_left", "mru0", "$HOME");
@@ -161,6 +171,8 @@ static void CreateBaselineINIFile(uGlobalData *gdata)
 
 	INI_UpdateItem(gdata->optfile, "scripts", "startup_file", "$HOME/.alfc/startup.lua");
 	INI_UpdateItem(gdata->optfile, "scripts", "shutdown_file", "$HOME/.alfc/shutdown.lua");
+	INI_UpdateItem(gdata->optfile, "scripts", "global_funcs", "$HOME/.alfc/global.lua");
+	INI_UpdateItem(gdata->optfile, "scripts", "viewer_funcs", "$HOME/.alfc/viewer.lua");
 
 	INI_UpdateItem(gdata->optfile, "colours", "background", "black");
 	INI_UpdateItem(gdata->optfile, "colours", "foreground", "grey");
@@ -168,9 +180,18 @@ static void CreateBaselineINIFile(uGlobalData *gdata)
 	INI_UpdateItem(gdata->optfile, "colours", "title_fg", "white");
 	INI_UpdateItem(gdata->optfile, "colours", "title_bg", "blue");
 
-	INI_UpdateItem(gdata->optfile, "colours", "hi_fg", "yeloow");
+	INI_UpdateItem(gdata->optfile, "colours", "hi_fg", "yellow");
 	INI_UpdateItem(gdata->optfile, "colours", "hi_bg", "red");
 
+	INI_UpdateItem(gdata->optfile, "copy_move", "overwrite", "true");
+	INI_UpdateItem(gdata->optfile, "copy_move", "display_log", "false");
+	INI_UpdateItem(gdata->optfile, "copy_move", "verify_copy", "true");
+
+    INI_UpdateItem(gdata->optfile, "delete", "display_log", "false");
+
+	INI_UpdateItem(gdata->optfile, "viewer", "mru", "16");
+	INI_UpdateItem(gdata->optfile, "viewer_mru", "count", "1");
+	INI_UpdateItem(gdata->optfile, "viewer_mru", "mru0", "readme.txt");
 }
 
 int decode_colour(char *s, int def)
