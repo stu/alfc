@@ -475,6 +475,7 @@ extern int GetHiddenFlag(uGlobalData *gd);
 extern void msgbox(uGlobalData *gd, char *str);
 
 extern int ScanMenuOpen(uGlobalData *gd, uint32_t key);
+extern void FreeMenuData(uMenu *menu[]);
 
 extern char *start_left;
 extern char *start_right;

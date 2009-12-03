@@ -168,7 +168,7 @@ static void FreeSubMenu(uSubMenu *m)
 	free(m);
 }
 
-static void FreeMenuData(uMenu *menu[])
+void FreeMenuData(uMenu *menu[])
 {
 	int i, j;
 
@@ -184,6 +184,8 @@ static void FreeMenuData(uMenu *menu[])
 
 			free(menu[i]->child);
 			free(menu[i]);
+
+			menu[i] = NULL;
 		}
 	}
 }

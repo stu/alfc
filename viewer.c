@@ -842,6 +842,11 @@ static int LoadGlobalViewerScript(uViewFile *v, char *sn)
 	return 0;
 }
 
+static void ReleaseViewerMenu(uViewFile *v)
+{
+	FreeMenuData(v->gd->viewer_menu);
+}
+
 void ViewerDrawAll(uViewFile *v)
 {
 	v->w->screen->set_updates(0);
@@ -1037,6 +1042,8 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 			}
 		}
 	}
+
+	ReleaseViewerMenu(v);
 
 	if(v->lstHotKeys != NULL)
 	{
