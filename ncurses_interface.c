@@ -227,6 +227,7 @@ static void nc_print_string(const char *s)
 		}
 		s++;
 	}
+
 	if (intUpdates == 1)
 	{
 		doupdate();
@@ -516,7 +517,10 @@ static void setcursor(int row, int col)
 	intCurRow = (row - 1);
 
 	move(intCurRow, intCurCol);
-	doupdate();
+	if (intUpdates == 1)
+	{
+		doupdate();
+	}
 }
 
 static int nc_screen_deinit(void)
