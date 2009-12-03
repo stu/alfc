@@ -126,9 +126,10 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 	AddCommand(":g ", "Go to line or bookmark", __Jump)
 	AddCommand(":b ", "Bookmark line", __Bookmark)
 
-	LoadPlugins()
-
+	IncludeFile("$HOME/.alfc/viewer_languages.lua")
 	IncludeFile("$HOME/.alfc/viewer_menu.lua")
+
+	LoadPlugins()
 
 	OnLoad()
 
