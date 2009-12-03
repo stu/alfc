@@ -29,10 +29,9 @@ case y.to_s
 			PORTABILITY_OBJS = %w( portability_win32.o gui_interface.o gui_main.o guicore.o)
 			GPORTABILITY_OBJS = %w( portability_win32.o gui_interface.o gui_guide.o guicore.o)
 		end
-		GLIBS = "-lz"
 		# mingw has bugs with 64bit stuff (mostly in sprintf etc dropping upper 32bits).
 		# this allows us to use %I64u format...
-		PORT_CFLAGS = "-Wno-format"
+		PORT_CFLAGS = "-Wno-format -DBUILD_WIN32"
 	when "cygwin"
 		@strPlatform = "ALFC_UNIXLIKE"
 		var[:exec] = "alfc.exe"
@@ -46,8 +45,7 @@ case y.to_s
 		var[:libs] = "-lpdcurses -llua -lz"
 		PORTABILITY_OBJS = %w( portability_unix.o  ncurses_interface.o)
 		GPORTABILITY_OBJS = %w( portability_unix.o  ncurses_interface.o)
-		PORT_CFLAGS = ""
-		GLIBS = "-lz"
+		PORT_CFLAGS = "-DBUILD_UNIXLIKE"
 	else
 		@strPlatform = "ALFC_UNIXLIKE"
 		var[:exec] = "alfc"
@@ -62,15 +60,13 @@ case y.to_s
 			var[:libs] = "-lm -lncurses -llua5.1 -lz"
 			PORTABILITY_OBJS = %w( portability_unix.o ncurses_main.o ncurses_interface.o)
 			GPORTABILITY_OBJS = %w( portability_unix.o ncurses_guide.o ncurses_interface.o)
-			GLIBS = "-lz"
 		else
 			var[:libs] = "-lm -llua5.1 -lX11 -lz"
 			PORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_main.o guicore.o)
 			GPORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_guide.o guicore.o)
-			GLIBS = "-lz"
 		end
 
-		PORT_CFLAGS="-D__USE_LARGEFILE64=1 -D_FILE_OFFSET_BITS=64"
+		PORT_CFLAGS="-D__USE_LARGEFILE64=1 -D_FILE_OFFSET_BITS=64 -DBUILD_UNIXLIKE"
 end
 
 
@@ -179,7 +175,7 @@ end
 
 
 gen Action do
-	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s + " -DDRV_" + DRIVER
+	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s
 end
 
 desc "Build the app"
@@ -223,10 +219,12 @@ file "defaults.h" => ["#{var[:bin2c]}"] + default_files  do |t|
 	sys "#{var[:bin2c]} hints.lua hints_lua >> defaults.h"
 	sys "#{var[:bin2c]} viewer_menu.lua viewer_menu_lua >> defaults.h"
 	sys "#{var[:bin2c]} docs/help.hlp help_hlp >> defaults.h"
-if DRIVER=="GUI"
-	sys "#{var[:bin2c]} font.rlf gui_data_font > gui_fonts.h"
+
+	#always build gui fonts
+	sys "echo \"#ifdef DRV_GUI\" > gui_fonts.h"
+	sys "#{var[:bin2c]} font.rlf gui_data_font >> gui_fonts.h"
 	sys "#{var[:bin2c]} font_small.rlf gui_data_font_small >> gui_fonts.h"
-end
+	sys "echo \"#endif\" >> gui_fonts.h"
 end
 
 task :appx => alfc + PORTABILITY_OBJS do |t|
@@ -242,17 +240,17 @@ task :help => ["auxfiles", "#{var[:gdump]}", "#{var[:guide]}"] do
 end
 
 file "#{var[:gcomp]}" => %w(guidecompiler.o dlist.o memwatch.o logwrite.o) do |t|
-	sys "#{CC} -o #{var[:gcomp]} #{t.prerequisites.join(' ')} #{GLIBS}"
+	sys "#{CC} -o #{var[:gcomp]} #{t.prerequisites.join(' ')} -lz"
     sys "./#{var[:gcomp]} docs/guide_create.txt guide_create.gd"
     sys "./#{var[:gcomp]} docs/help.txt help.gd"
 end
 
 file "#{var[:gdump]}" => %w(guidedump.o guideload.o dlist.o memwatch.o logwrite.o) do |t|
-    sys "#{CC} -o #{var[:gdump]} #{t.prerequisites.join(' ')} #{GLIBS} "
+    sys "#{CC} -o #{var[:gdump]} #{t.prerequisites.join(' ')} -lz"
 end
 
 file "#{var[:guide]}" => %w(guide.o guideload.o dlist.o version.o memwatch.o logwrite.o) + GPORTABILITY_OBJS do |t|
-    sys "#{CC} -o #{var[:guide]} #{t.prerequisites.join(' ')} #{var[:libs]} #{GLIBS}"
+    sys "#{CC} -o #{var[:guide]} #{t.prerequisites.join(' ')} #{var[:libs]} "
 end
 
 
@@ -309,7 +307,7 @@ gen Rule, '.lua' => '.lua' do |t|
 end
 
 gen Rule, '.o' => '.c' do |t|
-	sys "#{CC} #{CFLAGS} -c -o #{t.name} #{t.source}"
+	sys "#{CC} #{CFLAGS} -DDRV_#{DRIVER} -c -o #{t.name} #{t.source}"
 end
 
 gen Rule, '.h' => '.h' do |t|
@@ -350,15 +348,25 @@ task :make =>  ["clean", "bin2c.o", "auxfiles"] do
 		fp.puts "# Can be ALFC_UNIXLIKE or ALFC_WIN32"
 		fp.puts "#"
 		fp.puts "PLATFORM=#{@strPlatform}"
-
+		fp.puts "DRIVER=#{DRIVER}"
 		fp.puts ""
 		fp.puts "ifeq ($(PLATFORM),ALFC_WIN32)"
+		fp.puts "ifeq ($(DRIVER),NCURSES)"
 		fp.puts "PLATFORM_LIBS=-lpdcurses -llua -lregex -liberty -lkernel32 -lz"
 		fp.puts "PLATFORM_OBJS=portability_win32.o ncurses_main.o ncurses_interface.o"
 		fp.puts "else"
+		fp.puts "PLATFORM_LIBS=-llua -lregex -liberty -lkernel32 -mwindows -lz"
+		fp.puts "PLATFORM_OBJS=portability_win32.o gui_interface.o gui_main.o guicore.o"
+		fp.puts "endif"
+		fp.puts "else"
 		fp.puts "ifeq ($(PLATFORM),ALFC_UNIXLIKE)"
+		fp.puts "ifeq ($(DRIVER),NCURSES)"
 		fp.puts "PLATFORM_LIBS=-lm -lncurses -llua5.1 -lz"
 		fp.puts "PLATFORM_OBJS=portability_unix.o ncurses_main.o ncurses_interface.o"
+		fp.puts "else"
+		fp.puts "PLATFORM_LIBS=-lm -llua5.1 -lX11 -lz"
+		fp.puts "PLATFORM_OBJS=portability_unix.o gui_interface.o gui_main.o guicore.o"
+		fp.puts "endif"
 		fp.puts "else"
 		fp.puts "##error Unknown platform"
 		fp.puts "endif"
@@ -366,7 +374,7 @@ task :make =>  ["clean", "bin2c.o", "auxfiles"] do
 
 		fp.puts ""
 		fp.puts "CC=#{CC}"
-		fp.puts "CFLAGS=#{CFLAGS} -D$(PLATFORM)"
+		fp.puts "CFLAGS=#{CFLAGS} -D$(PLATFORM) -DDRV_$(DRIVER)"
 
 		fp.puts ""
 		fp.puts "EXEC=#{var[:exec]}"
