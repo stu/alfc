@@ -599,6 +599,12 @@ static void nc_set_updates(int set)
 	}
 }
 
+static int nc_get_updates(void)
+{
+	return intUpdates;
+}
+
+
 static void nc_updatewindow(void)
 {
 	doupdate();
@@ -638,6 +644,7 @@ uScreenDriver screen =
 	    nc_print_hline,
 	    nc_print_vline,
 	    nc_set_updates,
+	    nc_get_updates,
 
 	    init_dir_styles,
 	    init_view_styles,

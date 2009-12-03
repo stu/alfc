@@ -279,6 +279,7 @@ struct udtScreenDriver
 	void (*print_hline)(void);
 	void (*print_vline)(void);
 	void (*set_updates)(int set);
+	int (*get_updates)(void);
 
 	void (*init_dir_styles)(uScreenDriver *scr);
 	void (*init_view_styles)(uScreenDriver *scr);

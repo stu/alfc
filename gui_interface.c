@@ -488,6 +488,11 @@ static void gui_set_updates(int set)
 		intUpdates = 1;
 }
 
+static int gui_get_updates(void)
+{
+	return intUpdates;
+}
+
 static void gui_update_window(void)
 {
 	update_window();
@@ -521,6 +526,7 @@ uScreenDriver screen =
 	gui_print_hline,
 	gui_print_vline,
 	gui_set_updates,
+	gui_get_updates,
 
 	init_dir_styles,
 	init_view_styles,
