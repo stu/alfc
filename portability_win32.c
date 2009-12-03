@@ -1,3 +1,4 @@
+#ifdef BUILD_WIN32
 #include <windows.h>
 #include "headers.h"
 
@@ -277,4 +278,4 @@ char* ALFC_get_basepath(void)
 
 	return strdup(buff);
 }
-
+#endif

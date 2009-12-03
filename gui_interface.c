@@ -1,3 +1,4 @@
+#ifdef DRV_GUI
 #include "headers.h"
 #include "guicore.h"
 
@@ -536,3 +537,4 @@ uScreenDriver screen =
 	gui_trigger_redraw,
 	gui_going_exec
 };
+#endif

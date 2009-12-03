@@ -1,3 +1,4 @@
+#ifdef DRV_NCURSES
 #include "headers.h"
 #ifndef __WIN32__
 #include <signal.h>
@@ -654,3 +655,5 @@ uScreenDriver screen =
 	    nc_trigger_redraw,
 	    nc_going_exec
 	};
+#endif
+

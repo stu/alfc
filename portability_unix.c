@@ -1,3 +1,4 @@
+#ifdef BUILD_UNIXLIKE
 #include "headers.h"
 #include <pwd.h>
 
@@ -171,3 +172,5 @@ char* ALFC_get_basepath(void)
 {
 	return strdup(":/bin:/usr/bin:/usr/local/bin:/");
 }
+#endif
+
