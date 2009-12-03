@@ -123,15 +123,18 @@ static void BuildWindowLayout(uGlobalData *gdata)
 	w->top_line = 0;
 	w->highlight_line = 0;
 
-	if (w->width - 80 > 20)
-		w->width = 80;
-	else
-		w->width = 60;
+	if (w->width >= 60)
+	{
+		if (w->width >= 100)
+			w->width = 80;
+		else
+			w->width = 60;
+	}
 
-	if (w->height - 20 > 8)
-		w->height -= 8;
-	else
+	if (w->height <= 25)
 		w->height = 20;
+	else
+		w->height = w->gd->screen->get_screen_height() - 14;
 
 	w->offset_row = (w->gd->screen->get_screen_height() - w->height) / 2;
 	w->offset_col = (w->gd->screen->get_screen_width() - w->width) / 2;
