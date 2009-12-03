@@ -415,9 +415,11 @@ static int DisplayFile(uViewFile *v)
 	int i;
 	int ln;
 	char buff[256];
+	int ostatus;
 
 	ln = v->intTLine;
 
+	ostatus = v->w->screen->get_updates();
 	v->w->screen->set_updates(0);
 
 	v->w->screen->set_style(STYLE_TITLE);
@@ -448,7 +450,7 @@ static int DisplayFile(uViewFile *v)
 
 	DisplayStatus(v);
 
-	v->w->screen->set_updates(1);
+	v->w->screen->set_updates(ostatus);
 
 	return 0;
 }
@@ -842,9 +844,13 @@ static int LoadGlobalViewerScript(uViewFile *v, char *sn)
 
 void ViewerDrawAll(uViewFile *v)
 {
+	v->w->screen->set_updates(0);
+
 	DisplayFile(v);
 	DrawMenuLine(v->w->screen, v->lstHotKeys);
 	DisplayCLI(v);
+
+	v->w->screen->set_updates(1);
 }
 
 int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)

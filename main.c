@@ -1301,6 +1301,7 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	int i;
 	char *path;
 
+	int oldstatus;
 	int name_len;
 	int size_off;
 	int date_off;
@@ -1310,6 +1311,8 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 
 	win->screen->set_style(STYLE_TITLE);
 	win->screen->draw_border(win);
+
+	oldstatus = win->screen->get_updates();
 
 	win->screen->set_updates(0);
 
@@ -1374,7 +1377,7 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 		i += 1;
 	}
 
-	win->screen->set_updates(1);
+	win->screen->set_updates(oldstatus);
 	// set cursor to lower corner of screen...
 	win->screen->set_cursor(win->screen->get_screen_height(), win->screen->get_screen_width());
 }
@@ -3028,6 +3031,8 @@ void DrawAll(uGlobalData *gd)
 
 	assert(gd != NULL);
 
+	gd->screen->set_updates(0);
+
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawFileListWindow(GetInActWindow(gd), GetInActList(gd), GetInActDPath(gd));
 
@@ -3044,6 +3049,8 @@ void DrawAll(uGlobalData *gd)
 
 	SwitchPanes(gd);
 	SwitchPanes(gd);
+
+	gd->screen->set_updates(1);
 }
 
 static void StartDirectoryMode(uGlobalData *gdata, char *start_left, char *start_right)
