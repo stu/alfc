@@ -39,10 +39,7 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 		fn = ViewedFilename()
 		ext = findpattern(fn, "[.]")
 
-		--debug_msg("fn="..fn .. " lang count="..#lang)
-
 		if lang == nil then return end
-		if #lang == 0 then return end
 
 		for k,v in pairs(lang) do
 			if v.extensions ~= nil then
