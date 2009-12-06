@@ -1,0 +1,24 @@
+﻿Current Roadmap for development
+===============================
+
+These things need to be fixed before a proper release is cut;
+
+Filemanager side
+- dialogue for create directory
+- Overwrite confirmation dialogue
+- Directory Tree
+- better shell support
+- favourites list
+- Rename functions
+
+Viewer side
+- hex mode
+
+Editor side
+- Entire editor!
+
+Documentation
+- Online help
+- API docs
+
+

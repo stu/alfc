@@ -90,7 +90,7 @@ document whole dang options file....
 Windows Notes
 =============
 On windows, any file that starts with a dot eg ".netbeans" will have
-its attribute shown as hidden, even when it does not have a hidden 
+its attribute shown as hidden, even when it does not have a hidden
 attribute.
 
 
@@ -105,29 +105,6 @@ The source is available on Gitorious
 
     git clone git://gitorious.org/alfc/alfc.git
 
-
-
-ToDo list for next release
-==========================
-
-Core
-	- Viewer (HEX)
-	- Editor (both for text/hex)
-	- better shell support
-	- favourites list
-    - online documentation
-	- confirmation overwite on copy/delete
-	- verbose copy/move/delete display??
-		would preclude rewriting the recursive code...
-
-
-Files
-	- Rename Files
-
-Directories
-    - Better create/delete/rename/move control (dialogues?)
-
-Birth and Rebirth
 
 
 Portability
