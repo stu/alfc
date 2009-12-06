@@ -20,7 +20,12 @@ static int intResized;
 static void gui_cls(void);
 static void gui_setcursor(int row, int col);
 
-static int intStyleMode;
+
+struct udtStyleColors
+{
+	uint32_t fg;
+	uint32_t bg;
+} style_colors[16];
 
 static struct udtStyles
 {
@@ -36,31 +41,6 @@ static struct udtStyles
 	{ STYLE_NORMAL, 0, 0, 0, 0 },
 	{ STYLE_HIGHLIGHT, 0, 0, 0, 0 },
 
-};
-
-static int style_data_dir[][3] = {
-		{ STYLE_DIR_EXEC, 		CLR_BR_GREEN, 	CLR_BLACK },
-		{ STYLE_DIR_LINK, 		CLR_YELLOW, 	CLR_BLACK },
-		{ STYLE_DIR_IMAGE, 		CLR_BR_CYAN, 	CLR_BLACK },
-		{ STYLE_DIR_DIR, 		CLR_BR_BLUE, 	CLR_BLACK },
-		{ STYLE_DIR_DOCUMENT, 	CLR_MAGENTA, 	CLR_BLACK },
-		{ STYLE_DIR_ARCHIVE, 	CLR_RED, 		CLR_BLACK },
-		{ STYLE_DIR_BACKUP, 	CLR_DK_GREY,	CLR_BLACK },
-
-		{ -1, -1, -1 }
-};
-
-static int style_data_view[][3] = {
-		{ STYLE_VIEW_EDIT_EOL, 		CLR_BR_GREEN, 	CLR_BLACK },
-		{ -1, -1, -1 }
-};
-
-static int style_data_base[][3] = {
-		{ STYLE_TITLE, 			CLR_WHITE, 	CLR_BLUE },
-		{ STYLE_NORMAL, 		CLR_GREY, 	CLR_BLACK },
-		{ STYLE_HIGHLIGHT, 		CLR_WHITE, 	CLR_RED },
-
-		{ -1, -1, -1 }
 };
 
 rgbcolor xc_colors[32];
@@ -311,82 +291,63 @@ static void init_style(int style, uint32_t fg, uint32_t bg)
 
 static void gui_update_style(int style, uint32_t fg, uint32_t bg)
 {
-	int i;
+	if(bg == -1)
+		bg = style_colors[style].bg;
 
-	if(style < STYLE_00 && style > 0)
-	{
-		for(i=0; style_data_base[i][0] != -1; i++)
-		{
-			if(style_data_base[i][0] == style)
-			{
-				style_data_base[i][1] = fg;
-				style_data_base[i][2] = bg;
-				init_style(style, fg, bg);
-				return;
-			}
-		}
-	}
-
-	if(intStyleMode == 0)
-	{
-		for(i=0; style_data_dir[i][0] != -1; i++)
-		{
-			if(style_data_dir[i][0] == style)
-			{
-				style_data_dir[i][1] = fg;
-				style_data_dir[i][2] = bg;
-				init_style(style, fg, bg);
-				return;
-			}
-		}
-	}
-	else if(intStyleMode == 1)
-	{
-		for(i=0; style_data_view[i][0] != -1; i++)
-		{
-			if(style_data_view[i][0] == style)
-			{
-				style_data_view[i][1] = fg;
-				style_data_view[i][2] = bg;
-				init_style(style, fg, bg);
-				return;
-			}
-		}
-	}
+	style_colors[style].fg = fg;
+	style_colors[style].bg = bg;
+	init_style(style, fg, bg);
 }
 
 static void init_dir_styles(uScreenDriver *scr)
 {
-	int i;
-
-	intStyleMode = 0;
-	for(i=0; style_data_dir[i][0] != -1; i++)
-	{
-		init_style(style_data_dir[i][0], style_data_dir[i][1], style_data_dir[i][2]);
-	}
+	init_style(STYLE_DIR_EXEC, style_colors[STYLE_DIR_EXEC].fg, style_colors[STYLE_DIR_EXEC].bg);
+	init_style(STYLE_DIR_LINK, style_colors[STYLE_DIR_LINK].fg, style_colors[STYLE_DIR_LINK].bg);
+	init_style(STYLE_DIR_IMAGE, style_colors[STYLE_DIR_IMAGE].fg, style_colors[STYLE_DIR_IMAGE].bg);
+	init_style(STYLE_DIR_DIR, style_colors[STYLE_DIR_DIR].fg, style_colors[STYLE_DIR_DIR].bg);
+	init_style(STYLE_DIR_DOCUMENT, style_colors[STYLE_DIR_DOCUMENT].fg, style_colors[STYLE_DIR_DOCUMENT].bg);
+	init_style(STYLE_DIR_ARCHIVE, style_colors[STYLE_DIR_ARCHIVE].fg, style_colors[STYLE_DIR_ARCHIVE].bg);
+	init_style(STYLE_DIR_BACKUP, style_colors[STYLE_DIR_BACKUP].fg, style_colors[STYLE_DIR_BACKUP].bg);
+	init_style(STYLE_DIR_MEDIA, style_colors[STYLE_DIR_MEDIA].fg, style_colors[STYLE_DIR_MEDIA].bg);
 }
+
+static void init_dir_styles_masterlist(uScreenDriver *scr)
+{
+	style_colors[STYLE_DIR_EXEC].fg = CLR_BR_GREEN;
+	style_colors[STYLE_DIR_EXEC].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_LINK].fg = CLR_YELLOW;
+	style_colors[STYLE_DIR_LINK].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_IMAGE].fg = CLR_BR_BLUE;
+	style_colors[STYLE_DIR_IMAGE].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_EXEC].fg = CLR_BR_GREEN;
+	style_colors[STYLE_DIR_EXEC].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_DIR].fg = CLR_BR_BLUE;
+	style_colors[STYLE_DIR_DIR].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_DOCUMENT].fg = CLR_BLUE;
+	style_colors[STYLE_DIR_DOCUMENT].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_ARCHIVE].fg = CLR_BR_RED;
+	style_colors[STYLE_DIR_ARCHIVE].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_BACKUP].fg = CLR_DK_GREY;
+	style_colors[STYLE_DIR_BACKUP].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_MEDIA].fg = CLR_BR_MAGENTA;
+	style_colors[STYLE_DIR_MEDIA].bg = CLR_BLACK;
+
+	init_dir_styles(scr);
+}
+
 
 static void init_view_styles(uScreenDriver *scr)
 {
-	int i;
-
-	intStyleMode = 1;
-	for(i=0; style_data_dir[i][0] != -1; i++)
-	{
-		init_style(style_data_view[i][0], style_data_view[i][1], style_data_view[i][2]);
-	}
+	init_style(STYLE_VIEW_EDIT_EOL, CLR_BR_GREEN, CLR_BLACK); // end of line marker in viewer...
 }
-
-static void init_base_styles(uScreenDriver *scr)
-{
-	int i;
-
-	for(i=0; style_data_base[i][0] != -1; i++)
-	{
-		init_style(style_data_base[i][0], style_data_base[i][1], style_data_base[i][2]);
-	}
-}
-
 
 static int gui_screen_init(uScreenDriver *scr)
 {
@@ -409,8 +370,7 @@ static int gui_screen_init(uScreenDriver *scr)
 
 	gui_init_colours();
 
-	init_base_styles(scr);
-	init_dir_styles(scr);
+	init_dir_styles_masterlist(scr);
 
 	// init to black
 	init_style(STYLE_TITLE, CLR_GREY, CLR_BLACK);

@@ -9,24 +9,24 @@ function DecomposeFiletypes()
     filetypes.exec.type = FILETYPE_EXEC
     filetypes.exec.color = "bright green"
 
-    filetypes.movies = {}
-    filetypes.movies.extensions = { "*.avi", "*.wmv", "*.mpg" }
-    filetypes.movies.type = FILETYPE_MOVIE
-    filetypes.movies.color = "yellow"
+    filetypes.media = {}
+    filetypes.media.extensions = { "*.avi", "*.wmv", "*.mpg", "*.mp3", "*.m4v" }
+    filetypes.media.type = FILETYPE_MEDIA
+    filetypes.media.color = "cyan"
 
 	filetypes.images = {}
 	filetypes.images.extensions = { "*.gif", "*.png", "*.jpg", "*.pcx", "*.lbm", "*.psd", "*.raw", "*.nef", "*.jpeg", "*.jpe" }
 	filetypes.images.type = FILETYPE_IMAGE
-    filetypes.images.color = "yellow"
+    filetypes.images.color = "brown"
 
 	filetypes.archives = {}
 	filetypes.archives.extensions = { "*.tar", "*.taz", "*.tar.gz", "*.tar.bz", "*.tar.bz2", "*.tgz", "*.tbz",
-										"*.zip", "*.lha", "*.rar", "*.arc", "*.pak", "*.sit", "*.hqx", "*.zoo" }
+										"*.zip", "*.lha", "*.rar", "*.arc", "*.pak", "*.sit", "*.hqx", "*.zoo", "*.7z" }
 	filetypes.archives.type = FILETYPE_ARCHIVE
-    filetypes.archives.color = "red"
+    filetypes.archives.color = "bright red"
 
 	filetypes.docs = {}
-	filetypes.docs.extensions = { "README", "INSTALL", "*.txt", "*.doc", "*.me", "*.log" }
+	filetypes.docs.extensions = { "README", "INSTALL", "*.txt", "*.doc", "*.me", "*.log", "*.tex" }
 	filetypes.docs.type = FILETYPE_DOC
     filetypes.docs.color = "green"
 
@@ -43,6 +43,7 @@ function DecomposeFiletypes()
 			ftypes[vv] = {}
 			ftypes[vv].type = v.type
 		end
+		SetFileTypeColor(v.type, v.color)
 	end
 end
 

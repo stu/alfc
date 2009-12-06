@@ -1149,6 +1149,12 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 		case FILETYPE_BACKUP:
 			style = STYLE_DIR_BACKUP;
 			break;
+		case FILETYPE_MEDIA:
+			style = STYLE_DIR_MEDIA;
+			break;
+		case FILETYPE_EXEC:
+			style = STYLE_DIR_EXEC;
+			break;
 	}
 
 	memset(buff, ' ', 1024);

@@ -2724,3 +2724,67 @@ int gme_ShowHelp(lua_State *L)
 	return 0;
 }
 
+static uint32_t ConvertColourToInt(char *s)
+{
+	if(strcmp(s, "red") == 0) return CLR_RED;
+	if(strcmp(s, "blue") == 0) return CLR_BLUE;
+	if(strcmp(s, "green") == 0) return CLR_GREEN;
+	if(strcmp(s, "black") == 0) return CLR_BLACK;
+	if(strcmp(s, "brown") == 0) return CLR_BROWN;
+	if(strcmp(s, "magenta") == 0) return CLR_MAGENTA;
+	if(strcmp(s, "cyan") == 0) return CLR_CYAN;
+	if(strcmp(s, "grey") == 0) return CLR_GREY;
+	if(strcmp(s, "dark grey") == 0) return CLR_DK_GREY;
+	if(strcmp(s, "bright red") == 0) return CLR_BR_RED;
+	if(strcmp(s, "bright green") == 0) return CLR_BR_GREEN;
+	if(strcmp(s, "yellow") == 0) return CLR_YELLOW;
+	if(strcmp(s, "bright blue") == 0) return CLR_BR_BLUE;
+	if(strcmp(s, "bright magenta") == 0) return CLR_BR_MAGENTA;
+	if(strcmp(s, "bright cyan") == 0) return CLR_BR_CYAN;
+	if(strcmp(s, "white") == 0) return CLR_WHITE;
+
+	return CLR_GREY;
+}
+
+int gme_SetFileTypeColor(lua_State *L)
+{
+	uGlobalData	*gd;
+	int ftype;
+	struct lstr clr;
+	uint32_t c;
+
+	gd = GetGlobalData(L);
+
+	ftype = luaL_checkint(L, 1);
+	GET_LUA_STRING(clr, 2);
+
+	c = ConvertColourToInt(clr.data);
+
+	switch(ftype)
+	{
+		case FILETYPE_DEFAULT:
+			gd->screen->init_style(STYLE_NORMAL, c, -1);
+			break;
+		case FILETYPE_IMAGE:
+			gd->screen->init_style(STYLE_DIR_IMAGE, c, -1);
+			break;
+		case FILETYPE_ARCHIVE:
+			gd->screen->init_style(STYLE_DIR_ARCHIVE, c, -1);
+			break;
+		case FILETYPE_DOC:
+			gd->screen->init_style(STYLE_DIR_DOCUMENT, c, -1);
+			break;
+		case FILETYPE_BACKUP:
+			gd->screen->init_style(STYLE_DIR_BACKUP, c, -1);
+			break;
+		case FILETYPE_EXEC:
+			gd->screen->init_style(STYLE_DIR_EXEC, c, -1);
+			break;
+		case FILETYPE_MEDIA:
+			gd->screen->init_style(STYLE_DIR_MEDIA, c, -1);
+			break;
+	}
+
+	return 0;
+}
+

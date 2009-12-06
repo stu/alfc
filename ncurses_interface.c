@@ -43,6 +43,12 @@ struct udtStyles
 		},
 	};
 
+struct udtStyleColors
+{
+	uint32_t fg;
+	uint32_t bg;
+} style_colors[16];
+
 static char* driver_name(void)
 {
 	return "NCURSES";
@@ -137,8 +143,6 @@ static void nc_draw_frame(uWindow *w)
 {
 	int i;
 
-	//setcolour(STYLE_TITLE, styles[STYLE_TITLE].s_on);
-
 	setcursor(1 + w->offset_row, 1 + w->offset_col);
 	dr_outchar(ACS_ULCORNER);
 	setcursor(1 + w->offset_row, 1 + w->offset_col + (w->width - 1));
@@ -163,8 +167,6 @@ static void nc_draw_frame(uWindow *w)
 		setcursor(1 + w->offset_row + i, w->offset_col + w->width);
 		nc_print_vline();
 	}
-
-	//setcolour(STYLE_NORMAL, styles[STYLE_NORMAL].s_on);
 }
 
 static void nc_clear_window(uWindow *w)
@@ -406,20 +408,58 @@ static void init_style(int style, uint32_t fg, uint32_t bg)
 
 static void nc_init_style(int style, uint32_t fg, uint32_t bg)
 {
+	if(bg == -1)
+		bg = style_colors[style].bg;
+
+	style_colors[style].fg = fg;
+	style_colors[style].bg = bg;
 	init_style(style, fg, bg);
 }
 
 static void init_dir_styles(uScreenDriver *scr)
 {
-	init_style(STYLE_DIR_EXEC, CLR_BR_GREEN, CLR_BLACK); // exec
-	init_style(STYLE_DIR_LINK, CLR_YELLOW, CLR_BLACK); // link
-
-	init_style(STYLE_DIR_IMAGE, CLR_BR_BLUE, CLR_BLACK); // image
-	init_style(STYLE_DIR_DIR, CLR_BR_BLUE, CLR_BLACK); // dir
-	init_style(STYLE_DIR_DOCUMENT, CLR_BR_BLUE, CLR_BLACK); // document
-	init_style(STYLE_DIR_ARCHIVE, CLR_BR_BLUE, CLR_BLACK); // archive
-	init_style(STYLE_DIR_BACKUP, CLR_DK_GREY, CLR_BLACK); // archive
+	init_style(STYLE_DIR_EXEC, style_colors[STYLE_DIR_EXEC].fg, style_colors[STYLE_DIR_EXEC].bg);
+	init_style(STYLE_DIR_LINK, style_colors[STYLE_DIR_LINK].fg, style_colors[STYLE_DIR_LINK].bg);
+	init_style(STYLE_DIR_IMAGE, style_colors[STYLE_DIR_IMAGE].fg, style_colors[STYLE_DIR_IMAGE].bg);
+	init_style(STYLE_DIR_DIR, style_colors[STYLE_DIR_DIR].fg, style_colors[STYLE_DIR_DIR].bg);
+	init_style(STYLE_DIR_DOCUMENT, style_colors[STYLE_DIR_DOCUMENT].fg, style_colors[STYLE_DIR_DOCUMENT].bg);
+	init_style(STYLE_DIR_ARCHIVE, style_colors[STYLE_DIR_ARCHIVE].fg, style_colors[STYLE_DIR_ARCHIVE].bg);
+	init_style(STYLE_DIR_BACKUP, style_colors[STYLE_DIR_BACKUP].fg, style_colors[STYLE_DIR_BACKUP].bg);
+	init_style(STYLE_DIR_MEDIA, style_colors[STYLE_DIR_MEDIA].fg, style_colors[STYLE_DIR_MEDIA].bg);
 }
+
+static void init_dir_styles_masterlist(uScreenDriver *scr)
+{
+	style_colors[STYLE_DIR_EXEC].fg = CLR_BR_GREEN;
+	style_colors[STYLE_DIR_EXEC].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_LINK].fg = CLR_YELLOW;
+	style_colors[STYLE_DIR_LINK].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_IMAGE].fg = CLR_BR_BLUE;
+	style_colors[STYLE_DIR_IMAGE].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_EXEC].fg = CLR_BR_GREEN;
+	style_colors[STYLE_DIR_EXEC].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_DIR].fg = CLR_BR_BLUE;
+	style_colors[STYLE_DIR_DIR].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_DOCUMENT].fg = CLR_BLUE;
+	style_colors[STYLE_DIR_DOCUMENT].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_ARCHIVE].fg = CLR_BR_RED;
+	style_colors[STYLE_DIR_ARCHIVE].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_BACKUP].fg = CLR_DK_GREY;
+	style_colors[STYLE_DIR_BACKUP].bg = CLR_BLACK;
+
+	style_colors[STYLE_DIR_MEDIA].fg = CLR_BR_MAGENTA;
+	style_colors[STYLE_DIR_MEDIA].bg = CLR_BLACK;
+
+	init_dir_styles(scr);
+}
+
 
 static void init_view_styles(uScreenDriver *scr)
 {
@@ -492,7 +532,7 @@ static int nc_screen_init(uScreenDriver *scr)
 	init_style(STYLE_NORMAL, scr->gd->clr_foreground, scr->gd->clr_background); // default
 	init_style(STYLE_HIGHLIGHT, scr->gd->clr_hi_foreground, scr->gd->clr_hi_background); // highlight line
 
-	init_dir_styles(scr);
+	init_dir_styles_masterlist(scr);
 
 	scr->set_style(STYLE_NORMAL);
 
