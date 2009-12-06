@@ -1,5 +1,6 @@
 stucore
 doc
+*.vpj
 *~
 *.bak
 *.o
