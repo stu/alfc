@@ -1427,6 +1427,9 @@ int gmev_SetViewMode(lua_State *L)
 	v = GetViewerData(L);
 
 	mode = luaL_checknumber(L, 1);
+	if(!(mode == eView_Text || mode == eView_Hex))
+		return luaL_error(L, "Unknown view mode");
+
 	v->intViewMode = mode;
 	v->redraw = 1;
 

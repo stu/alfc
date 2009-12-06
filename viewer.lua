@@ -106,8 +106,8 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 	end
 
 	function __ToggleHexMode(command)
-		if GetViewMode() == viewModeText then
-			SetViewMode(eView_Hext)
+		if GetViewMode() == eView_Text then
+			SetViewMode(eView_Hex)
 		else
 			SetViewMode(eView_Text)
 		end
