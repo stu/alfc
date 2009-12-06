@@ -104,8 +104,12 @@ uint32_t ALFC_GetFileAttrs(uDirEntry *de)
 	uint32_t z;
 
 	x = malloc(strlen(de->path) + strlen(de->name) + 16);
-	strcpy(x, de->path);
-	strcat(x, "/");
+
+	if(strlen(de->path) > 0)
+	{
+		strcpy(x, de->path);
+		strcat(x, "/");
+	}
 	strcat(x, de->name);
 
 	z = GetFileAttributes(x);
