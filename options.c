@@ -190,6 +190,8 @@ static void CreateBaselineINIFile(uGlobalData *gdata)
     INI_UpdateItem(gdata->optfile, "delete", "display_log", "false");
 
 	INI_UpdateItem(gdata->optfile, "viewer", "mru", "16");
+	INI_UpdateItem(gdata->optfile, "viewer", "hex_width", "4");
+
 	INI_UpdateItem(gdata->optfile, "viewer_mru", "count", "1");
 	INI_UpdateItem(gdata->optfile, "viewer_mru", "mru0", "readme.txt");
 }

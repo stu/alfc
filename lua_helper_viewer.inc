@@ -49,13 +49,15 @@ void RegisterViewerFuncs(uViewFile *gb, lua_State *l)
 {
 	luaL_openlibs(l);
 
-	//RegisterCommonFuncs(gb->gd, l);
-	//RegisterGlobalData(gb->gd, l);
 	RegisterLuaFuncs(gb->gd, l);
 	RegisterViewerData(gb, l);
 
 /* LUA EXT REF */
 /* LUA END EXT REF */
+
+	lua_pushnumber(l, eView_Hex); lua_setglobal(l, "eView_Hex");
+	lua_pushnumber(l, eView_Text); lua_setglobal(l, "eView_Text");
+
 
 	lua_settop(l, 0);
 }

@@ -105,6 +105,15 @@ if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
 		end
 	end
 
+	function __ToggleHexMode(command)
+		if GetViewMode() == viewModeText then
+			SetViewMode(eView_Hext)
+		else
+			SetViewMode(eView_Text)
+		end
+	end
+
+
 	function CLIParse(command)
 		local cmd
 

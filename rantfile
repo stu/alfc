@@ -166,7 +166,7 @@ alfc = %w( dlist.o logwrite.o ini.o
 			lua_api.o options.o viewer.o
 			lua_helper_viewer.o lua_common.o lua_common_api.o
 			operations.o lua_hash.o md5.o rmd160.o sha1.o
-			menu.o help.o guideload.o
+			menu.o help.o guideload.o tree.o
 			)
 
 if DRIVER=="GUI"
@@ -274,7 +274,7 @@ end
 
 desc "Cleanup..."
 task :clean => "docs/clean" do
-	x = Dir["*.{bak,o,obj,a,gd}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"] + Dir["Makefile"]
+	x = Dir["*.{bak,o,obj,a,gd}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"] 
 
 	x += Dir["#{var[:gcomp]}"]
 	x += Dir["#{var[:gdump]}"]
@@ -442,7 +442,7 @@ desc "Install linux in /usr/local/bin"
 task :install => "all" do
     sys "sudo cp alfc /usr/local/bin"
     sys "sudo mkdir -p /usr/local/share/alfc"
-    sys "sudo cp *.gd /usr/local/share/alfc"
+    sys "sudo cp *.hlp /usr/local/share/alfc"
 end
 
 subdirs "docs"

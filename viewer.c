@@ -105,7 +105,7 @@ static DList* LoadLines(uViewFile *v, GetLine LoadLine)
 				fread(v->data, 1, len, fp);
 			}
 			else
-				len = 0;
+				len	= 0;
 
 			fclose(fp);
 
@@ -195,10 +195,18 @@ static DList* LoadLines(uViewFile *v, GetLine LoadLine)
 static void PrintLine(uViewFile *v, int ln, int i)
 {
 	char *p;
-	char buff[4096];
+	char *buff;
 	int q;
 	int j;
 	int tabs = v->tabsize;
+	int width;
+
+	width = v->w->screen->get_screen_width() + 16;
+	if(width < 256)
+		width = 256;
+
+	buff = malloc(width);
+
 
 	// Feeling lazy
 	switch(v->nwidth)
@@ -241,7 +249,7 @@ static void PrintLine(uViewFile *v, int ln, int i)
 
 	p = buff;
 	//*p = 0;
-	memset(buff, ' ', 4096);
+	memset(buff, ' ', width);
 	if(ln < v->intLineCount)
 	{
 		int xoff;
@@ -278,7 +286,7 @@ static void PrintLine(uViewFile *v, int ln, int i)
 		}
 
 		//j = v->intColOffset;
-		while(j < v->lines[ln].length && (p-buff) < 4000)
+		while(j < v->lines[ln].length && (p-buff) < width)
 		{
 			uint8_t c;
 			c = v->lines[ln].off[j];
@@ -339,10 +347,17 @@ static void PrintLine(uViewFile *v, int ln, int i)
 
 static int DisplayStatus(uViewFile *v)
 {
-	char buff[4096];
+	char *buff;
 	char *p;
+	int	width;
 
-	memset(buff, ' ', 4096);
+	width = v->w->screen->get_screen_width() + 16;
+	if(width < 256)
+		width = 256;
+
+	buff = malloc(width);
+
+	memset(buff, ' ', width);
 	memmove(buff, " Line: ", 7);
 
 	sprintf(buff + 40, "%i/%i, ", 1 + v->intTLine + v->intHLine, v->intLineCount);
@@ -381,6 +396,9 @@ static int DisplayStatus(uViewFile *v)
 
 	p = strchr(buff, 0x0);
 	sprintf(p, ", tab:%2i ", v->tabsize);
+
+	p = strchr(buff, 0x0);
+	sprintf(p, " (%s) ", v->intViewMode == eView_Hex ? "Hex" : "Text");
 
 	v->w->screen->set_cursor(v->w->offset_row + v->w->height, 1 + v->w->offset_col + v->nwidth + 4);
 	buff[v->w->width - (v->nwidth+2)] = 0;
@@ -628,7 +646,7 @@ static int vw_scroll_end(uViewFile *v)
 	else if(!(v->intTLine == v->intLineCount - wh - 1 && v->intHLine == wh-2))
 	{
 		wh -= 3;
-		v->intTLine = v->intLineCount - wh	;
+		v->intTLine = v->intLineCount - wh  ;
 		v->intHLine = wh - 1;
 		DisplayFile(v);
 	}
@@ -858,12 +876,37 @@ void ViewerDrawAll(uViewFile *v)
 	v->w->screen->set_updates(1);
 }
 
+// LoadLine is a callback for reading from a Lua table data structure.
+// if its NULL we assume FN is a valid file, otherwise its the window title.
 int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 {
 	uViewFile *v;
 	struct stat stats;
 	int rc;
 	int old_mode;
+	uDirEntry *de;
+
+	if(fn == NULL)
+		return 1;
+
+	stats.st_mode = 0;
+	if(LoadLine == NULL)
+	{
+		ALFC_stat(fn, &stats);
+
+		de = calloc(1, sizeof(uDirEntry));
+		de->path = strdup("");
+		de->name = strdup(fn);
+		de->attrs = stats.st_mode;
+		stats.st_mode = (uint16_t)ALFC_GetFileAttrs(de)&0xFFFF;
+		free(de->path);
+		free(de->name);
+		free(de);
+	}
+
+	// don't do view on a directory.
+	if(ALFC_IsDir(stats.st_mode) == 0)
+		return 1;
 
 	gd->screen->init_view_styles(gd->screen);
 
@@ -893,17 +936,18 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 		rc = LoadGlobalViewerScript(v, "$HOME/.alfc/global.lua");
 
 	gd->screen->set_style(STYLE_NORMAL);
-	v->w->screen->cls();
+	//v->w->screen->cls();
+	v->w->screen->window_clear(v->w);
+
+	gd->screen->set_style(STYLE_TITLE);
 	v->w->screen->draw_border(v->w);
 
+	// incase its a HUUUUUUUUUUGE file, throw up a vague title screen
 	gd->screen->set_style(STYLE_TITLE);
 	gd->screen->set_cursor(1, ((gd->screen->get_screen_width() - (strlen(" Welcome to Another Linux File Commander ") - 8))/2));
 	gd->screen->print(" Welcome to Another Linux File Commander ");
 
-	if(LoadLine != NULL)
-		ALFC_stat(fn, &stats);
-
-	if(LoadLine != NULL || S_ISDIR(stats.st_mode) == 0)
+	if(ALFC_IsDir(stats.st_mode) != 0)
 	{
 		LoadLines(v, LoadLine);
 		ViewerDrawAll(v);
@@ -937,7 +981,7 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 				}
 				else
 				{
-					ExecuteViewerString(v, kb->sCommand);
+					ExecuteGlobalViewerString(v, kb->sCommand);
 				}
 			}
 			else
@@ -1099,23 +1143,11 @@ uViewFile* GetViewerData(lua_State *L)
 
 int RegisterViewerData(uViewFile *v, lua_State *l)
 {
-	lua_pushlightuserdata(l, (void*)&uViewerData_Key);  /* push address */
+	lua_pushlightuserdata(l, (void*)&uViewerData_Key);	/* push address */
 	lua_pushlightuserdata(l, v);
 	lua_settable(l, LUA_REGISTRYINDEX);
 
 	return 1;
-}
-
-int gmev_SwitchToHexView(lua_State *L)
-{
-	uViewFile *v;
-	v = GetViewerData(L);
-	assert(v != NULL);
-
-	v->intViewMode = eView_Hex;
-	v->redraw = 1;
-
-	return 0;
 }
 
 int gmev_SetTabSize(lua_State *L)
@@ -1345,3 +1377,59 @@ int gmev_ViewerDrawAll(lua_State *L)
 
 	return 0;
 }
+
+/****f* LuaViewerAPI/GetViewMode
+* FUNCTION
+*	Returns the current active viewing mode.
+* SYNOPSIS
+mode = GetViewMode()
+* RESULTS
+*	mode
+*	o eView_Text - Sets text mode
+*	o eView_Hex - Sets hex mode
+* SEE ALSO
+*	SetViewMode, GetViewMode
+* AUTHOR
+*	Stu George
+******
+*/
+int gmev_GetViewMode(lua_State *L)
+{
+	uViewFile *v;
+	v = GetViewerData(L);
+	lua_pushnumber(L, v->intViewMode);
+
+	return 1;
+}
+
+/****f* LuaViewerAPI/SetViewMode
+* FUNCTION
+*	Sets the current view mode to either text or hex.
+* SYNOPSIS
+SetViewMode(eView_Hex)
+* INPUTS
+*	mode
+*	o eView_Text - Sets text mode
+*	o eView_Hex - Sets hex mode
+* RESULTS
+*   o Display will switch to specified mode.
+* SEE ALSO
+*	SetViewMode, GetViewMode
+* AUTHOR
+*	Stu George
+******
+*/
+int gmev_SetViewMode(lua_State *L)
+{
+	uViewFile *v;
+	int mode;
+
+	v = GetViewerData(L);
+
+	mode = luaL_checknumber(L, 1);
+	v->intViewMode = mode;
+	v->redraw = 1;
+
+	return 0;
+}
+
