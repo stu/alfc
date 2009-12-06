@@ -1384,9 +1384,9 @@ int gmev_ViewerDrawAll(lua_State *L)
 * SYNOPSIS
 mode = GetViewMode()
 * RESULTS
-*	mode
-*	o eView_Text - Sets text mode
-*	o eView_Hex - Sets hex mode
+*	mode (integer):
+*	o eView_Text -- Sets text mode
+*	o eView_Hex -- Sets hex mode
 * SEE ALSO
 *	SetViewMode, GetViewMode
 * AUTHOR
@@ -1408,9 +1408,9 @@ int gmev_GetViewMode(lua_State *L)
 * SYNOPSIS
 SetViewMode(eView_Hex)
 * INPUTS
-*	mode
-*	o eView_Text - Sets text mode
-*	o eView_Hex - Sets hex mode
+*	mode (integer):
+*	o eView_Text -- Sets text mode
+*	o eView_Hex -- Sets hex mode
 * RESULTS
 *   o Display will switch to specified mode.
 * SEE ALSO

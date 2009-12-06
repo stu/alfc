@@ -1167,18 +1167,17 @@ int gmec_SetQuitAppFlag(lua_State *L)
 	return 0;
 }
 
-/****f* LuaAPICommon/SetQuitAppFlag
+/****f* LuaAPICommon/GetQuitAppFlag
  * FUNCTION
- *	Sets the flag to tell the application to quit.
+ *	Returns the QuitAppFlag status
  * SYNOPSIS
- SetQuitAppFlag()
+ GetQuitAppFlag()
  * INPUTS
  *	o None
  * RESULTS
- *   o None
- * NOTES
- * 	This does not cause the app to quit there and then, it will most likely fiinish whatever
- * 	processing it was doing and once it gets back to the main screen, will quit out.
+ *  Flag
+ *	 o 0 - App still running
+ *	 o 1 - App in quit mode
  * SEE ALSO
  * GetQuitAppFlag, SetQuitAppFlag
  * AUTHOR
