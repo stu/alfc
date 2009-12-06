@@ -8,7 +8,7 @@ task :help => help_file do
 end
 
 task :clean do
-	x = Dir["*.{bak,o,obj,a,gd,hlp,dvi,aux,pdf,idx,ilg,ind,log,toc}"]
+	x = Dir["*.{bak,o,obj,a,gd,hlp,dvi,aux,pdf,idx,ilg,ind,log,toc}"] + Dir["*~"]
 
 	if x.length > 0
 		sys.rm_rf x
