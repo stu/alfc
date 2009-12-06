@@ -57,6 +57,7 @@
 #include "operations.h"
 #include "help.h"
 #include "menu.h"
+#include "tree.h"
 
 // screen config
 #ifdef DRV_NCURSES
