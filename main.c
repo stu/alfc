@@ -278,13 +278,13 @@ char* GetDateTimeString(char *fmt, time_t t)
 	struct tm *tt;
 
 	char *mns[] =
-		{
+	{
 		"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-		};
+	};
 	char *mnl[] =
-		{
+	{
 		"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
-		};
+	};
 
 	tt = localtime(&t);
 
@@ -374,14 +374,14 @@ void about_window(uGlobalData *gd)
 	// big enough to hold string...
 	buff = malloc(1024);
 	sprintf(buff, "\n"
-		"Welcome to Another Linux File Commander\n"
-		"By Stu George\n"
-		"\n"
-		"Version %i.%02i.%04i\n"
-		"Compiled on %s - %s\n"
-		"\n"
-		"Licensed under the GNU GPL v2\n"
-		"\n", VersionMajor(), VersionMinor(), VersionBuild(), VersionDate(), VersionTime());
+			"Welcome to Another Linux File Commander\n"
+			"By Stu George\n"
+			"\n"
+			"Version %i.%02i.%04i\n"
+			"Compiled on %s - %s\n"
+			"\n"
+			"Licensed under the GNU GPL v2\n"
+			"\n", VersionMajor(), VersionMinor(), VersionBuild(), VersionDate(), VersionTime());
 
 	height = 0;
 	width = 0;
@@ -535,9 +535,9 @@ DList* GetActiveMRU(uGlobalData *gd)
 
 uMenu** GetActMenu(uGlobalData *gd)
 {
-	if(gd->mode == eMode_Directory)
+	if (gd->mode == eMode_Directory)
 		return gd->file_menu;
-	else if(gd->mode == eMode_Viewer)
+	else if (gd->mode == eMode_Viewer)
 		return gd->viewer_menu;
 	else
 		LogInfo("UNKNOWN MENU\n");
@@ -1076,7 +1076,7 @@ static int CalcDateOff(uWindow *w, int end)
 	if (HaveColumnDate(w->gd) == 0)
 		return end;
 
-	return (end - (w->gd->date_fmt_len + w->gd->time_fmt_len + 2));
+	return(end - (w->gd->date_fmt_len + w->gd->time_fmt_len + 2));
 }
 
 static void compress_size(char *buff, uint64_t xx)
@@ -1547,25 +1547,25 @@ static void DrawFileInfo(uWindow *win)
 		memmove(buff + attr_offset, "Attr: ---------", 15);
 
 		if ((de->attrs & S_IRUSR) == S_IRUSR)
-		buff[attr_offset + 6] = 'r';
+			buff[attr_offset + 6] = 'r';
 		if ((de->attrs & S_IWUSR) == S_IWUSR)
-		buff[attr_offset + 7] = 'w';
+			buff[attr_offset + 7] = 'w';
 		if ((de->attrs & S_IXUSR) == S_IXUSR)
-		buff[attr_offset + 8] = 'x';
+			buff[attr_offset + 8] = 'x';
 
 		if ((de->attrs & S_IRGRP) == S_IRGRP)
-		buff[attr_offset + 9] = 'r';
+			buff[attr_offset + 9] = 'r';
 		if ((de->attrs & S_IWGRP) == S_IWGRP)
-		buff[attr_offset + 10] = 'w';
+			buff[attr_offset + 10] = 'w';
 		if ((de->attrs & S_IXGRP) == S_IXGRP)
-		buff[attr_offset + 11] = 'x';
+			buff[attr_offset + 11] = 'x';
 
 		if ((de->attrs & S_IROTH) == S_IROTH)
-		buff[attr_offset + 12] = 'r';
+			buff[attr_offset + 12] = 'r';
 		if ((de->attrs & S_IWOTH) == S_IWOTH)
-		buff[attr_offset + 13] = 'w';
+			buff[attr_offset + 13] = 'w';
 		if ((de->attrs & S_IXOTH) == S_IXOTH)
-		buff[attr_offset + 14] = 'x';
+			buff[attr_offset + 14] = 'x';
 #else
 		memmove(buff + attr_offset, "Attr: -----", 11);
 		if ((de->attrs & FILE_ATTRIBUTE_HIDDEN) == FILE_ATTRIBUTE_HIDDEN)
@@ -1715,90 +1715,90 @@ char* ConvertKeyToName(int key)
 		int key;
 		char *name;
 	} keys[] =
+	{
 		{
-			{
 			ALFC_KEY_DOWN, "Down"
-			},
-			{
+		},
+		{
 			ALFC_KEY_UP, "Up"
-			},
-			{
+		},
+		{
 			ALFC_KEY_LEFT, "Left"
-			},
-			{
+		},
+		{
 			ALFC_KEY_RIGHT, "Right"
-			},
-			{
+		},
+		{
 			ALFC_KEY_INS, "Insert"
-			},
-			{
+		},
+		{
 			ALFC_KEY_DEL, "Delete"
-			},
-			{
+		},
+		{
 			ALFC_KEY_BACKSPACE, "Backspace"
-			},
-			{
+		},
+		{
 			ALFC_KEY_HOME, "Home"
-			},
-			{
+		},
+		{
 			ALFC_KEY_END, "End"
-			},
-			{
+		},
+		{
 			ALFC_KEY_PAGE_UP, "Page Up"
-			},
-			{
+		},
+		{
 			ALFC_KEY_PAGE_DOWN, "Page Down"
-			},
-			{
+		},
+		{
 			ALFC_KEY_ENTER, "Enter"
-			},
-			{
+		},
+		{
 			ALFC_KEY_TAB, "Tab"
-			},
-			{
+		},
+		{
 			ALFC_KEY_SPACE, "Space"
-			},
-			{
+		},
+		{
 			ALFC_KEY_F01, "F1"
-			},
-			{
+		},
+		{
 			ALFC_KEY_F02, "F2"
-			},
-			{
+		},
+		{
 			ALFC_KEY_F03, "F3"
-			},
-			{
+		},
+		{
 			ALFC_KEY_F04, "F4"
-			},
-			{
+		},
+		{
 			ALFC_KEY_F05, "F5"
-			},
-			{
+		},
+		{
 			ALFC_KEY_F06, "F6"
-			},
-			{
+		},
+		{
 			ALFC_KEY_F07, "F7"
-			},
-			{
+		},
+		{
 			ALFC_KEY_F08, "F8"
-			},
-			{
+		},
+		{
 			ALFC_KEY_F09, "F9"
-			},
-			{
+		},
+		{
 			ALFC_KEY_F10, "F10"
-			},
-			{
+		},
+		{
 			ALFC_KEY_F11, "F11"
-			},
-			{
+		},
+		{
 			ALFC_KEY_F12, "F12"
-			},
+		},
 
-			{
+		{
 			-1, NULL
-			}
-		};
+		}
+	};
 
 	int j;
 
@@ -2079,7 +2079,7 @@ static int get_scroll_depth(uWindow *w)
 	if (dlist_size(GetActList(w->gd)) < w->height - 2)
 		return dlist_size(GetActList(w->gd));
 	else
-		return (w->height - 2) - 4;
+		return(w->height - 2) -	4;
 }
 
 int scroll_home(uGlobalData *gd)
@@ -2209,9 +2209,9 @@ void AddHistory(uGlobalData *gd, char *str, ...)
 {
 	char *x;
 	char *skip[] =
-		{
+	{
 		"HistoryUp()", "HistoryDown()", ":q", NULL
-		};
+	};
 	int i;
 
 	x = malloc(8192);
@@ -2320,7 +2320,7 @@ int SetHighlightedFile(uGlobalData *gd, int idx)
 				else
 				{
 					new_top = idx - depth / 2;
-					new_hl = idx - new_top; //(size - (depth / 2)) - (depth % 2);
+					new_hl = idx - new_top;	//(size - (depth / 2)) - (depth % 2);
 				}
 			}
 			else
@@ -3319,7 +3319,7 @@ int ALFC_main(int start_mode, char *view_file)
 					hr = NULL;
 					hl = NULL;
 
-					if(GetActList(gdata	) != NULL)
+					if (GetActList(gdata ) != NULL)
 					{
 						uDirEntry *deR, *deL;
 
@@ -3367,7 +3367,7 @@ int ALFC_main(int start_mode, char *view_file)
 							switch (key)
 							{
 
-								case 0x21B: // ESC-ESC
+								case 0x21B:	// ESC-ESC
 									intFlag = 1;
 									break;
 
