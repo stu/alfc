@@ -1122,12 +1122,15 @@ static void compress_size(char *buff, uint64_t xx)
 
 static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, int size_off, int date_off)
 {
-	char buff[1024];
+	char *buff;
 	char *buff2;
 	char *p;
 	uint64_t xx;
 
 	int style;
+
+	buff = malloc(1024);
+	assert(buff != NULL);
 
 	assert(de != NULL);
 
@@ -1299,12 +1302,13 @@ static void PrintFileLine(uDirEntry *de, int i, uWindow *win, int max_namelen, i
 	win->screen->set_style(STYLE_NORMAL);
 
 	free(buff2);
+	free(buff);
 }
 
 void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 {
 	int depth;
-	char buff[1024];
+	char *buff;
 	DLElement *e;
 	int i;
 	char *path;
@@ -1314,6 +1318,9 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	int size_off;
 	int date_off;
 	uDirEntry *de;
+
+	buff = malloc(1024);
+	assert(buff != NULL);
 
 	assert(lstFiles != NULL);
 
@@ -1388,6 +1395,8 @@ void DrawFileListWindow(uWindow *win, DList *lstFiles, char *dpath)
 	win->screen->set_updates(oldstatus);
 	// set cursor to lower corner of screen...
 	win->screen->set_cursor(win->screen->get_screen_height(), win->screen->get_screen_width());
+
+	free(buff);
 }
 
 static char* PrintNumber(uint64_t num)
