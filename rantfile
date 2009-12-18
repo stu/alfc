@@ -207,23 +207,23 @@ end
 
 file "defaults.h" => ["#{var[:bin2c]}"] + default_files  do |t|
 	sys.rm_f "options.o"
-	sys "#{var[:bin2c]} global.lua include_global_lua > defaults.h"
-	sys "#{var[:bin2c]} viewer.lua include_viewer_lua >> defaults.h"
-	sys "#{var[:bin2c]} startup.lua include_startup_lua >> defaults.h"
-	sys "#{var[:bin2c]} shutdown.lua include_shutdown_lua >> defaults.h"
-	sys "#{var[:bin2c]} options.ini include_options_ini >> defaults.h"
-	sys "#{var[:bin2c]} core_extract.lua core_extract_lua >> defaults.h"
-	sys "#{var[:bin2c]} core_hash.lua core_hash_lua >> defaults.h"
-	sys "#{var[:bin2c]} viewer_languages.lua viewer_languages_lua >> defaults.h"
-	sys "#{var[:bin2c]} filemanager_menu.lua filemanager_menu_lua >> defaults.h"
-	sys "#{var[:bin2c]} hints.lua hints_lua >> defaults.h"
-	sys "#{var[:bin2c]} viewer_menu.lua viewer_menu_lua >> defaults.h"
-	sys "#{var[:bin2c]} docs/help.hlp help_hlp >> defaults.h"
+	sys "./#{var[:bin2c]} global.lua include_global_lua > defaults.h"
+	sys "./#{var[:bin2c]} viewer.lua include_viewer_lua >> defaults.h"
+	sys "./#{var[:bin2c]} startup.lua include_startup_lua >> defaults.h"
+	sys "./#{var[:bin2c]} shutdown.lua include_shutdown_lua >> defaults.h"
+	sys "./#{var[:bin2c]} options.ini include_options_ini >> defaults.h"
+	sys "./#{var[:bin2c]} core_extract.lua core_extract_lua >> defaults.h"
+	sys "./#{var[:bin2c]} core_hash.lua core_hash_lua >> defaults.h"
+	sys "./#{var[:bin2c]} viewer_languages.lua viewer_languages_lua >> defaults.h"
+	sys "./#{var[:bin2c]} filemanager_menu.lua filemanager_menu_lua >> defaults.h"
+	sys "./#{var[:bin2c]} hints.lua hints_lua >> defaults.h"
+	sys "./#{var[:bin2c]} viewer_menu.lua viewer_menu_lua >> defaults.h"
+	sys "./#{var[:bin2c]} docs/help.hlp help_hlp >> defaults.h"
 
 	#always build gui fonts
 	sys "echo \"#ifdef DRV_GUI\" > gui_fonts.h"
-	sys "#{var[:bin2c]} font.rlf gui_data_font >> gui_fonts.h"
-	sys "#{var[:bin2c]} font_small.rlf gui_data_font_small >> gui_fonts.h"
+	sys "./#{var[:bin2c]} font.rlf gui_data_font >> gui_fonts.h"
+	sys "./#{var[:bin2c]} font_small.rlf gui_data_font_small >> gui_fonts.h"
 	sys "echo \"#endif\" >> gui_fonts.h"
 end
 
@@ -442,7 +442,7 @@ desc "Install linux in /usr/local/bin"
 task :install => "all" do
     sys "sudo cp alfc /usr/local/bin"
     sys "sudo mkdir -p /usr/local/share/alfc"
-    sys "sudo cp *.hlp /usr/local/share/alfc"
+    sys "sudo cp docs/*.hlp /usr/local/share/alfc"
 end
 
 subdirs "docs"
