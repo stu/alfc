@@ -10,116 +10,6 @@ char *start_right;
 char* gstr_WindowTitle = "HypterText Help Guide Viewer";
 extern char* gstr_WindowTitle;
 
-/* Convert environment variables to actual strings */
-char* ConvertDirectoryName(const char *x)
-{
-	char *env;
-
-	char *a;
-	char *p;
-	char *q;
-	char *z;
-
-	if (x == NULL)
-		return strdup("");
-
-	a = strdup(x);
-	p = malloc(1024);
-	assert(p != NULL);
-
-	p[0] = 0;
-	q = a;
-
-	if (q[0] == '~')
-	{
-		strcpy(p, "$HOME");
-		strcat(p, q + 1);
-
-		free(a);
-		a = strdup(p);
-	}
-
-	p[0] = 0;
-
-	while (*q != 0)
-	{
-		char *idx;
-
-		env = NULL;
-		idx = strchr(q, '$');
-
-		if (idx != NULL)
-		{
-			char *z;
-			char c;
-
-			*idx = 0;
-
-			strcat(p, q);
-			q = idx + 1;
-
-			z = strchr(q, '/');
-			if (z == NULL)
-				z = strchr(q, 0);
-
-			c = *z;
-			*z = 0;
-
-			env = ALFC_getenv(q);
-			*z = c;
-
-			if (env != NULL)
-			{
-				if (p[0] != 0 && p[strlen(p) - 1] != '/')
-					strcat(p, "/");
-
-				if (p[0] != 0 && *env == '/')
-					env += 1;
-
-				strcat(p, env);
-				q = z;
-			}
-			else
-			{
-				strcat(p, "$");
-				q = idx + 1;
-			}
-		}
-		else
-		{
-			strcat(p, q);
-			q = strchr(q, 0);
-		}
-	}
-
-	for (q = p, z = p; *q != 0;)
-	{
-		switch (*q)
-		{
-			case '\\':
-				*z = '/';
-				z++;
-				q++;
-				break;
-
-			case '"':
-				q++;
-				break;
-
-			default:
-				*z = *q;
-				z++;
-				q++;
-				break;
-		}
-	}
-
-	*z = 0;
-	free(a);
-
-	return realloc(p, 16 + strlen(p));
-}
-
 static void syntax(void)
 {
 	printf("guide guidename title/index/page\n");
@@ -153,14 +43,14 @@ static void draw_window(uWindow *w, uHelpPage *page_data)
 	buff = malloc( strlen(page_data->name) + 5);
 
 	q = strchr(page_data->name, ':');
-	if(q != NULL)
+	if (q != NULL)
 	{
 		do
 		{
 			q++;
 			oq = q;
 			q = strchr(q, ':');
-		}while(q != NULL);
+		}while (q != NULL);
 		q = oq;
 	}
 	else
@@ -185,26 +75,56 @@ static void draw_page(uWindow *w, uHelpPage *page_data)
 	w->screen->set_style(style);
 	i = 0;
 
+	page_data->displayed_page_link_count = 0;
+
 	assert(page_data->lines != NULL);
 
 	w->screen->set_style(STYLE_NORMAL);
 
 	while (i < w->height - 2 && line < page_data->line_count)
 	{
-		wide = 0;
+		int last_link;
 
+		wide = 0;
 		w->screen->set_cursor(2 + w->offset_row + i, 2 + w->offset_col);
 
 		pp = page_data->lines[line];
 		assert(pp != NULL);
 
+		last_link = 0;
+
 		while (wide < page_data->width)
 		{
 			style = STYLE_NORMAL;
 			if ((pp[wide] >> 8) == HLP_F_EMPH)
+			{
 				style = STYLE_HIGHLIGHT;
-			else if((pp[wide] >> 8) == HLP_F_LINK)
+				last_link = 0;
+			}
+			if ((pp[wide] >> 8) == HLP_F_BOLD)
+			{
+				style = STYLE_DIR_DIR;
+				last_link = 0;
+			}
+			else if ((pp[wide] >> 8) == HLP_F_LINK)
+			{
+				//FIXME: two links next to each other??
 				style = STYLE_DIR_DOCUMENT;
+				if (last_link == 0)
+				{
+					page_data->displayed_page_link_count += 1;
+					last_link = 1;
+				}
+
+				if (page_data->displayed_page_link_count == page_data->highlight_link)
+				{
+					style = STYLE_DIR_ARCHIVE;
+				}
+			}
+			else
+			{
+				last_link = 0;
+			}
 
 			w->screen->set_style(style);
 			display_char(w, (pp[wide] & 0xFF));
@@ -254,6 +174,22 @@ static void BuildWindowLayout(uGlobalData *gdata)
 	w->screen->set_cursor(2, 2);
 }
 
+static int GetLinkCountLine(uHelpPage *page_data, int line)
+{
+	int x = 0;
+	int i;
+
+	for (i=0; i < page_data->link_count; i++)
+	{
+		if (page_data->_links[i]->row - 1 == line)
+		{
+			x += 1;
+		}
+	}
+
+	return x;
+}
+
 int ALFC_main(int start_mode, char *view_file)
 {
 	uHelpFile *hdr;
@@ -270,6 +206,7 @@ int ALFC_main(int start_mode, char *view_file)
 
 	ALFC_startup();
 	LogWrite_Startup(0, LOG_INFO | LOG_DEBUG | LOG_ERROR | LOG_STDERR, 5000);
+	LogInfo("help guide loader - Stu George -- v%i.%02i/%04i - Built on " __DATE__ "; " __TIME__ "\n", VersionMajor(), VersionMinor(), VersionBuild());
 
 	if (view_file == NULL)
 	{
@@ -322,6 +259,8 @@ int ALFC_main(int start_mode, char *view_file)
 	gdata->screen->init(gdata->screen);
 
 	gdata->screen->init_style(STYLE_DIR_DOCUMENT, CLR_BLACK, CLR_GREEN);
+	gdata->screen->init_style(STYLE_DIR_ARCHIVE, CLR_YELLOW, CLR_BLUE);
+	gdata->screen->init_style(STYLE_DIR_DIR, CLR_YELLOW, CLR_CYAN);
 #else
 	gdata->clr_title_bg = CLR_GREY;
 	gdata->clr_title_fg = CLR_WHITE;
@@ -336,6 +275,8 @@ int ALFC_main(int start_mode, char *view_file)
 	gdata->screen->init(gdata->screen);
 
 	gdata->screen->init_style(STYLE_DIR_DOCUMENT, CLR_BLACK, CLR_CYAN);
+	gdata->screen->init_style(STYLE_DIR_ARCHIVE, CLR_YELLOW, CLR_BLUE);
+	gdata->screen->init_style(STYLE_DIR_DIR, CLR_YELLOW, CLR_GREY);
 #endif
 
 	BuildWindowLayout(gdata);
@@ -355,7 +296,8 @@ int ALFC_main(int start_mode, char *view_file)
 		qflag = 0;
 		redraw = 1;
 
-		page_data = HelpReflowPage(hdr, page, w->width - 2);
+		page_data = HelpReflowPage(hdr, page, w->width - 2, -1);
+
 		if (page_data != NULL)
 		{
 			int ph;
@@ -379,9 +321,13 @@ int ALFC_main(int start_mode, char *view_file)
 				key = 0;
 				if (gdata->screen->screen_isresized() != 0)
 				{
+					int l;
+
 					BuildWindowLayout(gdata);
+
+					l = page_data->highlight_link;
 					FreeHelpPage(page_data);
-					page_data = HelpReflowPage(hdr, page, w->width - 2);
+					page_data = HelpReflowPage(hdr, page, w->width - 2, l);
 
 					draw_window(w, page_data);
 					draw_page(w, page_data);
@@ -394,18 +340,39 @@ int ALFC_main(int start_mode, char *view_file)
 				switch (key)
 				{
 					case ALFC_KEY_DOWN:
-						if (w->top_line + 1 <= ph)
+						if (page_data->displayed_page_link_count > page_data->highlight_link)
 						{
+							page_data->highlight_link += 1;
+							redraw = 1;
+						}
+						else if (w->top_line + 1 <= ph)
+						{
+
+							page_data->highlight_link -= GetLinkCountLine(page_data, w->top_line);
 							w->top_line += 1;
 							redraw = 1;
 						}
 						break;
 
 					case ALFC_KEY_UP:
-						if (w->top_line > 0)
+						if ( page_data->highlight_link > 1)
 						{
+							page_data->highlight_link -= 1;
+							redraw = 1;
+						}
+						else if (w->top_line > 0)
+						{
+							int rc;
+
 							w->top_line -= 1;
 							redraw = 1;
+							rc = GetLinkCountLine(page_data, w->top_line);
+							if (rc > 0)
+							{
+								page_data->highlight_link -= 1;
+								if(page_data->highlight_link < 1)
+									page_data->highlight_link = 1;
+							}
 						}
 						break;
 
@@ -413,16 +380,19 @@ int ALFC_main(int start_mode, char *view_file)
 					case 'q':
 					case ALFC_KEY_F12:
 					case ALFC_KEY_ESCAPE:
-					case 0x21B: // ESC-ESC
+					case 0x21B:	// ESC-ESC
 						qflag = 1;
 						break;
 
+					default:
+						LogInfo("foo\n");
+						break;
 				}
 			}
 		}
 		else
 		{
-			fprintf(stderr, "cound not find the requested node.\n");
+			LogError("cound not find the requested node.\n");
 		}
 
 		if (page_data != NULL)
@@ -440,6 +410,7 @@ int ALFC_main(int start_mode, char *view_file)
 	free(gdata);
 
 	ALFC_shutdown();
+	LogWrite_Shutdown();
 
 	return 0;
 }

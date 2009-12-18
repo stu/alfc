@@ -88,7 +88,7 @@ use \emph{ENTER} to select a link to read.
 
 From here, please see the \link{Index}.
 
-
+The \bold{Lorem Ipsum} obligatory text.\\
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc pulvinar, risus in sodales ultricies, odio enim blandit massa, \link{Index} in fringilla quam metus at ante. Morbi et metus quis tellus malesuada malesuada. Vivamus \link{Index} sed tortor ante. Quisque faucibus accumsan mauris in porttitor. Aliquam condimentum leo ante, nec suscipit massa. Maecenas luctus tortor arcu. Suspendisse potenti. Sed ac augue in tellus facilisis \link{Index} pharetra. Ut sollicitudin dapibus orci quis aliquet. Phasellus vitae egestas turpis. Vestibulum placerat viverra sapien eget molestie. Nulla venenatis risus at enim egestas scelerisque. Ut rutrum venenatis placerat. Curabitur commodo, quam vel feugiat bibendum, nisi nibh sagittis sem, nec porta quam dolor vitae lacus. Praesent id lacus in metus vehicula imperdiet eget ut turpis. Curabitur blandit sem non nisi tempus viverra. Sed sed leo ut turpis sodales gravida. Suspendisse hendrerit ligula id sapien interdum mattis. In ac magna quis quam dapibus porttitor. Pellentesque at nulla lorem.
 
 Quisque scelerisque suscipit hendrerit. Nam pulvinar gravida sagittis. Duis faucibus pharetra tristique. Pellentesque adipiscing ultricies lacus, eu porttitor ante vulputate in. Proin interdum feugiat odio. Etiam faucibus pretium feugiat. Donec imperdiet nisl at dui venenatis dapibus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi diam orci, posuere at adipiscing pellentesque, commodo id ipsum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Pellentesque malesuada auctor eros sed volutpat. Pellentesque sit amet eros sit amet est blandit imperdiet. Integer et adipiscing sapien. Nulla vestibulum, nisi at dictum sollicitudin, lacus mauris condimentum tellus, vitae sollicitudin diam tellus ut nibh.
@@ -105,7 +105,7 @@ Pellentesque eget metus purus. Suspendisse cursus orci et enim rhoncus pretium. 
 
 \section{Introduction}
 This program is a file management utility patterned after
-a very famous classic program called \emph{}Norton Commander}
+a very famous classic program called \emph{Norton Commander}
 (Hence the 'Commander' in the title as hommage).
 
 It is written to comply with the GPL v2 license.

@@ -59,11 +59,12 @@ static void newline(uHelpPage *page)
 	page->line_count += 1;
 }
 
-uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width)
+uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int link)
 {
 	uHelpSection *sect;
 	uHelpPage *page;
 	uint8_t flags;
+	int last_id = 0;
 
 	int stack_depth;
 	uint8_t stack[256];
@@ -79,6 +80,11 @@ uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width)
 	page->line_count = 0;
 	page->lines = calloc(1, 1 * sizeof(uint16_t*));
 	page->width = width;
+	page->highlight_link = link;
+	page->link_count = 0;
+
+	if (page->highlight_link < 0)
+		page->highlight_link = 1;
 
 	flags = 0;
 	stack_depth = 0;
@@ -124,6 +130,16 @@ uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width)
 					flags |= HLP_F_EMPH;
 					x += 6;
 				}
+				else if (strncmp(x, "\\bold{", 6) == 0)
+				{
+					assert(stack_depth < 255);
+
+					stack[stack_depth] = flags;
+					stack_depth += 1;
+
+					flags |= HLP_F_BOLD;
+					x += 6;
+				}
 				else if (strncmp(x, "\\link{", 5) == 0)
 				{
 					char *p;
@@ -132,6 +148,15 @@ uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width)
 					stack[stack_depth] = flags;
 					x += 6;
 					flags |= HLP_F_LINK;
+
+					page->link_count += 1;
+					page->_links = realloc(page->_links, sizeof(uHelpLink*) * page->link_count);
+					page->_links[page->link_count - 1] = calloc(1, sizeof(uHelpLink));
+
+					page->_links[page->link_count - 1]->col = col;
+					page->_links[page->link_count - 1]->row = page->line_count;
+					page->_links[page->link_count - 1]->id = last_id ++;
+					page->_links[page->link_count - 1]->length = 0;
 
 					p = x;
 					while (*p != '}' && *p != 0x0)
@@ -195,6 +220,11 @@ uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width)
 							p++;
 							x++;
 							col++;
+
+							if ((flags & HLP_F_LINK) == HLP_F_LINK)
+							{
+								page->_links[page->link_count - 1]->length += 1;
+							}
 
 							if (col == page->width)
 							{

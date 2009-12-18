@@ -10,7 +10,8 @@ extern "C"
 enum HELP_F_ATTRS
 {
 	HLP_F_EMPH = 0x01,
-	HLP_F_LINK
+	HLP_F_LINK,
+	HLP_F_BOLD
 };
 
 enum F_RECORD
@@ -24,6 +25,14 @@ enum F_RECORD
 	HLP_LINE_GZ = HLP_LINE + 0x20,
 };
 
+typedef struct udtHelpLink
+{
+	int id;
+	int row;
+	int col;
+	int length;
+} uHelpLink, *pHelpLink;
+
 typedef struct udtHelpPage
 {
 	char *name;
@@ -32,16 +41,11 @@ typedef struct udtHelpPage
 	int line_count;
 	uint16_t **lines;
 
+	int displayed_page_link_count;
+	int highlight_link;
+
 	int link_count;
-
-	struct udtHelpLink
-	{
-		int id;
-		int row;
-		int col;
-		int length;
-	} **_links;
-
+	uHelpLink **_links;
 } uHelpPage;
 
 typedef struct udtHelpSection

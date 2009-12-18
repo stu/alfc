@@ -7,7 +7,7 @@ extern "C"{
 extern void FreeHelpPage(uHelpPage *p);
 extern uHelpFile* LoadHelpFile(char *fn);
 extern void FreeHelpFile(uHelpFile *hlp);
-extern uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width);
+extern uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int link);
 
 #ifdef __cplusplus
 }

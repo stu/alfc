@@ -88,9 +88,7 @@ def outline(x, ofp)
 	xx = x.split("\n")
 
 	xx.each do |xxx|
-		#puts "line: #{xx}"
 		q = xxx.rstrip
-		if q[-1].to_s == "\n" then q = q.chop end
 		bdump_gz(q, 0x05, ofp)
 	end
 	return ""
@@ -136,11 +134,11 @@ def ParseSections(txt, ofp)
 				q = q.gsub(/\t/,'        ')
 
 				#if line.length > 0 then
-				if line[-1].to_s != "10" and line.length > 0 then
-					q = q.lstrip
+				if (line[-1].to_s != "10" and line[-1].to_s != "13") and line.length > 0 then
+					line += " " + q
+				else
+					line += "" + q
 				end
-
-				line += " " + q
 			end
 		end
 
