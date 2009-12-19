@@ -25,7 +25,7 @@ struct udtStyleColors
 {
 	uint32_t fg;
 	uint32_t bg;
-} style_colors[16];
+} style_colors[32];
 
 static struct udtStyles
 {
@@ -34,7 +34,7 @@ static struct udtStyles
 	int s_off;
 	int fg;
 	int bg;
-} styles[16] =
+} styles[32] =
 {
 	{ 0,0,0, 0, 0},
 	{ STYLE_TITLE, 0, 0, 0, 0},

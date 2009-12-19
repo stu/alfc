@@ -41,15 +41,15 @@ static void BuildWindowLayout(uGlobalData *gdata)
 	w->offset_row = (w->gd->screen->get_screen_height() - w->height) / 2;
 	w->offset_col = (w->gd->screen->get_screen_width() - w->width) / 2;
 
-	w->screen->set_style(STYLE_NORMAL);
+	w->screen->set_style(STYLE_HELP_NORMAL);
 	w->screen->window_clear(w);
-	w->screen->set_style(STYLE_TITLE);
+	w->screen->set_style(STYLE_HELP_TITLE);
 	w->screen->draw_border(w);
 
 	w->screen->set_cursor(w->offset_row + 1, w->offset_col + 2);
 	w->screen->print(" Guide Reader : ");
 
-	gdata->screen->set_style(STYLE_NORMAL);
+	gdata->screen->set_style(STYLE_HELP_NORMAL);
 	w->screen->set_cursor(2, 2);
 }
 
@@ -64,7 +64,7 @@ int ShowHelp(uGlobalData *gdata, char *guide, char *page)
 	BuildWindowLayout(gdata);
 	w = gdata->win_left;
 
-	gdata->screen->set_style(STYLE_NORMAL);
+	gdata->screen->set_style(STYLE_HELP_NORMAL);
 	w->screen->set_cursor(2, 2);
 
 	hdr = LoadHelpFile(guide);

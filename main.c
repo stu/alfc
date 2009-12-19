@@ -3230,6 +3230,12 @@ int ALFC_main(int start_mode, char *view_file)
 		gdata->screen->init(gdata->screen);
 		gdata->screen->set_updates(1);
 
+		gdata->screen->init_style(STYLE_HELP_TITLE, CLR_WHITE, CLR_CYAN);
+		gdata->screen->init_style(STYLE_HELP_NORMAL, CLR_BLACK, CLR_CYAN);
+		gdata->screen->init_style(STYLE_HELP_BOLD, CLR_BLUE, CLR_CYAN);
+		gdata->screen->init_style(STYLE_HELP_EMPHASIS, CLR_WHITE, CLR_CYAN);
+		gdata->screen->init_style(STYLE_HELP_LINK, CLR_YELLOW, CLR_CYAN);
+
 		gdata->screen->set_style(STYLE_NORMAL);
 		gdata->screen->cls();
 

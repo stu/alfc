@@ -27,7 +27,7 @@ struct udtStyles
 	int style;
 	int s_on;
 	int s_off;
-} styles[16] =
+} styles[32] =
 	{
 		{
 		0, 0, 0
@@ -47,7 +47,7 @@ struct udtStyleColors
 {
 	uint32_t fg;
 	uint32_t bg;
-} style_colors[16];
+} style_colors[32];
 
 static char* driver_name(void)
 {

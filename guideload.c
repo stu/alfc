@@ -31,7 +31,7 @@ static void status_msg(uWindow *w, char *strX, ...)
 		*z = 0;
 	}
 
-	w->screen->set_style(STYLE_TITLE);
+	w->screen->set_style(STYLE_HELP_TITLE);
 	w->screen->set_cursor(w->offset_row + w->height, w->offset_col + 2);
 	w->screen->print(z);
 
@@ -52,9 +52,9 @@ void help_draw_window(uWindow *w, uHelpPage *page_data)
 	char *buff;
 	char *q, *oq;;
 
-	w->screen->set_style(STYLE_NORMAL);
+	w->screen->set_style(STYLE_HELP_NORMAL);
 	w->screen->window_clear(w);
-	w->screen->set_style(STYLE_TITLE);
+	w->screen->set_style(STYLE_HELP_TITLE);
 	w->screen->draw_border(w);
 	w->screen->set_cursor(w->offset_row + 1, w->offset_col + 2);
 	w->screen->print(" Guide Reader : ");
@@ -86,7 +86,7 @@ void help_draw_page(uWindow *w, uHelpPage *page_data)
 {
 	uint16_t *pp;
 	int wide;
-	int style = STYLE_NORMAL;
+	int style = STYLE_HELP_NORMAL;
 	int line;
 	int width;
 	int i;
@@ -102,7 +102,7 @@ void help_draw_page(uWindow *w, uHelpPage *page_data)
 
 	assert(page_data->lines != NULL);
 
-	w->screen->set_style(STYLE_NORMAL);
+	w->screen->set_style(STYLE_HELP_NORMAL);
 
 	while (i < w->height - 2 && line < page_data->line_count)
 	{
@@ -118,20 +118,20 @@ void help_draw_page(uWindow *w, uHelpPage *page_data)
 
 		while (wide < page_data->width)
 		{
-			style = STYLE_NORMAL;
+			style = STYLE_HELP_NORMAL;
 			if ((pp[wide] >> 8) == HLP_F_EMPH)
 			{
-				style = STYLE_DIR_ARCHIVE;
+				style = STYLE_HELP_EMPHASIS;
 				last_link = 0;
 			}
 			if ((pp[wide] >> 8) == HLP_F_BOLD)
 			{
-				style = STYLE_DIR_DIR;
+				style = STYLE_HELP_BOLD;
 				last_link = 0;
 			}
 			else if (((pp[wide] >> 8) & (HLP_F_LINK1 | HLP_F_LINK2)) != 0)
 			{
-				style = STYLE_DIR_DOCUMENT;
+				style = STYLE_HELP_LINK;
 				if (last_link == 0 || (last_link != ((pp[wide]>>8) & (HLP_F_LINK1 | HLP_F_LINK2))))
 				{
 					page_data->displayed_page_link_count += 1;
@@ -154,7 +154,7 @@ void help_draw_page(uWindow *w, uHelpPage *page_data)
 			wide++;
 		}
 
-		w->screen->set_style(STYLE_NORMAL);
+		w->screen->set_style(STYLE_HELP_NORMAL);
 		line += 1;
 		i += 1;
 	}

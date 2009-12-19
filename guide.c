@@ -44,14 +44,14 @@ static void BuildWindowLayout(uGlobalData *gdata)
 	w->offset_col = (w->gd->screen->get_screen_width() - w->width)/ 2;
 	w->offset_row = (w->gd->screen->get_screen_height() - w->height)/ 2;
 
-	w->screen->set_style(STYLE_TITLE);
+	w->screen->set_style(STYLE_HELP_TITLE);
 	w->screen->window_clear(w);
 	w->screen->draw_border(w);
 
 	w->screen->set_cursor(w->offset_row + 1, w->offset_col + 2);
 	w->screen->print(" Guide Reader : ");
 
-	gdata->screen->set_style(STYLE_NORMAL);
+	gdata->screen->set_style(STYLE_HELP_NORMAL);
 	w->screen->set_cursor(2, 2);
 }
 
@@ -120,16 +120,18 @@ int ALFC_main(int start_mode, char *view_file)
 	gdata->screen->gd = gdata;
 	gdata->screen->init(gdata->screen);
 
-	gdata->screen->init_style(STYLE_DIR_DOCUMENT, CLR_YELLOW, CLR_CYAN);
-	gdata->screen->init_style(STYLE_DIR_ARCHIVE, CLR_WHITE, CLR_CYAN);
-	gdata->screen->init_style(STYLE_DIR_DIR, CLR_BR_GREEN, CLR_CYAN);
+	gdata->screen->init_style(STYLE_HELP_TITLE, CLR_WHITE, CLR_CYAN);
+	gdata->screen->init_style(STYLE_HELP_NORMAL, CLR_BLACK, CLR_CYAN);
+	gdata->screen->init_style(STYLE_HELP_BOLD, CLR_BLUE, CLR_CYAN);
+	gdata->screen->init_style(STYLE_HELP_EMPHASIS, CLR_WHITE, CLR_CYAN);
+	gdata->screen->init_style(STYLE_HELP_LINK, CLR_YELLOW, CLR_CYAN);
 
 
 	BuildWindowLayout(gdata);
 
 	w = gdata->win_left;
 
-	gdata->screen->set_style(STYLE_NORMAL);
+	gdata->screen->set_style(STYLE_HELP_NORMAL);
 	w->screen->set_cursor(2, 2);
 
 	hdr = LoadHelpFile(guide);
