@@ -101,14 +101,13 @@ void help_draw_page(uWindow *w, uHelpPage *page_data)
 				style = STYLE_DIR_DIR;
 				last_link = 0;
 			}
-			else if ((pp[wide] >> 8) == HLP_F_LINK)
+			else if (((pp[wide] >> 8) & (HLP_F_LINK1 | HLP_F_LINK2)) != 0)
 			{
-				//FIXME: two links next to each other??
 				style = STYLE_DIR_DOCUMENT;
-				if (last_link == 0)
+				if (last_link == 0 || (last_link != ((pp[wide]>>8) & (HLP_F_LINK1 | HLP_F_LINK2))))
 				{
 					page_data->displayed_page_link_count += 1;
-					last_link = 1;
+					last_link = (pp[wide]>>8) & (HLP_F_LINK1 | HLP_F_LINK2);
 				}
 
 				if (page_data->displayed_page_link_count == page_data->highlight_link)
@@ -282,7 +281,11 @@ static uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int l
 					stack_depth += 1;
 					stack[stack_depth] = flags;
 					x += 6;
-					flags |= HLP_F_LINK;
+
+					if (last_id % 2 == 0)
+						flags = HLP_F_LINK1;
+					else
+						flags = HLP_F_LINK2;
 
 					page->link_count += 1;
 					page->_links = realloc(page->_links, sizeof(uHelpLink*) * page->link_count);
@@ -350,7 +353,7 @@ static uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int l
 							x++;
 							col++;
 
-							if ((flags & HLP_F_LINK) == HLP_F_LINK)
+							if ((flags & (HLP_F_LINK1 | HLP_F_LINK2)) != 0)
 							{
 								assert(page->_links != NULL);
 								assert(page->link_count > 0);
