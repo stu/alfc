@@ -101,6 +101,7 @@ Pellentesque eget metus purus. Suspendisse cursus orci et enim rhoncus pretium. 
 
 \section{Index}
 
+Below here you should see the index.
 \list{*}
 
 \section{Introduction}

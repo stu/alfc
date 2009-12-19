@@ -193,6 +193,7 @@ static void newline(uHelpPage *page)
 	page->line_count += 1;
 }
 
+
 static uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int link)
 {
 	uHelpSection *sect;
@@ -300,12 +301,6 @@ static uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int l
 
 						p++;
 					}
-				}
-				else if (strncmp(x, "\\list{", 5) == 0)
-				{
-					stack_depth += 1;
-					stack[stack_depth] = flags;
-					x += 6;
 				}
 				else
 				{
