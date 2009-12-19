@@ -107,13 +107,12 @@ int ALFC_main(int start_mode, char *view_file)
 
 	gdata = calloc(1, sizeof(uGlobalData));
 
-#if 10
 	gdata->clr_title_bg = CLR_CYAN;
 	gdata->clr_title_fg = CLR_WHITE;
 	gdata->clr_background = CLR_CYAN;
 	gdata->clr_foreground = CLR_BLACK;
-	gdata->clr_hi_background = CLR_CYAN;
-	gdata->clr_hi_foreground = CLR_BR_GREEN;
+	gdata->clr_hi_background = CLR_BLUE;
+	gdata->clr_hi_foreground = CLR_YELLOW;
 
 	gdata->screen = malloc(sizeof(uScreenDriver));
 	memmove(gdata->screen, &screen, sizeof(uScreenDriver));
@@ -121,26 +120,10 @@ int ALFC_main(int start_mode, char *view_file)
 	gdata->screen->gd = gdata;
 	gdata->screen->init(gdata->screen);
 
-	gdata->screen->init_style(STYLE_DIR_DOCUMENT, CLR_BLACK, CLR_GREEN);
-	gdata->screen->init_style(STYLE_DIR_ARCHIVE, CLR_YELLOW, CLR_BLUE);
-	gdata->screen->init_style(STYLE_DIR_DIR, CLR_YELLOW, CLR_CYAN);
-#else
-	gdata->clr_title_bg = CLR_GREY;
-	gdata->clr_title_fg = CLR_WHITE;
-	gdata->clr_background = CLR_GREY;
-	gdata->clr_foreground = CLR_BLACK;
-	gdata->clr_hi_background = CLR_GREY;
-	gdata->clr_hi_foreground = CLR_BLUE;
+	gdata->screen->init_style(STYLE_DIR_DOCUMENT, CLR_YELLOW, CLR_CYAN);
+	gdata->screen->init_style(STYLE_DIR_ARCHIVE, CLR_WHITE, CLR_CYAN);
+	gdata->screen->init_style(STYLE_DIR_DIR, CLR_BR_GREEN, CLR_CYAN);
 
-	gdata->screen = malloc(sizeof(uScreenDriver));
-	memmove(gdata->screen, &screen, sizeof(uScreenDriver));
-	gdata->screen->gd = gdata;
-	gdata->screen->init(gdata->screen);
-
-	gdata->screen->init_style(STYLE_DIR_DOCUMENT, CLR_BLACK, CLR_CYAN);
-	gdata->screen->init_style(STYLE_DIR_ARCHIVE, CLR_YELLOW, CLR_BLUE);
-	gdata->screen->init_style(STYLE_DIR_DIR, CLR_YELLOW, CLR_GREY);
-#endif
 
 	BuildWindowLayout(gdata);
 

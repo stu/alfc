@@ -11,6 +11,33 @@ struct udtRecord
 	uint8_t *data;
 };
 
+static void status_msg(uWindow *w, char *strX, ...)
+{
+	va_list args;
+	char *z;
+
+	z = malloc(4096);
+	assert(z != NULL);
+	assert(strlen(strX) < 1024);
+
+	if(strX != NULL)
+	{
+		va_start(args, strX);
+		vsprintf(z, strX, args);
+		va_end(args);
+	}
+	else
+	{
+		*z = 0;
+	}
+
+	w->screen->set_style(STYLE_TITLE);
+	w->screen->set_cursor(w->offset_row + w->height, w->offset_col + 2);
+	w->screen->print(z);
+
+	free(z);
+}
+
 static void display_char(uWindow *w, char c)
 {
 	char x[2];
@@ -25,8 +52,9 @@ void help_draw_window(uWindow *w, uHelpPage *page_data)
 	char *buff;
 	char *q, *oq;;
 
-	w->screen->set_style(STYLE_TITLE);
+	w->screen->set_style(STYLE_NORMAL);
 	w->screen->window_clear(w);
+	w->screen->set_style(STYLE_TITLE);
 	w->screen->draw_border(w);
 	w->screen->set_cursor(w->offset_row + 1, w->offset_col + 2);
 	w->screen->print(" Guide Reader : ");
@@ -93,7 +121,7 @@ void help_draw_page(uWindow *w, uHelpPage *page_data)
 			style = STYLE_NORMAL;
 			if ((pp[wide] >> 8) == HLP_F_EMPH)
 			{
-				style = STYLE_HIGHLIGHT;
+				style = STYLE_DIR_ARCHIVE;
 				last_link = 0;
 			}
 			if ((pp[wide] >> 8) == HLP_F_BOLD)
@@ -112,7 +140,7 @@ void help_draw_page(uWindow *w, uHelpPage *page_data)
 
 				if (page_data->displayed_page_link_count == page_data->highlight_link)
 				{
-					style = STYLE_DIR_ARCHIVE;
+					style = STYLE_HIGHLIGHT;
 				}
 			}
 			else
@@ -714,6 +742,26 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 						}
 						break;
 
+					case ALFC_KEY_HOME:
+						{
+							uHelpBreadCrumb *b;
+
+							b = malloc(sizeof(uHelpBreadCrumb));
+							b->top_line = w->top_line;
+							b->highlight_line = page_data->highlight_link;
+							b->prev_link = strdup(page_data->name);
+							dlist_ins(hdr->lstBreadCrumbs, b);
+
+							FreeHelpPage(page_data);
+							page_data = HelpReflowPage(hdr, "Main", w->width - 2, -1);
+
+							help_draw_window(w, page_data);
+							help_draw_page(w, page_data);
+							redraw = 1;
+						}
+						break;
+
+					case ALFC_KEY_BACKSPACE:
 					case ALFC_KEY_LEFT:
 						{
 							uHelpBreadCrumb *b;
@@ -738,18 +786,7 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 								}
 								else
 								{
-									char *buff;
-
-									// 32 is enough for the basic msg
-									buff = malloc(32 + strlen(b->prev_link));
-									assert(buff != NULL);
-
-									sprintf(buff, " FAILED TO LOAD PAGE : %s ", b->prev_link);
-
-									w->screen->set_style(STYLE_TITLE);
-									w->screen->set_cursor(w->offset_row + w->height, w->offset_col + 2);
-									w->screen->print(buff);
-									free(buff);
+									status_msg(w, " FAILED TO LOAD PAGE : %s ", b->prev_link);
 								}
 
 								FreeBreadCrumb(b);
@@ -757,6 +794,7 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 						}
 						break;
 
+					case ALFC_KEY_ENTER:
 					case ALFC_KEY_RIGHT:
 						{
 							pHelpLink link;
@@ -788,19 +826,7 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 								}
 								else
 								{
-									char *buff;
-
-									// 32 is enough for the basic msg
-									buff = malloc(32 + strlen(link->link));
-									assert(buff != NULL);
-
-									sprintf(buff, " FAILED TO LOAD PAGE : %s ", link->link);
-
-									w->screen->set_style(STYLE_TITLE);
-									w->screen->set_cursor(w->offset_row + w->height, w->offset_col + 2);
-									w->screen->print(buff);
-									free(buff);
-
+									status_msg(w, " FAILED TO LOAD PAGE : %s ", link->link);
 								}
 							}
 						}
@@ -808,14 +834,13 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 
 					case 'Q':
 					case 'q':
-					case ALFC_KEY_F12:
+					case ALFC_KEY_F01:
 					case ALFC_KEY_ESCAPE:
 					case 0x21B:	// ESC-ESC
 						qflag = 1;
 						break;
 
 					default:
-						LogInfo("foo\n");
 						break;
 				}
 			}
