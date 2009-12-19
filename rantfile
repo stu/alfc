@@ -153,7 +153,7 @@ end
 cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
 
 CC = "gcc"
-CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DNMEMWATCH " + PORT_CFLAGS
+CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH " + PORT_CFLAGS
 LIBS = ""
 
 header_files = %w(rantfile main.h)
@@ -274,7 +274,7 @@ end
 
 desc "Cleanup..."
 task :clean => "docs/clean" do
-	x = Dir["*.{bak,o,obj,a,gd}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"] 
+	x = Dir["*.{bak,o,obj,a,gd}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"]
 
 	x += Dir["#{var[:gcomp]}"]
 	x += Dir["#{var[:gdump]}"]

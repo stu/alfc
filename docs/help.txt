@@ -116,7 +116,7 @@ and flexability in your system management.
 This program is designed to be easy and powerful, giving you
 control back over your filesystem.
 
-Design Spec
+\bold{Design Spec}
 \\- Dont over-engineer
 \\- Not supposed to supplant vi/emacs/foo as programming editor
 \\- Is supposed to sustain normal admin tasks (file management, config

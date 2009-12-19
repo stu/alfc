@@ -10,8 +10,8 @@ extern "C"
 enum HELP_F_ATTRS
 {
 	HLP_F_EMPH = 0x01,
-	HLP_F_LINK,
-	HLP_F_BOLD
+	HLP_F_LINK = 0x02,
+	HLP_F_BOLD = 0x04
 };
 
 enum F_RECORD

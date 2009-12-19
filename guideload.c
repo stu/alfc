@@ -11,6 +11,130 @@ struct udtRecord
 	uint8_t *data;
 };
 
+static void display_char(uWindow *w, char c)
+{
+	char x[2];
+
+	x[0] = c;
+	x[1] = 0;
+	w->screen->print((char*) &x);
+}
+
+void help_draw_window(uWindow *w, uHelpPage *page_data)
+{
+	char *buff;
+	char *q, *oq;;
+
+	w->screen->set_style(STYLE_TITLE);
+	w->screen->window_clear(w);
+	w->screen->draw_border(w);
+	w->screen->set_cursor(w->offset_row + 1, w->offset_col + 2);
+	w->screen->print(" Guide Reader : ");
+
+	assert(page_data->name != NULL);
+
+	buff = malloc( strlen(page_data->name) + 5);
+
+	q = strchr(page_data->name, ':');
+	if (q != NULL)
+	{
+		do
+		{
+			q++;
+			oq = q;
+			q = strchr(q, ':');
+		}while (q != NULL);
+		q = oq;
+	}
+	else
+		q = page_data->name;
+
+	sprintf(buff, "%s ", q);
+	w->screen->print(buff);
+	free(buff);
+}
+
+void help_draw_page(uWindow *w, uHelpPage *page_data)
+{
+	uint16_t *pp;
+	int wide;
+	int style = STYLE_NORMAL;
+	int line;
+	int width;
+	int i;
+
+	w->screen->set_updates(0);
+
+	line = w->top_line;
+	width = w->width - 2;
+	w->screen->set_style(style);
+	i = 0;
+
+	page_data->displayed_page_link_count = 0;
+
+	assert(page_data->lines != NULL);
+
+	w->screen->set_style(STYLE_NORMAL);
+
+	while (i < w->height - 2 && line < page_data->line_count)
+	{
+		int last_link;
+
+		wide = 0;
+		w->screen->set_cursor(2 + w->offset_row + i, 2 + w->offset_col);
+
+		pp = page_data->lines[line];
+		assert(pp != NULL);
+
+		last_link = 0;
+
+		while (wide < page_data->width)
+		{
+			style = STYLE_NORMAL;
+			if ((pp[wide] >> 8) == HLP_F_EMPH)
+			{
+				style = STYLE_HIGHLIGHT;
+				last_link = 0;
+			}
+			if ((pp[wide] >> 8) == HLP_F_BOLD)
+			{
+				style = STYLE_DIR_DIR;
+				last_link = 0;
+			}
+			else if ((pp[wide] >> 8) == HLP_F_LINK)
+			{
+				//FIXME: two links next to each other??
+				style = STYLE_DIR_DOCUMENT;
+				if (last_link == 0)
+				{
+					page_data->displayed_page_link_count += 1;
+					last_link = 1;
+				}
+
+				if (page_data->displayed_page_link_count == page_data->highlight_link)
+				{
+					style = STYLE_DIR_ARCHIVE;
+				}
+			}
+			else
+			{
+				last_link = 0;
+			}
+
+			w->screen->set_style(style);
+			display_char(w, (pp[wide] & 0xFF));
+
+			wide++;
+		}
+
+		w->screen->set_style(STYLE_NORMAL);
+		line += 1;
+		i += 1;
+	}
+
+	w->screen->set_updates(1);
+}
+
 static uHelpSection* LookupSection(uHelpFile *hlp, char *section)
 {
 	DLElement *e;
@@ -31,15 +155,25 @@ static uHelpSection* LookupSection(uHelpFile *hlp, char *section)
 	return NULL;
 }
 
-void FreeHelpPage(uHelpPage *p)
+static void FreeHelpPage(uHelpPage *p)
 {
 	int i;
 
 	free(p->name);
 	for (i = 0; i < p->line_count; i++)
 		free(p->lines[i]);
-
 	free(p->lines);
+
+	if (p->_links != NULL)
+	{
+		for (i=0; i < p->link_count; i++)
+		{
+			free(p->_links[i]);
+		}
+		free(p->_links);
+	}
+
+	free(p);
 }
 
 static void newline(uHelpPage *page)
@@ -59,7 +193,7 @@ static void newline(uHelpPage *page)
 	page->line_count += 1;
 }
 
-uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int link)
+static uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int link)
 {
 	uHelpSection *sect;
 	uHelpPage *page;
@@ -223,6 +357,8 @@ uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int link)
 
 							if ((flags & HLP_F_LINK) == HLP_F_LINK)
 							{
+								assert(page->_links != NULL);
+								assert(page->link_count > 0);
 								page->_links[page->link_count - 1]->length += 1;
 							}
 
@@ -422,4 +558,138 @@ uHelpFile* LoadHelpFile(char *fn)
 
 	return hlp;
 }
+
+static int GetLinkCountLine(uHelpPage *page_data, int line)
+{
+	int x = 0;
+	int i;
+
+	for (i=0; i < page_data->link_count; i++)
+	{
+		if (page_data->_links[i]->row - 1 == line)
+		{
+			x += 1;
+		}
+	}
+
+	return x;
+}
+
+#ifdef ALFC_DATA_STRUCTURES
+void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(uGlobalData*gd))
+{
+	uHelpPage *page_data;
+
+	if (hdr != NULL)
+	{
+		int redraw;
+		int qflag;
+
+		qflag = 0;
+		redraw = 1;
+
+		page_data = HelpReflowPage(hdr, page, w->width - 2, -1);
+
+		if (page_data != NULL)
+		{
+			int ph;
+			uint32_t key;
+
+			help_draw_window(w, page_data);
+
+			ph = page_data->line_count;
+			ph -= (w->height - 2);
+			if (ph < 0)
+				ph = 0;
+
+			while (qflag == 0 && w->gd->screen->screen_isshutdown() == 0)
+			{
+				if (redraw == 1)
+				{
+					help_draw_page(w, page_data);
+					redraw = 0;
+				}
+
+				key = 0;
+				if (w->gd->screen->screen_isresized() != 0)
+				{
+					int l;
+
+					BuildWindowLayout(w->gd);
+
+					l = page_data->highlight_link;
+					FreeHelpPage(page_data);
+					page_data = HelpReflowPage(hdr, page, w->width - 2, l);
+
+					help_draw_window(w, page_data);
+					help_draw_page(w, page_data);
+				}
+				else
+				{
+					key = w->screen->get_keypress();
+				}
+
+				switch (key)
+				{
+					case ALFC_KEY_DOWN:
+						if (page_data->displayed_page_link_count > page_data->highlight_link)
+						{
+							page_data->highlight_link += 1;
+							redraw = 1;
+						}
+						else if (w->top_line + 1 <= ph)
+						{
+
+							page_data->highlight_link -= GetLinkCountLine(page_data, w->top_line);
+							w->top_line += 1;
+							redraw = 1;
+						}
+						break;
+
+					case ALFC_KEY_UP:
+						if ( page_data->highlight_link > 1)
+						{
+							page_data->highlight_link -= 1;
+							redraw = 1;
+						}
+						else if (w->top_line > 0)
+						{
+							int rc;
+
+							w->top_line -= 1;
+							redraw = 1;
+							rc = GetLinkCountLine(page_data, w->top_line);
+							if (rc > 0)
+							{
+								page_data->highlight_link -= 1;
+								if (page_data->highlight_link < 1)
+									page_data->highlight_link = 1;
+							}
+						}
+						break;
+
+					case 'Q':
+					case 'q':
+					case ALFC_KEY_F12:
+					case ALFC_KEY_ESCAPE:
+					case 0x21B:	// ESC-ESC
+						qflag = 1;
+						break;
+
+					default:
+						LogInfo("foo\n");
+						break;
+				}
+			}
+		}
+		else
+		{
+			LogError("cound not find the requested node.\n");
+		}
+
+		if (page_data != NULL)
+			FreeHelpPage(page_data);
+	}
+}
+#endif
 

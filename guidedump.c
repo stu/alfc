@@ -5,7 +5,6 @@
 #include <assert.h>
 
 #include "dlist.h"
-
 #include "guideheader.h"
 #include "guideload.h"
 
@@ -33,7 +32,7 @@ static void DumpGuide(uHelpFile *hlp)
 		el = dlist_head(sect->lstLines);
 		while (el != NULL)
 		{
-			printf("line: %s\n", (char*) dlist_data(el));
+			printf("%s\n", (char*) dlist_data(el));
 			el = dlist_next(el);
 		}
 	}

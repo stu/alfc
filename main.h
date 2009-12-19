@@ -411,6 +411,8 @@ enum eTimeSigils
 	et_MonthNameShort,
 };
 
+#define ALFC_DATA_STRUCTURES	1
+
 extern void AddHistory(uGlobalData *gd, char *str, ...);
 
 extern int IsVisible(uGlobalData *gd, int idx);

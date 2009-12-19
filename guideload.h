@@ -4,10 +4,14 @@
 extern "C"{
 #endif
 
-extern void FreeHelpPage(uHelpPage *p);
 extern uHelpFile* LoadHelpFile(char *fn);
 extern void FreeHelpFile(uHelpFile *hlp);
-extern uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int link);
+
+#ifdef ALFC_DATA_STRUCTURES
+extern void help_draw_window(uWindow *w, uHelpPage *page_data);
+extern void help_draw_page(uWindow *w, uHelpPage *page_data);
+extern void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(uGlobalData*gd));
+#endif
 
 #ifdef __cplusplus
 }
