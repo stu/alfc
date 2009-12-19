@@ -167,6 +167,9 @@ static void FreeHelpPage(uHelpPage *p)
 	{
 		for (i=0; i < p->link_count; i++)
 		{
+			if(p->_links[i]->link != NULL)
+				free(p->_links[i]->link);
+
 			free(p->_links[i]);
 		}
 		free(p->_links);
@@ -294,15 +297,26 @@ static uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int l
 					page->_links[page->link_count - 1]->col = col;
 					page->_links[page->link_count - 1]->row = page->line_count;
 					page->_links[page->link_count - 1]->id = last_id ++;
-					page->_links[page->link_count - 1]->length = 0;
+					page->_links[page->link_count - 1]->display_length = 0;
+					page->_links[page->link_count - 1]->link = NULL;
 
 					p = x;
 					while (*p != '}' && *p != 0x0)
 					{
 						if (*p == '|')
+						{
+							page->_links[page->link_count - 1]->link = calloc(1, 4+(p - x));
+							memmove(page->_links[page->link_count - 1]->link, x, p - x);
 							x = p + 1;
+						}
 
 						p++;
+					}
+
+					if (page->_links[page->link_count - 1]->link == NULL)
+					{
+						page->_links[page->link_count - 1]->link = calloc(1, 4+(p - x));
+						memmove(page->_links[page->link_count - 1]->link, x, p - x);
 					}
 				}
 				else
@@ -349,16 +363,18 @@ static uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int l
 								last_flags = flags;
 							}
 
-							p++;
-							x++;
-							col++;
+
 
 							if ((flags & (HLP_F_LINK1 | HLP_F_LINK2)) != 0)
 							{
 								assert(page->_links != NULL);
 								assert(page->link_count > 0);
-								page->_links[page->link_count - 1]->length += 1;
+								page->_links[page->link_count - 1]->display_length += 1;
 							}
+
+							p++;
+							x++;
+							col++;
 
 							if (col == page->width)
 							{
@@ -573,6 +589,31 @@ static int GetLinkCountLine(uHelpPage *page_data, int line)
 	return x;
 }
 
+static pHelpLink ScanForLink(uHelpPage *page, int top_line)
+{
+	int i;
+	int j;
+
+	j = page->highlight_link;
+
+	for (i=0; i < page->link_count; i++)
+	{
+		if (page->_links[i]->row >= top_line)
+		{
+			if (j > 0)
+			{
+				j -= 1;
+				if (j == 0)
+				{
+					return page->_links[i];
+				}
+			}
+		}
+	}
+
+	return NULL;
+}
+
 #ifdef ALFC_DATA_STRUCTURES
 void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(uGlobalData*gd))
 {
@@ -662,6 +703,47 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 								page_data->highlight_link -= 1;
 								if (page_data->highlight_link < 1)
 									page_data->highlight_link = 1;
+							}
+						}
+						break;
+
+					case ALFC_KEY_RIGHT:
+						{
+							pHelpLink link;
+
+							link = ScanForLink(page_data, w->top_line);
+							if (link == NULL)
+							{
+								LogError("Somehow activated an invalid link\n");
+							}
+							else
+							{
+								uHelpPage *px;
+								px = HelpReflowPage(hdr, link->link, w->width - 2, -1);
+
+								if (px != NULL)
+								{
+									FreeHelpPage(page_data);
+									page_data = px;
+									help_draw_window(w, page_data);
+									redraw = 1;
+								}
+								else
+								{
+									char *buff;
+
+									// 32 is enough for the basic msg
+									buff = malloc(32 + strlen(link->link));
+									assert(buff != NULL);
+
+									sprintf(buff, " FAILED TO LOAD PAGE : %s ", link->link);
+
+									w->screen->set_style(STYLE_TITLE);
+									w->screen->set_cursor(w->offset_row + w->height, w->offset_col + 2);
+									w->screen->print(buff);
+									free(buff);
+
+								}
 							}
 						}
 						break;
