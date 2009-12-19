@@ -108,7 +108,8 @@ class HelpFile
 		if lname == "*" then
 			@sections.each do |s|
 				ss = s.name.split(":")
-				qq << "\\link{#{s.name}|#{ss[-1]}}"
+				st = "  " * ss.length
+				qq << "#{st}\\link{#{s.name}|#{ss[-1]}}"
 			end
 			return qq
 		else
@@ -116,15 +117,15 @@ class HelpFile
 			n2 = lname + "}"
 
 			@sections.each do |s|
+				ss = s.name.split(":")
+				st = "  " * ss.length
+
 				if s.name.to_s[0 .. n1.length-1] == n1 then
-					ss = s.name.split(":")
-					qq << "\\link{#{s.name}|#{ss[-1]}}"
+					qq << "#{st}\\link{#{s.name}|#{ss[-1]}}"
 				elsif s.name.to_s[0 .. n2.length-1] == n2 then
-					ss = s.name.split(":")
-					qq << "\\link{#{s.name}|#{ss[-1]}}"
+					qq << "#{st}\\link{#{s.name}|#{ss[-1]}}"
 				elsif s.name.to_s[0 .. lname.length-1] == lname then
-					ss = s.name.split(":")
-					qq << "\\link{#{s.name}|#{ss[-1]}}"
+					qq << "#{st}\\link{#{s.name}|#{ss[-1]}}"
 				end
 			end
 			return qq
