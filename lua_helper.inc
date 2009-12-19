@@ -89,6 +89,7 @@ int ExecuteString(uGlobalData *gb, char *sn)
 
 	lua_close(l);
 	free(outbuff);
+	free(new_sn);
 
 	return rc;
 }
