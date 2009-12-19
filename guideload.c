@@ -20,7 +20,7 @@ static void status_msg(uWindow *w, char *strX, ...)
 	assert(z != NULL);
 	assert(strlen(strX) < 1024);
 
-	if(strX != NULL)
+	if (strX != NULL)
 	{
 		va_start(args, strX);
 		vsprintf(z, strX, args);
@@ -195,7 +195,7 @@ static void FreeHelpPage(uHelpPage *p)
 	{
 		for (i=0; i < p->link_count; i++)
 		{
-			if(p->_links[i]->link != NULL)
+			if (p->_links[i]->link != NULL)
 				free(p->_links[i]->link);
 
 			free(p->_links[i]);
@@ -480,7 +480,7 @@ static void FreeBreadCrumb(void *data)
 {
 	uHelpBreadCrumb *b = data;
 
-	if(b->prev_link != NULL)
+	if (b->prev_link != NULL)
 		free(b->prev_link);
 
 	free(b);
@@ -682,6 +682,11 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 				{
 					help_draw_page(w, page_data);
 					redraw = 0;
+
+					ph = page_data->line_count;
+					ph -= (w->height - 2);
+					if (ph < 0)
+						ph = 0;
 				}
 
 				key = 0;
@@ -766,7 +771,7 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 						{
 							uHelpBreadCrumb *b;
 
-							if(dlist_size(hdr->lstBreadCrumbs) > 0)
+							if (dlist_size(hdr->lstBreadCrumbs) > 0)
 							{
 								uHelpPage *px;
 
@@ -774,7 +779,7 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 
 								px = HelpReflowPage(hdr, b->prev_link, w->width - 2, -1);
 
-								if(px != NULL)
+								if (px != NULL)
 								{
 									px->highlight_link = b->highlight_line;
 									w->top_line = b->top_line;
