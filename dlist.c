@@ -1,7 +1,29 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "dlist.h"
+
+
+/**
+  * pre: list != NULL
+  */
+void FreeDList(DList *list)
+{
+	if(list == NULL)
+		return;
+
+	dlist_destroy(list);
+	free(list);
+}
+
+
+DList* NewDList(void (*destroy)(void *data))
+{
+	DList *x = malloc(sizeof(DList));
+	dlist_init(x, destroy);
+
+	return x;
+}
 
 /**
   * pre: list != NULL
