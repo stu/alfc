@@ -448,16 +448,23 @@ static void FreeSection(void *data)
 	free(h);
 }
 
+static void FreeBreadCrumb(void *data)
+{
+	uHelpBreadCrumb *b = data;
+
+	if(b->prev_link != NULL)
+		free(b->prev_link);
+
+	free(b);
+}
+
 void FreeHelpFile(uHelpFile *hlp)
 {
 	if (hlp == NULL)
 		return;
 
-	if (hlp->lstSections != NULL)
-	{
-		dlist_destroy(hlp->lstSections);
-		free(hlp->lstSections);
-	}
+	FreeDList(hlp->lstSections);
+	FreeDList(hlp->lstBreadCrumbs);
 
 	if (hlp->author != NULL)
 		free(hlp->author);
@@ -503,8 +510,8 @@ uHelpFile* LoadHelpFile(char *fn)
 
 	hlp = calloc(1, sizeof(uHelpFile));
 
-	hlp->lstSections = malloc(sizeof(DList));
-	dlist_init(hlp->lstSections, FreeSection);
+	hlp->lstSections = NewDList(FreeSection);
+	hlp->lstBreadCrumbs = NewDList(FreeBreadCrumb);
 
 	fp = fopen(fn, "rb");
 
@@ -707,6 +714,49 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 						}
 						break;
 
+					case ALFC_KEY_LEFT:
+						{
+							uHelpBreadCrumb *b;
+
+							if(dlist_size(hdr->lstBreadCrumbs) > 0)
+							{
+								uHelpPage *px;
+
+								dlist_remove(hdr->lstBreadCrumbs, dlist_tail(hdr->lstBreadCrumbs), (void*)&b);
+
+								px = HelpReflowPage(hdr, b->prev_link, w->width - 2, -1);
+
+								if(px != NULL)
+								{
+									px->highlight_link = b->highlight_line;
+									w->top_line = b->top_line;
+
+									FreeHelpPage(page_data);
+									page_data = px;
+									help_draw_window(w, page_data);
+									redraw = 1;
+								}
+								else
+								{
+									char *buff;
+
+									// 32 is enough for the basic msg
+									buff = malloc(32 + strlen(b->prev_link));
+									assert(buff != NULL);
+
+									sprintf(buff, " FAILED TO LOAD PAGE : %s ", b->prev_link);
+
+									w->screen->set_style(STYLE_TITLE);
+									w->screen->set_cursor(w->offset_row + w->height, w->offset_col + 2);
+									w->screen->print(buff);
+									free(buff);
+								}
+
+								FreeBreadCrumb(b);
+							}
+						}
+						break;
+
 					case ALFC_KEY_RIGHT:
 						{
 							pHelpLink link;
@@ -723,6 +773,14 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 
 								if (px != NULL)
 								{
+									uHelpBreadCrumb *b;
+
+									b = malloc(sizeof(uHelpBreadCrumb));
+									b->top_line = w->top_line;
+									b->highlight_line = page_data->highlight_link;
+									b->prev_link = strdup(page_data->name);
+									dlist_ins(hdr->lstBreadCrumbs, b);
+
 									FreeHelpPage(page_data);
 									page_data = px;
 									help_draw_window(w, page_data);

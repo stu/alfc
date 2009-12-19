@@ -56,6 +56,15 @@ typedef struct udtHelpSection
 	DList *lstLines;
 } uHelpSection;
 
+typedef struct udtHelpBreadCrumb
+{
+	char *prev_link;
+
+	// these become invalid if the page resizes.
+	int top_line;
+	int highlight_line;
+} uHelpBreadCrumb;
+
 typedef struct udtHelpFile
 {
 	char *title;
@@ -63,6 +72,7 @@ typedef struct udtHelpFile
 	char *revision;
 
 	DList *lstSections;
+	DList *lstBreadCrumbs;
 } uHelpFile;
 
 #ifdef __cplusplus
