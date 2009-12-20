@@ -1,0 +1,10 @@
+Current dev bugs
+================
+
+- Does not give feedback when a bad filter is entered.
+  Filter gets displayed in status but has no affect.
+  eg: enter ":f *.pdf"
+
+- Activating filter ":g *.pdf" seems to display hidden files.
+
+
