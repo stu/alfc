@@ -6,7 +6,7 @@ doc
 *.o
 *.a
 .*.marks
-.rant.meta
+.rant.met
 alfc
 alfc.exe
 bin2c
@@ -49,5 +49,5 @@ gdump.exe
 *.dvi
 *.tex.backup
 *.hlp
-
+alfc.1
 
