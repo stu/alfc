@@ -1,0 +1,77 @@
+.\"TOPICS "Topics:"
+.TH ALFC 1 "%%DATE%%" "alfc %%VERSION%%" "Another Linux File Commander"
+
+.SH NAME
+alfc \- program for...
+
+..SH SYNOPSIS
+.B alfc
+[ options ] [\-view file] [-l DIR] [-r DIR]
+.br
+
+.SH DESCRIPTION
+ALFC is a directory browser/file manager for Unix-like and Windows operating
+systems, patterend after the famous Norton Commander program from DOS.
+
+.SH OPTIONS
+.TP
+.I \-view
+This option will load a file into the internal viewer
+.TP
+.I \-v
+Displays the program version
+.TP
+.I \-l DIR
+Start with left pane as directory DIR
+.TP
+.I \-r DIR
+Start with right pane as directory DIR
+
+.SH LICENSE
+ALFC is distributed under GNU GPL v2
+
+.SH AVAILABILITY
+alfc is vailable via git from Gitorious.
+   git clone git://gitorious.org/alfc/alfc.git
+
+.SH FILES
+.PP
+.I /usr/local/share/alfc/help.hlp
+.IP
+The help file for the program.
+.PP
+.I ~/.alfc
+.IP
+This is the users configuration directory
+.PP
+.I ~/.alfc/options.ini
+.IP
+This is the users basic configuration file. Most basic options are set here.
+.PP
+.I ~/.alfc/*.lua
+.IP
+These are supporting scripting files that control the setup of ALFC.
+.PP
+.I ~/.alfc/scripts/*.lua
+.IP
+These are custom scripts that can be invoked by the user.
+
+.SH USAGE
+Start alfc in the home directory on the left and Documents on the right.
+.IP
+.B "alfc -l ~ -r Documents"
+.PP
+Start by viewing a file
+.IP
+.B "alfc -view ~/Documents/source/main.c"
+
+.SH NOTES
+.TP
+ALFC can be compiled either as an NCurses application or a X11/Win32 application.
+
+.SH "SEE ALSO"
+mc(1), ytree(1),
+
+.SH BUGS
+There is an online bug tracker at
+    https://redmine.bloodycactus.com/projects/alfc

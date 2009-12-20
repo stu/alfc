@@ -1,5 +1,6 @@
 #rantfile -- 07-Jan-2009
 import "md5"
+require 'date'
 
 _VER_MAJ = 0
 _VER_MIN = 1
@@ -151,6 +152,7 @@ end
 
 
 cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
+@cBV = cBV
 
 CC = "gcc"
 CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH " + PORT_CFLAGS
@@ -186,7 +188,7 @@ task "auxfiles" => ["fixversion", "defaults", "headers" ] do
 end
 
 task "fixversion" do
-	s = Dir["version.o"]
+	s = Dir["version.o", "docs/alfc.1"]
 	if s.length > 0
 		sys.rm s
 	end
@@ -202,7 +204,7 @@ file "#{var[:bin2c]}" => %w(bin2c.o) do |t|
 	sys "#{CC} -o #{var[:bin2c]} #{t.prerequisites.join(' ')} "
 end
 
-task :defaults => ["docs/help", "defaults.h"] do |t|
+task :defaults => ["docs/help", "docs/manpage", "defaults.h"] do |t|
 end
 
 file "defaults.h" => ["#{var[:bin2c]}"] + default_files  do |t|
@@ -413,7 +415,7 @@ task :make =>  ["clean", "bin2c.o", "auxfiles"] do
 	sys.rm_f "#{ALFCREL}/bin2c.c"
 
 	sys.mkdir "#{ALFCREL}/docs"
-	files = %w(docs/help.hlp docs/Changelog docs/readme.txt docs/COPYING)
+	files = %w(docs/help.hlp docs/Changelog docs/readme.txt docs/COPYING docs/alfc.1)
 	files.each do |t|
 		sys.cp t, "#{ALFCREL}/docs/"
 	end

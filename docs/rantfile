@@ -7,8 +7,25 @@ desc "Build help files"
 task :help => help_file do
 end
 
+desc "Build man file"
+task :manpage do
+	vv = "v#{@cBV.major.to_s}.#{@cBV.minor.to_s}/#{@cBV.build.to_s}"
+	vd = Date.today.year.to_s + Date.today.month.to_s + Date.today.day.to_s
+	fp = File.new("alfc.1", "w")
+	if fp != nil
+		f = File.open('alfc.man')
+		a = f.readlines
+		a.each do |l|
+			l = l.gsub("%%VERSION%%", vv)
+			l = l.gsub("%%DATE%%", vd)
+			fp.puts l
+		end
+		fp.close
+	end
+end
+
 task :clean do
-	x = Dir["*.{bak,o,obj,a,gd,hlp,dvi,aux,pdf,idx,ilg,ind,log,toc}"] + Dir["*~"]
+	x = Dir["*.{bak,o,obj,a,gd,hlp,dvi,aux,pdf,idx,ilg,ind,log,toc,1}"] + Dir["*~"]
 
 	if x.length > 0
 		sys.rm_rf x
