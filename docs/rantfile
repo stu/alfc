@@ -26,7 +26,7 @@ task :manpage do
 end
 
 task :clean do
-	x = Dir["*.{bak,o,obj,a,gd,hlp,dvi,aux,pdf,idx,ilg,ind,log,toc,1}"] + Dir["*~"]
+	x = Dir["*.{bak,o,obj,a,gd,hlp,dvi,aux,pdf,idx,ilg,ind,log,toc,1,1.gz,backup}"] + Dir["*~"]
 
 	if x.length > 0
 		sys.rm_rf x
