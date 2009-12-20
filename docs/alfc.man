@@ -2,16 +2,15 @@
 .TH ALFC 1 "%%DATE%%" "alfc %%VERSION%%" "Another Linux File Commander"
 
 .SH NAME
-alfc \- program for...
+alfc \- program for managing your files.
 
-..SH SYNOPSIS
+.SH SYNOPSIS
 .B alfc
-[ options ] [\-view file] [-l DIR] [-r DIR]
-.br
+[\-view file] [-l DIR] [-r DIR]
 
 .SH DESCRIPTION
 ALFC is a directory browser/file manager for Unix-like and Windows operating
-systems, patterend after the famous Norton Commander program from DOS.
+systems, patterend after the famous Norton Commander program for MS-DOS.
 
 .SH OPTIONS
 .TP
@@ -56,7 +55,7 @@ These are supporting scripting files that control the setup of ALFC.
 .IP
 These are custom scripts that can be invoked by the user.
 
-.SH USAGE
+.SH EXAMPLE
 Start alfc in the home directory on the left and Documents on the right.
 .IP
 .B "alfc -l ~ -r Documents"
