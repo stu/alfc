@@ -40,9 +40,6 @@ end
     BindKey(ALFC_KEY_F7, "Create Dir", [[:md]])
 	BindKey(ALFC_KEY_F8, "Move", [[:tm]])
 
-	--BindKey(ALFC_KEY_F02, "Same", [[:s]])
-	--BindKey(ALFC_KEY_F03, "History", [[ViewHistory()]])
-
 	BindKey(ALFC_KEY_ALT + string.byte("X"), "Quit", [[:q]])
 
 	BindKey(ALFC_KEY_F12, "Tag", [[TagHighlightedFile()]])
@@ -52,12 +49,13 @@ end
 	-- extra's for the ofm1999 standard
 	BindKey(ALFC_KEY_CTRL + string.byte("R"), "Refresh", [[:cd]])
 	BindKey(ALFC_KEY_CTRL + string.byte("U"), "Swap", [[:swap]])
-
+	-- add in a same quick function
+	BindKey(ALFC_KEY_CTRL + string.byte("S"), "Same", [[:s]])
 
 	-- Bind ALT-C, ALT-D, ALT-M for copy/delete/move
-	--BindKey(ALFC_KEY_ALT + string.byte("C"), "Copy Tagged", [[:tc]])
-	--BindKey(ALFC_KEY_ALT + string.byte("D"), "Del Tagged", [[:td]])
-	--BindKey(ALFC_KEY_ALT + string.byte("M"), "Move Tagged", [[:tm]])
+	BindKey(ALFC_KEY_ALT + string.byte("C"), "Copy Tagged", [[:tc]])
+	BindKey(ALFC_KEY_ALT + string.byte("D"), "Del Tagged", [[:td]])
+	BindKey(ALFC_KEY_ALT + string.byte("M"), "Move Tagged", [[:tm]])
 	if SystemType() == "UNIX" then
 		BindKey(ALFC_KEY_ALT + string.byte("L"), "Symlink Tagged", [[:sym]])
 	end
