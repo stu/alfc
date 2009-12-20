@@ -20,8 +20,9 @@ function DecomposeFiletypes()
     filetypes.images.color = "brown"
 
 	filetypes.archives = {}
-	filetypes.archives.extensions = { "*.tar", "*.taz", "*.tar.gz", "*.tar.bz", "*.tar.bz2", "*.tgz", "*.tbz",
-										"*.zip", "*.lha", "*.rar", "*.arc", "*.pak", "*.sit", "*.hqx", "*.zoo", "*.7z" }
+	filetypes.archives.extensions = { "*.tar", "*.taz",  "*.tgz", "*.tbz",
+										"*.zip", "*.lha", "*.rar", "*.arc", "*.pak", "*.sit", "*.hqx", "*.zoo", "*.7z",
+										"*.gz", "*.bz", "*.bz2" }
 	filetypes.archives.type = FILETYPE_ARCHIVE
     filetypes.archives.color = "bright red"
 
