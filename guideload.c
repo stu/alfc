@@ -666,15 +666,10 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 
 		if (page_data != NULL)
 		{
-			int ph;
+			int ph = 0;
 			uint32_t key;
 
 			help_draw_window(w, page_data);
-
-			ph = page_data->line_count;
-			ph -= (w->height - 2);
-			if (ph < 0)
-				ph = 0;
 
 			while (qflag == 0 && w->gd->screen->screen_isshutdown() == 0)
 			{
