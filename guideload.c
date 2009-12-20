@@ -89,7 +89,7 @@ static void draw_percentage(uWindow *w, uHelpPage *page)
 
 	line = page->line_count;
 	line -= w->height - 2;
-	if(line < 0)
+	if (line < 0)
 		line = 100;
 	else
 	{
@@ -728,6 +728,32 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 
 				switch (key)
 				{
+					case ALFC_KEY_PAGE_DOWN:
+						if (ph > w->top_line)
+						{
+							w->top_line += w->height - 4;
+							if (w->top_line > ph)
+							{
+								w->top_line = ph;
+							}
+							page_data->highlight_link = 0;
+							redraw = 1;
+						}
+						break;
+
+					case ALFC_KEY_PAGE_UP:
+						if(w->top_line > 0)
+						{
+							w->top_line -= w->height - 4;
+							if(w->top_line < 0)
+							{
+								w->top_line = 0;
+							}
+							page_data->highlight_link = 0;
+							redraw = 1;
+						}
+						break;
+
 					case ALFC_KEY_DOWN:
 						if (page_data->displayed_page_link_count > page_data->highlight_link)
 						{
