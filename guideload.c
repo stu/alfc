@@ -47,7 +47,7 @@ static void display_char(uWindow *w, char c)
 	w->screen->print((char*) &x);
 }
 
-void help_draw_window(uWindow *w, uHelpPage *page_data)
+static void help_draw_window(uWindow *w, uHelpPage *page_data)
 {
 	char *buff;
 	char *q, *oq;;
@@ -82,7 +82,28 @@ void help_draw_window(uWindow *w, uHelpPage *page_data)
 	free(buff);
 }
 
-void help_draw_page(uWindow *w, uHelpPage *page_data)
+static void draw_percentage(uWindow *w, uHelpPage *page)
+{
+	int line;
+	char buff[8];
+
+	line = page->line_count;
+	line -= w->height - 2;
+	if(line < 0)
+		line = 100;
+	else
+	{
+		line = (w->top_line*100) / line;
+	}
+
+	sprintf(buff, " %3i%% ", line);
+
+	w->screen->set_style(STYLE_HELP_TITLE);
+	w->screen->set_cursor(w->offset_row + w->height, w->offset_col + w->width - 7);
+	w->screen->print(buff);
+}
+
+static void help_draw_page(uWindow *w, uHelpPage *page_data)
 {
 	uint16_t *pp;
 	int wide;
@@ -158,6 +179,8 @@ void help_draw_page(uWindow *w, uHelpPage *page_data)
 		line += 1;
 		i += 1;
 	}
+
+	draw_percentage(w, page_data);
 
 	w->screen->set_updates(1);
 }
