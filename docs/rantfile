@@ -21,6 +21,7 @@ task :manpage do
 			fp.puts l
 		end
 		fp.close
+		sys "gzip -9 alfc.1"
 	end
 end
 

@@ -50,4 +50,5 @@ gdump.exe
 *.tex.backup
 *.hlp
 alfc.1
+alfc.1.gz
 
