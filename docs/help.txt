@@ -2,82 +2,20 @@
 \author{Stu George}
 \version{0.1-20091127}
 
-\section{Main:Date and Time Formats}
+\section{Main:Configuration}
+See the \bold{options.ini} file for most basic config options.
 
-ALFC can display the time in the following formats;
-<pre>
-    HH:mm.ss - eg 13:57.03
-    hh:mm.ss AMPM - eg 1:57.03 PM
-    hh:mm.ssAMPM - eg 1:57.03PM
-    hh:mm.ss - eg 1:57.03
-    HH:mm - eg 13:57
-    hh:mm - eg 1:57
-    hh:mm AMPM - eg 1:57 PM
-    hh:mmAMPM - eg 1:57PM
-</pre>
+\section{Main:File Manager}
+The file manager is the main part of \emph{ALFC}.
 
-    Where;
-
-<pre>
-    HH - 24hour format
-    hh - 12hour format
-    mm - minutes
-    ss - seconds
-    AMPM - Displays AM or PM
-</pre>
-
-Date formats are as below;
-<pre>
-    dd/mm/yyyy - eg 22/12/2009
-    dd/mm/yy - eg 22/12/09
-    mm/dd/yyyy - eg 12/22/2009
-    mm/dd/yy - eg 12/22/09
-    mm-dd-yyyy - eg 12-22-2009
-    mm-dd-yy - eg 12-22-09
-    dd-mm-yyyy - eg 22-12-2009
-    dd-mm-yy - eg 22-12-09
-
-    dd/mmm/yyyy - eg 22/dec/2009
-    dd/mmm/yy - eg 22/dec/09
-    mmm/dd/yyyy - eg dec/22/2009
-    mmm/dd/yy - eg dec/22/09
-    mmm-dd-yyyy - eg dec-22-2009
-    mmm-dd-yy - eg dec-22-09
-    dd-mmm-yyyy - eg 22-dec-2009
-    dd-mmm-yy - eg 22-dec-09
-
-    dd/mmmm/yyyy - eg 22/December/2009
-    dd/mmmm/yy - eg 22/December/09
-    mmmm/dd/yyyy - eg December/22/2009
-    mmmm/dd/yy - eg December/22/09
-    mmmm-dd-yyyy - eg December-22-2009
-    mmmm-dd-yy - eg December-22-09
-    dd-mmmm-yyyy - eg 22-December-2009
-    dd-mmmm-yy - eg 22-December-09
-
-    yymmdd - eg 091222
-    yyyymmdd - eg 20091222
-    ddmmyyyy - eg 22122009
-    ddmmmyyyy - eg 22dec2009
-</pre>
-
-    Where;
-<pre>
-      dd - day of month (1-31)
-      mm - month, numericly (1-12)
-     mmm - month as jan/feb/.../dec
-    mmmm - month as whole January, September, etc.
-      yy - two digit year
-    yyyy - four digit year
-</pre>
-
-\section{Main:Keyboard Commands}
+\section{Main:File Manager:Keyboard Commands}
+keyboard commands for the FM go here
 
 
-\section{View:Introduction}
-This is the inbuilt Viewer command
+\section{Main:Viewer:Keyboard Commands}
 
-\section{View:Keyboard Commands}
+\section{Main:Viewer}
+\emph{ALFC} has an inbuilt viewer.
 
 
 \section{Main}
@@ -88,30 +26,29 @@ use \emph{ENTER} to select a link to read.
 
 From here, please see the \link{Index}.
 
-The \bold{Lorem Ipsum} obligatory text.\\
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc pulvinar, risus in sodales ultricies, odio enim blandit massa, \link{Index} in fringilla quam metus at ante. Morbi et metus quis tellus malesuada malesuada. Vivamus \link{Index} sed tortor ante. Quisque faucibus accumsan mauris in porttitor. Aliquam condimentum leo ante, nec suscipit massa. Maecenas luctus tortor arcu. Suspendisse potenti. Sed ac augue in tellus facilisis \link{Index} pharetra. Ut sollicitudin dapibus orci quis aliquet. Phasellus vitae egestas turpis. Vestibulum placerat viverra sapien eget molestie. Nulla venenatis risus at enim egestas scelerisque. Ut rutrum venenatis placerat. Curabitur commodo, quam vel feugiat bibendum, nisi nibh sagittis sem, nec porta quam dolor vitae lacus. Praesent id lacus in metus vehicula imperdiet eget ut turpis. Curabitur blandit sem non nisi tempus viverra. Sed sed leo ut turpis sodales gravida. Suspendisse hendrerit ligula id sapien interdum mattis. In ac magna quis quam dapibus porttitor. Pellentesque at nulla lorem.
+\bold{To navigate the help}\\
+====================
+\\- ENTER, RIGHT ARROW    -- Select highlighted topic.
+\\- BACKSPACE, LEFT ARROW -- Go backwards to previous topic.
+\\- HOME                  -- Go to front page of file
+\\- F1, Q                 -- Close help
 
-Quisque scelerisque suscipit hendrerit. Nam pulvinar gravida sagittis. Duis faucibus pharetra tristique. Pellentesque adipiscing ultricies lacus, eu porttitor ante vulputate in. Proin interdum feugiat odio. Etiam faucibus pretium feugiat. Donec imperdiet nisl at dui venenatis dapibus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi diam orci, posuere at adipiscing pellentesque, commodo id ipsum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Pellentesque malesuada auctor eros sed volutpat. Pellentesque sit amet eros sit amet est blandit imperdiet. Integer et adipiscing sapien. Nulla vestibulum, nisi at dictum sollicitudin, lacus mauris condimentum tellus, vitae sollicitudin diam tellus ut nibh.
-
-Quisque eu facilisis tortor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris at magna nibh. Ut bibendum porta consectetur. Vivamus fringilla, purus vitae semper tincidunt, ligula neque consectetur justo, quis lobortis erat elit vel ipsum. Integer vitae orci elementum augue malesuada venenatis. Etiam facilisis mollis dui, non laoreet lacus luctus in. Cras euismod convallis nisi, id gravida est egestas a. Donec ullamcorper scelerisque neque sit amet fermentum. Phasellus lobortis turpis vel libero porta vulputate. Mauris vehicula neque eu nunc mollis nec ultrices eros condimentum. Pellentesque pellentesque libero eu leo dapibus non malesuada libero ornare. Integer pulvinar dictum ante.
-
-Sed quam libero, ullamcorper vel cursus quis, eleifend eu risus. Donec condimentum gravida tincidunt. Morbi accumsan placerat porta. Proin sodales condimentum sollicitudin. Vestibulum risus lacus, faucibus vitae ultricies sit amet, vehicula faucibus velit. Suspendisse nec accumsan nisl. Vivamus at lacus accumsan leo faucibus pharetra. Nulla elementum eleifend ornare. Pellentesque consectetur ultricies ornare. Quisque eu tempus nisi. Vivamus fermentum nunc at dolor dictum sed porta enim convallis. Morbi nec semper dui. In hac habitasse platea dictumst. Donec a accumsan neque. Aenean semper suscipit purus et tincidunt. Mauris vitae dui sed dui vulputate varius. Donec nec est felis, sed rutrum diam. Sed cursus pellentesque mattis. Curabitur eu turpis arcu.
-
-Pellentesque eget metus purus. Suspendisse cursus orci et enim rhoncus pretium. Aliquam consectetur cursus rutrum. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nam dapibus ligula quis tellus condimentum mollis tristique turpis tincidunt. Vivamus dolor tellus, lacinia sit amet adipiscing in, ultricies nec tellus. Cras tempor pretium luctus. Nulla pharetra faucibus interdum. Morbi ac nunc ut elit hendrerit porta. Curabitur ac augue sapien. Donec et lorem in velit consequat suscipit. Morbi ut sagittis ipsum. Aenean suscipit malesuada justo, in gravida velit bibendum eu. Curabitur at hendrerit erat. Vestibulum sapien erat, faucibus consectetur hendrerit ornare, consectetur vitae turpis. Aenean a risus velit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Curabitur lectus nulla, rutrum vel pulvinar sed, feugiat in orci.
+\\- DOWN ARROW            -- Scroll text down
+\\- UP ARROW              -- Scroll text up
 
 \section{Index}
 
 Below here you should see the index.
-\list{*}
+\\\list{*}
 
-\section{Introduction}
+\section{Main:Introduction}
 This program is a file management utility patterned after
 a very famous classic program called \emph{Norton Commander}
 (Hence the 'Commander' in the title as hommage).
 
 It is written to comply with the GPL v2 license.
 
-ALFC embeds the Lua scripting language to give you a lot of power
+ALFC embeds the \link{Main:About:Lua|Lua} scripting language to give you a lot of power
 and flexability in your system management.
 
 This program is designed to be easy and powerful, giving you
@@ -123,17 +60,56 @@ control back over your filesystem.
 \\- Is supposed to sustain normal admin tasks (file management, config
 file editing, etc).
 
-\section{About}
-Lots of work went into this, see the \link{Credits|Credits}
+\section{Main:About}
+Lots of work went into this, see the \link{Main:About:Credits|Credits}
 
-\emph{ALFC} is written under the \link{GPL v2|GPL} license.
+\emph{ALFC} is written under the \link{Main:About:GPL v2|GPL} license and
+embeds Lua using the \link{Main:About:Lua|Lua MIT license}.
 
-\section{About:Credits}
+\section{Main:About:Lua}
+Thanks to the main Lua authors;
+
+\emph{Roberto Ierusalimschy}\\
+Ph.D. in Computer Science, PUC-Rio, 1990.\\
+Associate Professor at the Department of Computer Science, PUC-Rio. Head of Lablua.\\
+
+\emph{Waldemar Celes}\\
+Ph.D. in Computer Science, PUC-Rio, 1995.\\
+Assistant Professor at the Department of Computer Science, PUC-Rio. Consultant at Tecgraf.\\
+
+\emph{Luiz Henrique de Figueiredo}\\
+D.Sc. in Mathematics, IMPA, 1992.\\
+Associate Researcher at IMPA. Consultant at Tecgraf.\\
+
+\bold{License}
+\\License for Lua 5.0 and later versions
+
+Copyright 1994-2008 Lua.org, PUC-Rio.
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in the
+Software without restriction, including without limitation the rights to use, copy,
+modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so, subject to the
+following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+
+\section{Main:About:Credits}
 Stu George - Most everything\\
 Nate       - Originally did the rlcore code.\\
 Lua Team   - Lua\\
 
-\section{GPL v2}
+
+\section{Main:About:GPL v2}
 		    GNU GENERAL PUBLIC LICENSE\\
 		       Version 2, June 1991
 
