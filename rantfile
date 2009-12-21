@@ -1,6 +1,8 @@
 #rantfile -- 07-Jan-2009
 import "md5"
 require 'date'
+require 'fileutils'
+include FileUtils
 
 _VER_MAJ = 0
 _VER_MIN = 1
@@ -155,7 +157,7 @@ cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
 @cBV = cBV
 
 CC = "gcc"
-CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DMEMWATCH " + PORT_CFLAGS
+CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DNMEMWATCH " + PORT_CFLAGS
 LIBS = ""
 
 header_files = %w(rantfile main.h)
@@ -259,24 +261,24 @@ end
 desc "Build documentation"
 task "docs" do
 	print "Updating Lua API documentation (html mutli) :: "
-	sys "robodoc --html --doc ./doc/lua_api/html_multi --multidoc --rc robodoc_lua.rc"
+	sys "robodoc --html --doc ./docs/lua_api/html_multi --multidoc --rc robodoc_lua.rc"
 
 	print "Updating Lua API documentation (html single) :: "
-	sys "robodoc --html --doc ./doc/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
+	sys "robodoc --html --doc ./docs/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
 
 	print "Updating Lua API documentation (rtf) :: "
-	sys "robodoc --rtf --doc ./doc/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
+	sys "robodoc --rtf --doc ./docs/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
 
 	print "Updating Lua API documentation (latex) :: "
-	sys "robodoc --latex --doc ./doc/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
+	sys "robodoc --latex --doc ./docs/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
 
 	print "Updating Lua API documentation (docbook xml) :: "
-	sys "robodoc --dbxml --doc ./doc/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
+	sys "robodoc --dbxml --doc ./docs/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
 end
 
 desc "Cleanup..."
 task :clean => "docs/clean" do
-	x = Dir["*.{bak,o,obj,a,gd}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"]  + Dir["doc"]
+	x = Dir["*.{bak,o,obj,a,gd}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"] + Dir["docs/lua_api/*"]
 
 	x += Dir["#{var[:gcomp]}"]
 	x += Dir["#{var[:gdump]}"]
@@ -296,6 +298,10 @@ task :clean => "docs/clean" do
 
 	if x.length > 0
 		sys.rm_rf x
+	end
+
+	if File.directory? 'docs/lua_api'
+		sys.rmdir "docs/lua_api"
 	end
 end
 
@@ -332,7 +338,7 @@ end
 
 ##############################################################################
 desc "Create Makefile"
-task :make =>  ["clean", "bin2c.o", "auxfiles"] do
+task :make =>  ["clean", "bin2c.o", "auxfiles", "docs"] do
 	if File.exists?("Makefile") == TRUE
 		File.delete("Makefile")
 	end
@@ -421,10 +427,12 @@ task :make =>  ["clean", "bin2c.o", "auxfiles"] do
 	sys.rm_f "#{ALFCREL}/bin2c.c"
 
 	sys.mkdir "#{ALFCREL}/docs"
-	files = %w(docs/help.hlp docs/Changelog docs/readme.txt docs/COPYING docs/alfc.1)
+	files = %w(docs/help.hlp docs/Changelog docs/readme.txt docs/COPYING docs/alfc.1.gz)
 	files.each do |t|
 		sys.cp t, "#{ALFCREL}/docs/"
 	end
+
+	cp_r "docs/lua_api", "#{ALFCREL}/docs/lua_api"
 
 	sys.mkdir "#{ALFCREL}/scripts"
 	files = Dir["scripts/*.lua"]
