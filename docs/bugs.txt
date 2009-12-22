@@ -7,6 +7,3 @@ Current dev bugs
 
 - Activating filter ":g *.pdf" seems to display hidden files.
 
-- When link crosses lines, its treated as a new link and not a
-  continuation.
-

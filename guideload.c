@@ -111,6 +111,7 @@ static void help_draw_page(uWindow *w, uHelpPage *page_data)
 	int line;
 	int width;
 	int i;
+	int last_link;
 
 	w->screen->set_updates(0);
 
@@ -125,38 +126,38 @@ static void help_draw_page(uWindow *w, uHelpPage *page_data)
 
 	w->screen->set_style(STYLE_HELP_NORMAL);
 
+	last_link = 0;
+	style = STYLE_HELP_NORMAL;
 	while (i < w->height - 2 && line < page_data->line_count)
 	{
-		int last_link;
-
 		wide = 0;
 		w->screen->set_cursor(2 + w->offset_row + i, 2 + w->offset_col);
 
 		pp = page_data->lines[line];
 		assert(pp != NULL);
 
-		last_link = 0;
-
-		while (wide < page_data->width)
+		while (wide < page_data->width && (pp[wide]&0xFF) != 0)
 		{
-			style = STYLE_HELP_NORMAL;
+			//LogInfo("%c%02X%02X\n", pp[wide] & 0xFF, pp[wide]&0xFF, pp[wide] >> 8);
 			if ((pp[wide] >> 8) == HLP_F_EMPH)
 			{
 				style = STYLE_HELP_EMPHASIS;
 				last_link = 0;
 			}
-			if ((pp[wide] >> 8) == HLP_F_BOLD)
+			else if ((pp[wide] >> 8) == HLP_F_BOLD)
 			{
 				style = STYLE_HELP_BOLD;
 				last_link = 0;
 			}
 			else if (((pp[wide] >> 8) & (HLP_F_LINK1 | HLP_F_LINK2)) != 0)
 			{
+				LogInfo("LastLink=%i (%c)\n", last_link, pp[wide] & 0xFF);
 				style = STYLE_HELP_LINK;
 				if (last_link == 0 || (last_link != ((pp[wide]>>8) & (HLP_F_LINK1 | HLP_F_LINK2))))
 				{
 					page_data->displayed_page_link_count += 1;
 					last_link = (pp[wide]>>8) & (HLP_F_LINK1 | HLP_F_LINK2);
+					//LogInfo("LastLink=%i\n", last_link);
 				}
 
 				if (page_data->displayed_page_link_count == page_data->highlight_link)
@@ -166,6 +167,7 @@ static void help_draw_page(uWindow *w, uHelpPage *page_data)
 			}
 			else
 			{
+				style = STYLE_HELP_NORMAL;
 				last_link = 0;
 			}
 
@@ -220,6 +222,9 @@ static void FreeHelpPage(uHelpPage *p)
 		{
 			if (p->_links[i]->link != NULL)
 				free(p->_links[i]->link);
+
+			if (p->_links[i]->show != NULL)
+				free(p->_links[i]->show);
 
 			free(p->_links[i]);
 		}
@@ -331,6 +336,7 @@ static uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int l
 				else if (strncmp(x, "\\link{", 5) == 0)
 				{
 					char *p;
+					char *q;
 
 					stack_depth += 1;
 					stack[stack_depth] = flags;
@@ -350,8 +356,10 @@ static uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int l
 					page->_links[page->link_count - 1]->id = last_id ++;
 					page->_links[page->link_count - 1]->display_length = 0;
 					page->_links[page->link_count - 1]->link = NULL;
+					page->_links[page->link_count - 1]->show = NULL;
 
 					p = x;
+					q = x;
 					while (*p != '}' && *p != 0x0)
 					{
 						if (*p == '|')
@@ -359,6 +367,7 @@ static uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int l
 							page->_links[page->link_count - 1]->link = calloc(1, 4+(p - x));
 							memmove(page->_links[page->link_count - 1]->link, x, p - x);
 							x = p + 1;
+							q = x;
 						}
 
 						p++;
@@ -369,6 +378,9 @@ static uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int l
 						page->_links[page->link_count - 1]->link = calloc(1, 4+(p - x));
 						memmove(page->_links[page->link_count - 1]->link, x, p - x);
 					}
+
+					page->_links[page->link_count - 1]->show = calloc(1, 4+(p - q));
+					memmove(page->_links[page->link_count - 1]->show, q, p - q);
 				}
 				else
 				{
@@ -415,7 +427,6 @@ static uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int l
 							}
 
 
-
 							if ((flags & (HLP_F_LINK1 | HLP_F_LINK2)) != 0)
 							{
 								assert(page->_links != NULL);
@@ -434,7 +445,7 @@ static uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int l
 								last_flags_min_link = last_flags & ~(HLP_F_LINK1 | HLP_F_LINK2);
 
 								while (last_p < p)
-									*last_p++ = ((0x20) | (last_flags_min_link << 8));
+									*last_p++ = ((0x00) | (last_flags_min_link << 8));
 
 								x = last_x;
 								flags = last_flags;
@@ -746,10 +757,10 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 						break;
 
 					case ALFC_KEY_PAGE_UP:
-						if(w->top_line > 0)
+						if (w->top_line > 0)
 						{
 							w->top_line -= w->height - 4;
-							if(w->top_line < 0)
+							if (w->top_line < 0)
 							{
 								w->top_line = 0;
 							}

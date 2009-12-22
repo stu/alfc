@@ -33,6 +33,7 @@ typedef struct udtHelpLink
 	int col;
 	int display_length;
 	char *link;
+	char *show;
 } uHelpLink, *pHelpLink;
 
 typedef struct udtHelpPage
