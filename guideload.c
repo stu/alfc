@@ -138,7 +138,6 @@ static void help_draw_page(uWindow *w, uHelpPage *page_data)
 
 		while (wide < page_data->width && (pp[wide]&0xFF) != 0)
 		{
-			//LogInfo("%c%02X%02X\n", pp[wide] & 0xFF, pp[wide]&0xFF, pp[wide] >> 8);
 			if ((pp[wide] >> 8) == HLP_F_EMPH)
 			{
 				style = STYLE_HELP_EMPHASIS;
@@ -151,7 +150,6 @@ static void help_draw_page(uWindow *w, uHelpPage *page_data)
 			}
 			else if (((pp[wide] >> 8) & (HLP_F_LINK1 | HLP_F_LINK2)) != 0)
 			{
-				LogInfo("LastLink=%i (%c)\n", last_link, pp[wide] & 0xFF);
 				style = STYLE_HELP_LINK;
 				if (last_link == 0 || (last_link != ((pp[wide]>>8) & (HLP_F_LINK1 | HLP_F_LINK2))))
 				{
