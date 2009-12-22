@@ -2692,8 +2692,18 @@ int gme_msgbox(lua_State *L)
 
 	msgbox(gd, info.data);
 
-	if (gd->lstFullLeft != NULL && gd->lstFullRight != NULL)
+	/*if (gd->lstFullLeft != NULL && gd->lstFullRight != NULL)
+		DrawAll(gd);*/
+	if (gd->mode == eMode_Directory)
+	{
 		DrawAll(gd);
+	}
+	else if (gd->mode == eMode_Viewer)
+	{
+		return ViewerDrawAllLua(L);
+	}
+	else
+		LogInfo("UNKNOWN DRAW ALL ON MENU\n");
 
 	return 0;
 }
@@ -2719,7 +2729,16 @@ int gme_ShowHelp(lua_State *L)
 	free(fn);
 	free(fn2);
 
-	DrawAll(gd);
+	if (gd->mode == eMode_Directory)
+	{
+		DrawAll(gd);
+	}
+	else if (gd->mode == eMode_Viewer)
+	{
+		return ViewerDrawAllLua(L);
+	}
+	else
+		LogInfo("UNKNOWN DRAW ALL ON MENU\n");
 
 	return 0;
 }

@@ -26,11 +26,12 @@ local function BuildMenu(win)
 	return x
 end
 
-    if SystemType() == "UNIX" then
+	if SystemType() == "UNIX" then
 		BindKey(ALFC_KEY_F1, "Help", [[ShowHelp("/usr/local/share/alfc/help.hlp", "Main")]])
     else
 		BindKey(ALFC_KEY_F1, "Help", [[ShowHelp("$HOME/.alfc/help.hlp", "Main")]])
     end
+
 
 	BindKey(ALFC_KEY_F2, "Menu", [[Menu()]])
 	BindKey(ALFC_KEY_F3, "View", [[ViewFile(GetHighlightedFilename())]])
@@ -76,7 +77,13 @@ end
 				{ key = string.byte('h'), name = "Hidden", code = [[if GetOption("options", "show_hidden") == "false" then SetOption("options", "show_hidden", "true") else SetOption("options", "show_hidden", "false") end SetCurrentWorkingDirectory(GetCurrentWorkingDirectory())]]},
                 { key = string.byte('x'), name = "Exit", code = [[__QuitApp()]]},
 				{ key = string.byte('a'), name = "About", code = [[About()]] },
-				{ key = ALFC_KEY_F1, name = "Help", code = [[ViewFile("help.txt")]] },
+				{ key = ALFC_KEY_F1, name = "Help", code = [[if SystemType() == "UNIX" then
+		ShowHelp("/usr/local/share/alfc/help.hlp", "Main")
+    else
+		ShowHelp("$HOME/.alfc/help.hlp", "Main")
+    end]] },
 			})
+
+
 
 	CreateMenu(ALFC_KEY_ALT + string.byte("2"), "Right Panel", BuildMenu(WINDOW_RIGHT))

@@ -1,17 +1,26 @@
 
+	if SystemType() == "UNIX" then
+		BindKey(ALFC_KEY_F1, "Help", [[ShowHelp("/usr/local/share/alfc/help.hlp", "Main")]])
+    else
+		BindKey(ALFC_KEY_F1, "Help", [[ShowHelp("$HOME/.alfc/help.hlp", "Main")]])
+    end
+
 	BindKey(ALFC_KEY_ALT + string.byte("A"), "About", [[About()]])
 	BindKey(ALFC_KEY_F3, "Close Viewer", [[QuitViewer()]])
 	BindKey(ALFC_KEY_ALT + string.byte("X"), "Quit", [[:q]])
 	BindKey(ALFC_KEY_ALT + string.byte("H"), "Toggle Hex mode", [[__ToggleHexMode()]])
 
-	BindKey(ALFC_KEY_F1, "Help", [[ShowHelp("$HOME/.alfc/help.hlp", "Main")]])
 	BindKey(ALFC_KEY_F2, "Menu", [[Menu()]])
 
 	CreateMenu(ALFC_KEY_ALT + string.byte("F"), "File", {
 				{ key = string.byte('c'), name = "Close Viewer", code = [[__CloseViewer()]] },
 				{ key = string.byte('x'), name = "Exit", code = [[__QuitApp()]]},
 				{ key = string.byte('a'), name = "About", code = [[About()]] },
-				{ key = ALFC_KEY_F1, name = "Help", code = [[ViewFile("help.txt")]] }
+				{ key = ALFC_KEY_F1, name = "Help", code = [[if SystemType() == "UNIX" then
+		ShowHelp("/usr/local/share/alfc/help.hlp", "Main")
+    else
+		ShowHelp("$HOME/.alfc/help.hlp", "Main")
+    end]] }
 			})
 
 	CreateMenu(ALFC_KEY_ALT + string.byte("E"), "Edit", {
