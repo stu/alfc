@@ -429,8 +429,12 @@ static uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int l
 
 							if (col == page->width)
 							{
+								int last_flags_min_link;
+
+								last_flags_min_link = last_flags & ~(HLP_F_LINK1 | HLP_F_LINK2);
+
 								while (last_p < p)
-									*last_p++ = ((0x20) | (last_flags << 8));
+									*last_p++ = ((0x20) | (last_flags_min_link << 8));
 
 								x = last_x;
 								flags = last_flags;
