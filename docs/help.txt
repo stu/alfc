@@ -30,7 +30,7 @@ From here, please see the \link{Index}.
 ====================
 \\- ENTER, RIGHT ARROW    -- Select highlighted topic.
 \\- BACKSPACE, LEFT ARROW -- Go backwards to previous topic.
-\\- HOME                  -- Go to front page of file
+\\- HOME (H,I)            -- Go to front page of file
 \\- F1, Q                 -- Close help
 
 \\- DOWN ARROW            -- Scroll text down
@@ -38,7 +38,8 @@ From here, please see the \link{Index}.
 
 \section{Index}
 
-Below here you should see the index.
+Below is the complete index, please select your topic.
+
 \\\list{*}
 
 \section{Main:Introduction}
@@ -442,8 +443,8 @@ necessary.  Here is a sample; alter the names:
   Yoyodyne, Inc., hereby disclaims all copyright interest in the program
   'Gnomovision' (which makes passes at compilers) written by James Hacker.
 
-  <signature of Ty Coon>, 1 April 1989
-  Ty Coon, President of Vice
+  <signature of Ty Coon>, 1 April 1989\\
+  Ty Coon, President of Vice\\
 
 This General Public License does not permit incorporating your program into
 proprietary programs.  If your program is a subroutine library, you may

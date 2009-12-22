@@ -806,6 +806,11 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 						}
 						break;
 
+						// alias I/i for Index, H/h for home.
+					case 'i':
+					case 'I':
+					case 'h':
+					case 'H':
 					case ALFC_KEY_HOME:
 						{
 							uHelpBreadCrumb *b;
