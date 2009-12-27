@@ -6,7 +6,7 @@ doc
 *.o
 *.a
 .*.marks
-.rant.met
+.rant.meta
 alfc
 alfc.exe
 bin2c
