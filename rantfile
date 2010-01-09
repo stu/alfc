@@ -11,6 +11,123 @@ _VER_MIN = 1
 DRIVER="NCURSES"
 PREFIX="/usr/local"
 
+
+def FindLib(libs, paths)
+    cwd = Dir.getwd
+
+    while paths.length > 0
+        p = paths[0]
+
+        paths[0] = nil
+        paths.delete_at(0)
+
+        ok = true
+        begin
+            Dir.chdir("#{p}")
+        rescue
+            ok = false
+        end
+
+
+        if ok == true
+            x = Dir["*"]
+            x.each do |f|
+                if f == "." or f == ".."
+                    break
+                end
+
+                begin
+                    link = File.readlink("#{p}")
+                    if link == "." or link == ".."
+                        break
+                    end
+                    rescue
+                end
+
+                if  File.directory?("#{p}/#{f}")
+                    paths.insert(0, "#{p}/#{f}")
+                else
+                    libs.each do |l|
+                        if f == "lib#{l}.a"
+                            return "#{p}/#{f}"
+                        elsif f == "lib#{l}.lib"
+                            return "#{p}/#{f}"
+                        elsif f == "lib#{l}.la"
+                            return "#{p}/#{f}"
+                        end
+                    end
+                end
+            end
+        end
+
+    end
+
+    Dir.chdir(cwd)
+    return "FAIL"
+end
+
+
+def FindInclude(incs, paths)
+    cwd = Dir.getwd
+
+    while paths.length > 0
+        p = paths[0]
+
+        paths[0] = nil
+        paths.delete_at(0)
+
+        ok = true
+        begin
+            Dir.chdir("#{p}")
+        rescue
+            ok = false
+        end
+
+
+        if ok == true
+            x = Dir["*"]
+            x.each do |f|
+                if f == "." or f == ".."
+                    break
+                end
+
+                begin
+                    link = File.readlink("#{p}")
+                    if link == "." or link == ".."
+                        break
+                    end
+                    rescue
+                end
+
+                if  File.directory?("#{p}/#{f}")
+                    paths.insert(0, "#{p}/#{f}")
+                else
+                    incs.each do |i|
+                        if f == "#{i}"
+                            return "#{p}"
+                        end
+                    end
+                end
+            end
+        end
+
+    end
+
+    Dir.chdir(cwd)
+    return "FAIL"
+end
+
+# fails with multiple lua installs
+lualib = FindLib(
+		["lua5.1", "lua5.0", "lua5", "lua"],
+		["/usr/lib", "/usr/local/lib", "/opt", "/usr/lib64", "/usr/lib32"]
+		)
+
+luainc = FindInclude(
+		["lauxlib.h"],
+		["/usr/include", "/usr/local/include", "/opt"]
+		)
+
 y = RUBY_PLATFORM.scan(/(mswin32|mingw32|bccwin32|msdosdjgpp|os2|amigaos|cygwin)/)
 case y.to_s
 	when "mswin32", "mingw32", "bccwin32", "msdosdjgpp"
@@ -60,11 +177,11 @@ case y.to_s
 		var[:gdump] = "gdump"
 
 		if DRIVER=="NCURSES"
-			var[:libs] = "-lm -lncurses -llua5.1 -lz"
+			var[:libs] = "-lm -lncurses #{lualib} -lz"
 			PORTABILITY_OBJS = %w( portability_unix.o ncurses_main.o ncurses_interface.o)
 			GPORTABILITY_OBJS = %w( portability_unix.o ncurses_guide.o ncurses_interface.o)
 		else
-			var[:libs] = "-lm -llua5.1 -lX11 -lz"
+			var[:libs] = "-lm #{lualib} -lX11 -lz"
 			PORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_main.o guicore.o)
 			GPORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_guide.o guicore.o)
 		end
@@ -152,7 +269,6 @@ class BuildVersion
 	end
 end
 
-
 cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
 @cBV = cBV
 
@@ -179,11 +295,16 @@ end
 
 
 gen Action do
-	CFLAGS = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s
+	var[:cflags] = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s + " -I\"#{luainc}\" "
 end
 
 desc "Build the app"
-task :all => ["auxfiles", "appx", "help"] do
+task :all => ["includes", "auxfiles", "appx", "help"] do
+end
+
+task "includes" do
+
+
 end
 
 task "auxfiles" => ["fixversion", "defaults", "headers" ] do
@@ -315,7 +436,7 @@ gen Rule, '.lua' => '.lua' do |t|
 end
 
 gen Rule, '.o' => '.c' do |t|
-	sys "#{CC} #{CFLAGS} -DDRV_#{DRIVER} -c -o #{t.name} #{t.source}"
+	sys "#{CC} #{var[:cflags]} -DDRV_#{DRIVER} -c -o #{t.name} #{t.source}"
 end
 
 gen Rule, '.h' => '.h' do |t|
@@ -383,7 +504,7 @@ task :make =>  ["clean", "bin2c.o", "auxfiles", "docs"] do
 
 		fp.puts ""
 		fp.puts "CC=#{CC}"
-		fp.puts "CFLAGS=#{CFLAGS} -D$(PLATFORM) -DDRV_$(DRIVER)"
+		fp.puts "CFLAGS=#{var[:cflags]} -D$(PLATFORM) -DDRV_$(DRIVER)"
 
 		fp.puts ""
 		fp.puts "EXEC=#{var[:exec]}"
@@ -461,6 +582,8 @@ task :install do
 	sys "install -m 755 -d #{PREFIX}/share/man/man1/"
 	sys "install docs/alfc.1* -m 644 -D #{PREFIX}/share/man/man1"
 	sys "install docs/help.hlp -m 644 -D #{PREFIX}/share/alfc/help.hlp"
+    sys "install docs/alfc.desktop -m 644 -D #{PREFIX}/share/applications/"
+    sys "install docs/alfc.xpm -m 644 -D #{PREFIX}/share/icons/"
 end
 
 subdirs "docs"

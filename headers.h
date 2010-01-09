@@ -23,18 +23,11 @@
 #include <windows.h>
 #endif
 
-// default for mingw..
-#ifdef __MINGW_H
-#include <lua/lauxlib.h>
-#include <lua/lualib.h>
-#else
-// arch linux
-//#include <lauxlib.h>
-//#include <lualib.h>
-// default for ubuntu..
-#include <lua5.1/lauxlib.h>
-#include <lua5.1/lualib.h>
-#endif
+
+// Include path found by rantfile.. set with -I
+#include <lauxlib.h>
+#include <lualib.h>
+
 #include "memwatch.h"
 
 #include "dlist.h"
