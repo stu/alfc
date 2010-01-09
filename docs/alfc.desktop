@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=ALFC
+Comment=Another Linux File Commander
+Exec=alfc
+Terminal=true
+Type=Application
+Icon=alfc.xpm
+Categories=Application;Utility;

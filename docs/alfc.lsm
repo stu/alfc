@@ -1,0 +1,14 @@
+Begin4
+Title:			Another Linux File Commander
+Version:		0.1
+Entered-date:	2009-12-28
+Description:	Linux based file commander
+Keywords:		Norton Commander clone, XTree, Deco
+Author:			sgeorge@mega-tokyo.com (Stu George)
+Maintained-by:	sgeorge@mega-tokyo.com (Stu George)
+Primary-site:	https://redmine.bloodycactus.com/projects/alfc
+Alternate-site:
+Original-site:
+Platforms:		Linux, Win32
+Copying-policy:	Gnu General Public License (GPL) 2.0
+End

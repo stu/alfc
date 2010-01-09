@@ -1,11 +1,9 @@
 %% set for XeTex + Latex
-%\documentclass[letterpaper,landscape]{article}
+%% http://en.wikibooks.org/wiki/LaTeX/Formatting
 \documentclass[letterpaper]{article}
-\usepackage[T1]{fontenc} 
-\usepackage{type1cm}
+
 \usepackage[margin=3cm]{geometry}
 \usepackage{makeidx}
-%\usepackage{2in1, lscape}
 \usepackage{lastpage}
 \usepackage{fancyhdr}
 
@@ -13,18 +11,14 @@
 \usepackage{xunicode}
 \usepackage{xltxtra}
 \setmainfont[Mapping=tex-text]{Palatino Linotype}
-\setmonofont{Monaco}
+\setmonofont{Bitstream Vera Sans Mono}
 
 \pagestyle{fancy}
+\fancyhead[L]{\bfseries\thepage} 
 \fancyfoot[C]{{\thepage} of \pageref{LastPage}}
 \setlength\headheight{12pt}		% sets page header height
 \setlength\headsep{12bp}		% changes height of title to the line above it
 \makeindex
-%\renewcommand{\labelitem}{$\diamond$}
-%\renewcommand{\thefootnote{\fnsymbol{footnote}}}
-%\usepackage{indentfirst}
-%\setlength{\parskip}{3mm}
-%\setlength{\parindent}{3mm}
 \setlength{\parindent}{0mm}
 
 \def\xbe{Haiku}
@@ -81,7 +75,7 @@ basic out-of-the-box configuration.
 
 We do not assume one particular platform, as \textsl{ALFC} can be run on either \xmswin\ or \xlin, and we will endevour to mark any platform specific examples. \xbe\ is a bit different but close enough to be posix compatible, it just has a different directory layout.
 
-\xlin\ can be used interchangably with most other posix operating systems such as FreeBSD
+\xlin\ can be used interchangably with almost any other posix compliant operating systems such as FreeBSD or Haiku.
 
 \vfill \eject
 \section{Configuration}
@@ -98,7 +92,7 @@ Newer versions of \xmswin\ from XP and onwards;
 \\eg: C:\textbackslash Documents and Settings\textbackslash username\textbackslash .alfc}}}
 \end{flushleft}
 
-Older versions of \xmswin such as the Windows 98 and Windows ME family;
+Older versions of \xmswin\ such as the Windows 98 and Windows ME family;
 \begin{flushleft}
 \framebox{\parbox{\xboxsize}{WINDOWS 98\\\texttt{\$USERPROFILE\textbackslash .alfc
 \\eg: C:\textbackslash Windows\textbackslash Profiles\textbackslash username\textbackslash .alfc}}}
@@ -115,7 +109,7 @@ BeOS / Haiku is a little different;
 \\eg: /boot/home}}}
 \end{flushleft}
 
-
+\vfill \eject
 \section{File Management}
 
 \subsection{File Attributes}
@@ -130,9 +124,7 @@ Applies to both \xlin\ and \xmswin.
 
 \subsubsection{Hidden Files}
 \begin{center}
-\framebox{\parbox{\xboxsize}{WINDOWS\\On \xmswin, any file that starts with a dot eg ".netbeans" will have
-its attribute shown as hidden, even when it does not have a hidden 
-attribute.}}
+\framebox{\parbox{\xboxsize}{WINDOWS\\On \xmswin, any file that starts with a dot eg \texttt{'.netbeans'} will have its attribute shown as hidden, even when it does not have a hidden attribute.}}
 \end{center}
 
 \subsubsection{Writable}
@@ -151,7 +143,7 @@ Applies to \xmswin\ only.
 \subsubsection{Globs}
 \index{Tagging!glob}The term \textsl{Glob} indicates a simple, limited form of pattern matching.
 \begin{center}
-\framebox{\parbox{\xboxsize}{GLOBBING\\\texttt{'*.doc' refers to all files ending in '.doc'. If you wanted}}}
+\framebox{\parbox{\xboxsize}{GLOBBING\\\texttt{'*.doc'} refers to all files ending in \texttt{'.doc'}.}}
 \end{center}
 
 Globbing has two special characters, the ? and the *;
@@ -161,7 +153,7 @@ Globbing has two special characters, the ? and the *;
     \hline
     Character & Description & Example \\ \hline
     ? & Single character & ?at = Cat, Bat, Hat\\ \hline
-    * & Multi character Wildcaard & d*n = don, down, doooooooown, dominican \\ \hline
+    * & Multi character Wildcaard & d*n = don, down, doooooown, dominican \\ \hline
     \hline
     \end{tabular}
 \end{center}
@@ -169,25 +161,25 @@ Globbing has two special characters, the ? and the *;
 
 \subsubsection{Filters}
 \index{Tagging!filter}
-Filters are a more complex form of pattern matching, known as \index{Tagging!regular expressions}regular expressions.
+\index{Tagging!regular expressions}
+Filters are a more complex form of pattern matching, known as regular expressions.
 
 In filters, the special characters of ?, * and + mean different things compared to the ? and * used in globbing.
-
-
 
 \subsubsection{Tags with Globs and Filters}
 \index{Tagging!tags}
 
 
 \vfill \eject
-\section{Credits}
+\section{Credits, Licensing and Trademarks}
+\subsection{Credits}
 \textsl{ALFC} was designed and developed by \xdeveloper\ through fits and spurts of time.
 
 Documentation compiled on \today
 
 Thank you for reading.
 
-\section{Licensing}
+\subsection{Licensing}
 \index{Licensing}
 The binary application, source code and accompanying documention/manuals are all
 available under the \index{GNU GPL}GNU \index{GPL}GPL v2 license.
