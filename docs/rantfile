@@ -9,7 +9,7 @@ end
 
 desc "Build man file"
 task :manpage do
-	vv = "v#{@cBV.major.to_s}.#{@cBV.minor.to_s}/#{@cBV.build.to_s}"
+	vv = "v#{var[:maj]}.#{var[:min]}/#{var[:build]}"
 	vd = Date.today.year.to_s + Date.today.month.to_s + Date.today.day.to_s
 	fp = File.new("alfc.1", "w")
 	if fp != nil

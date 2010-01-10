@@ -49,10 +49,13 @@ def FindLib(libs, paths)
                 else
                     libs.each do |l|
                         if f == "lib#{l}.a"
+							Dir.chdir(cwd)
                             return "#{p}/#{f}"
                         elsif f == "lib#{l}.lib"
+							Dir.chdir(cwd)
                             return "#{p}/#{f}"
                         elsif f == "lib#{l}.la"
+							Dir.chdir(cwd)
                             return "#{p}/#{f}"
                         end
                     end
@@ -104,6 +107,7 @@ def FindInclude(incs, paths)
                 else
                     incs.each do |i|
                         if f == "#{i}"
+							Dir.chdir(cwd)
                             return "#{p}"
                         end
                     end
@@ -205,7 +209,7 @@ class BuildVersion
 		@filename = filename
 
 		# read version file into memory, if it exists.
-		if File.exists?(@filename) == TRUE
+		if File.exists?(@filename)
 			lx = IO.readlines(@filename)
 
 			# parse lines
@@ -227,6 +231,8 @@ class BuildVersion
 					@build = build
 				end
 			end
+		else
+			puts "could not load version "  + @filename.to_s
 		end
 
 	end
@@ -269,9 +275,6 @@ class BuildVersion
 	end
 end
 
-cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
-@cBV = cBV
-
 CC = "gcc"
 CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DNMEMWATCH " + PORT_CFLAGS
 LIBS = ""
@@ -293,22 +296,17 @@ if DRIVER=="GUI"
 	default_files += %w(font.rlf font_small.rlf)
 end
 
-
-gen Action do
-	var[:cflags] = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s + " -I\"#{luainc}\" "
-end
-
 desc "Build the app"
-task :all => ["includes", "auxfiles", "appx", "help"] do
-end
-
-task "includes" do
-
-
+task :all => ["auxfiles", "appx", "help"] do
 end
 
 task "auxfiles" => ["fixversion", "defaults", "headers" ] do
 end
+
+cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
+var[:maj] = cBV.major
+var[:min] = cBV.minor
+var[:build] = cBV.build
 
 task "fixversion" do
 	s = Dir["version.o", "docs/alfc.1*"]
@@ -318,6 +316,8 @@ task "fixversion" do
 
 	# now build lua helper files
 	sys "#{var[:lua]} lua_helper.lua"
+
+	var[:cflags] = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s + " -I\"#{luainc}\" "
 end
 
 task :headers => header_files do |t|
