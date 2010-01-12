@@ -124,12 +124,12 @@ end
 # fails with multiple lua installs
 lualib = FindLib(
 		["lua5.1", "lua5.0", "lua5", "lua"],
-		["/usr/lib", "/usr/local/lib", "/opt", "/usr/lib64", "/usr/lib32"]
+		["/usr/lib", "/usr/local/lib", "/usr/sfw/lib", "/opt", "/usr/lib64", "/usr/lib32"]
 		)
 
 luainc = FindInclude(
 		["lauxlib.h"],
-		["/usr/include", "/usr/local/include", "/opt"]
+		["/usr/include", "/usr/local/include", "/usr/sfw/include", "/opt"]
 		)
 
 y = RUBY_PLATFORM.scan(/(mswin32|mingw32|bccwin32|msdosdjgpp|os2|amigaos|cygwin)/)
