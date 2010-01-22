@@ -188,11 +188,11 @@ case y.to_s
 		var[:exec_boot] = "./"
 
 		if DRIVER=="NCURSES"
-			var[:libs] = "-lm -lncurses #{lualib} -lz"
+			var[:libs] = "-lm -lncurses #{lualib} -ldl -lz"
 			PORTABILITY_OBJS = %w( portability_unix.o ncurses_main.o ncurses_interface.o)
 			GPORTABILITY_OBJS = %w( portability_unix.o ncurses_guide.o ncurses_interface.o)
 		else
-			var[:libs] = "-lm #{lualib} -lX11 -lz"
+			var[:libs] = "-lm #{lualib} -lX11 -ldl -lz"
 			PORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_main.o guicore.o)
 			GPORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_guide.o guicore.o)
 		end
