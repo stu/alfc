@@ -2696,7 +2696,8 @@ int gme_msgbox(lua_State *L)
 		DrawAll(gd);*/
 	if (gd->mode == eMode_Directory)
 	{
-		DrawAll(gd);
+		if(gd->lstFullLeft != NULL && gd->lstFullRight != NULL)
+			DrawAll(gd);
 	}
 	else if (gd->mode == eMode_Viewer)
 	{
