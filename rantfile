@@ -12,6 +12,7 @@ DRIVER="NCURSES"
 PREFIX="/usr/local"
 
 
+
 def FindLib(libs, paths)
     cwd = Dir.getwd
 
@@ -41,7 +42,10 @@ def FindLib(libs, paths)
                     if link == "." or link == ".."
                         break
                     end
-                    rescue
+                rescue NotImplementedError
+                    #catch specific (seems win32 throws and rescue all wont catch it)
+                rescue
+                    # all others
                 end
 
                 if  File.directory?("#{p}/#{f}")
@@ -52,9 +56,6 @@ def FindLib(libs, paths)
 							Dir.chdir(cwd)
                             return "#{p}/#{f}"
                         elsif f == "lib#{l}.lib"
-							Dir.chdir(cwd)
-                            return "#{p}/#{f}"
-                        elsif f == "lib#{l}.la"
 							Dir.chdir(cwd)
                             return "#{p}/#{f}"
                         end
@@ -99,7 +100,10 @@ def FindInclude(incs, paths)
                     if link == "." or link == ".."
                         break
                     end
-                    rescue
+                rescue NotImplementedError
+                    #catch specific (seems win32 throws and rescue all wont catch it)
+                rescue
+                    # all others
                 end
 
                 if  File.directory?("#{p}/#{f}")
@@ -124,12 +128,12 @@ end
 # fails with multiple lua installs
 lualib = FindLib(
 		["lua5.1", "lua5.0", "lua5", "lua"],
-		["/usr/lib", "/usr/local/lib", "/usr/sfw/lib", "/opt", "/usr/lib64", "/usr/lib32"]
+		["/usr/lib", "/usr/local/lib", "/usr/sfw/lib", "/usr/lib64", "/usr/lib32", "/mingw/lib", "/opt"]
 		)
 
 luainc = FindInclude(
 		["lauxlib.h"],
-		["/usr/include", "/usr/local/include", "/usr/sfw/include", "/opt"]
+		["/usr/include", "/usr/local/include", "/usr/sfw/include", "/mingw/include", "/opt"]
 		)
 
 y = RUBY_PLATFORM.scan(/(mswin32|mingw32|bccwin32|msdosdjgpp|os2|amigaos|cygwin)/)
@@ -143,6 +147,7 @@ case y.to_s
 		var[:gcomp] = "gcomp.exe"
 		var[:guide] = "guide.exe"
 		var[:gdump] = "gdump.exe"
+		var[:exec_boot] = ".\\"
 
 		if DRIVER=="NCURSES"
 			var[:libs] = "-lpdcurses -llua -lregex -liberty -lkernel32 -lz"
@@ -165,6 +170,7 @@ case y.to_s
 		var[:gcomp] = "gcomp.exe"
 		var[:guide] = "guide.exe"
 		var[:gdump] = "gdump.exe"
+		var[:exec_boot] = ".\\"
 
 		var[:libs] = "-lpdcurses -llua -lz"
 		PORTABILITY_OBJS = %w( portability_unix.o  ncurses_interface.o)
@@ -179,6 +185,7 @@ case y.to_s
 		var[:gcomp] = "gcomp"
 		var[:guide] = "guide"
 		var[:gdump] = "gdump"
+		var[:exec_boot] = "./"
 
 		if DRIVER=="NCURSES"
 			var[:libs] = "-lm -lncurses #{lualib} -lz"
@@ -209,7 +216,7 @@ class BuildVersion
 		@filename = filename
 
 		# read version file into memory, if it exists.
-		if File.exists?(@filename)
+		if File.exists?(@filename) == TRUE
 			lx = IO.readlines(@filename)
 
 			# parse lines
@@ -332,23 +339,23 @@ end
 
 file "defaults.h" => ["#{var[:bin2c]}"] + default_files  do |t|
 	sys.rm_f "options.o"
-	sys "./#{var[:bin2c]} global.lua include_global_lua > defaults.h"
-	sys "./#{var[:bin2c]} viewer.lua include_viewer_lua >> defaults.h"
-	sys "./#{var[:bin2c]} startup.lua include_startup_lua >> defaults.h"
-	sys "./#{var[:bin2c]} shutdown.lua include_shutdown_lua >> defaults.h"
-	sys "./#{var[:bin2c]} options.ini include_options_ini >> defaults.h"
-	sys "./#{var[:bin2c]} core_extract.lua core_extract_lua >> defaults.h"
-	sys "./#{var[:bin2c]} core_hash.lua core_hash_lua >> defaults.h"
-	sys "./#{var[:bin2c]} viewer_languages.lua viewer_languages_lua >> defaults.h"
-	sys "./#{var[:bin2c]} filemanager_menu.lua filemanager_menu_lua >> defaults.h"
-	sys "./#{var[:bin2c]} hints.lua hints_lua >> defaults.h"
-	sys "./#{var[:bin2c]} viewer_menu.lua viewer_menu_lua >> defaults.h"
-	sys "./#{var[:bin2c]} docs/help.hlp help_hlp >> defaults.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} global.lua include_global_lua > defaults.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} viewer.lua include_viewer_lua >> defaults.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} startup.lua include_startup_lua >> defaults.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} shutdown.lua include_shutdown_lua >> defaults.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} options.ini include_options_ini >> defaults.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} core_extract.lua core_extract_lua >> defaults.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} core_hash.lua core_hash_lua >> defaults.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} viewer_languages.lua viewer_languages_lua >> defaults.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} filemanager_menu.lua filemanager_menu_lua >> defaults.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} hints.lua hints_lua >> defaults.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} viewer_menu.lua viewer_menu_lua >> defaults.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} docs/help.hlp help_hlp >> defaults.h"
 
 	#always build gui fonts
 	sys "echo \"#ifdef DRV_GUI\" > gui_fonts.h"
-	sys "./#{var[:bin2c]} font.rlf gui_data_font >> gui_fonts.h"
-	sys "./#{var[:bin2c]} font_small.rlf gui_data_font_small >> gui_fonts.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} font.rlf gui_data_font >> gui_fonts.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} font_small.rlf gui_data_font_small >> gui_fonts.h"
 	sys "echo \"#endif\" >> gui_fonts.h"
 end
 
@@ -366,8 +373,8 @@ end
 
 file "#{var[:gcomp]}" => %w(guidecompiler.o dlist.o memwatch.o logwrite.o) do |t|
 	sys "#{CC} -o #{var[:gcomp]} #{t.prerequisites.join(' ')} -lz"
-    sys "./#{var[:gcomp]} docs/guide_create.txt guide_create.gd"
-    sys "./#{var[:gcomp]} docs/help.txt help.gd"
+    sys "#{var[:exec_boot]}#{var[:gcomp]} docs/guide_create.txt guide_create.gd"
+    sys "#{var[:exec_boot]}#{var[:gcomp]} docs/help.txt help.gd"
 end
 
 file "#{var[:gdump]}" => %w(guidedump.o guideload.o dlist.o memwatch.o logwrite.o) do |t|
@@ -504,7 +511,7 @@ task :make =>  ["clean", "bin2c.o", "auxfiles", "docs"] do
 
 		fp.puts ""
 		fp.puts "CC=#{CC}"
-		fp.puts "CFLAGS=#{var[:cflags]} -D$(PLATFORM) -DDRV_$(DRIVER)"
+		fp.puts "CFLAGS=#{CFLAGS} -D$(PLATFORM) -DDRV_$(DRIVER)"
 
 		fp.puts ""
 		fp.puts "EXEC=#{var[:exec]}"
