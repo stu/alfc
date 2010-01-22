@@ -1,5 +1,6 @@
 #include "headers.h"
 
+#include "dlist.h"
 #include "guideheader.h"
 #include "guideload.h"
 
@@ -16,6 +17,116 @@ static void syntax(void)
 	printf("\neg:guide alfc.gd main/about/credits\n");
 
 	exit(0);
+}
+
+/* Convert environment variables to actual strings */
+char* ConvertDirectoryName(const char *x)
+{
+	char *env;
+
+	char *a;
+	char *p;
+	char *q;
+	char *z;
+
+	if (x == NULL)
+		return strdup("");
+
+	a = strdup(x);
+	p = malloc(1024);
+	assert(p != NULL);
+
+	p[0] = 0;
+	q = a;
+
+	if (q[0] == '~')
+	{
+		strcpy(p, "$HOME");
+		strcat(p, q + 1);
+
+		free(a);
+		a = strdup(p);
+	}
+
+	p[0] = 0;
+
+	while (*q != 0)
+	{
+		char *idx;
+
+		env = NULL;
+		idx = strchr(q, '$');
+
+		if (idx != NULL)
+		{
+			char *z;
+			char c;
+
+			*idx = 0;
+
+			strcat(p, q);
+			q = idx + 1;
+
+			z = strchr(q, '/');
+			if (z == NULL)
+				z = strchr(q, 0);
+
+			c = *z;
+			*z = 0;
+
+			env = ALFC_getenv(q);
+			*z = c;
+
+			if (env != NULL)
+			{
+				if (p[0] != 0 && p[strlen(p) - 1] != '/')
+					strcat(p, "/");
+
+				if (p[0] != 0 && *env == '/')
+					env += 1;
+
+				strcat(p, env);
+				q = z;
+			}
+			else
+			{
+				strcat(p, "$");
+				q = idx + 1;
+			}
+		}
+		else
+		{
+			strcat(p, q);
+			q = strchr(q, 0);
+		}
+	}
+
+	for (q = p, z = p; *q != 0;)
+	{
+		switch (*q)
+		{
+			case '\\':
+				*z = '/';
+				z++;
+				q++;
+				break;
+
+			case '"':
+				q++;
+				break;
+
+			default:
+				*z = *q;
+				z++;
+				q++;
+				break;
+		}
+	}
+
+	*z = 0;
+	free(a);
+
+	return realloc(p, 16 + strlen(p));
 }
 
 
