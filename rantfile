@@ -589,8 +589,10 @@ task :install do
 	sys "install -m 755 -d #{PREFIX}/share/man/man1/"
 	sys "install docs/alfc.1* -m 644 -D #{PREFIX}/share/man/man1"
 	sys "install docs/help.hlp -m 644 -D #{PREFIX}/share/alfc/help.hlp"
-    sys "install docs/alfc.desktop -m 644 -D #{PREFIX}/share/applications/"
-    sys "install docs/alfc.xpm -m 644 -D #{PREFIX}/share/icons/"
+    if File.exists?("#{PREFIX}/share/applications/") && File.directory?("#{PREFIX}/share/applications/")
+        sys "install docs/alfc.desktop -m 644 -D #{PREFIX}/share/applications/"
+        sys "install docs/alfc.xpm -m 644 -D #{PREFIX}/share/icons/"
+    end
 end
 
 subdirs "docs"
