@@ -122,6 +122,7 @@ cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
 var[:maj] = cBV.major
 var[:min] = cBV.minor
 var[:build] = cBV.build
+cBV.WriteVersion
 
 task "fixversion" do
 	s = Dir["version.o", "docs/alfc.1*"]
@@ -231,6 +232,7 @@ task :clean => "docs/clean" do
 	x += Dir["viewer.h"]
 	x += Dir["gui_fonts.h"]
 	x += Dir["defaults.h"]
+	x += Dir["version.*"]
 
 	if x.length > 0
 		sys.rm_rf x

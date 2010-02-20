@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 #
-# BuildVersion 0.2 - Ruby Version by Stu George 
+# BuildVersion 0.2 - Ruby Version by Stu George
 # http://mega-tokyo.com
-# 
+#
 # Author:: Stu George
 # License:: Public Domain
 # Copyright:: blah blah
@@ -10,7 +10,7 @@
 # v0.2 - 20041106
 # - Added options to increment major/minor/build numbers
 #
-# v0.1 - 20041105 
+# v0.1 - 20041105
 #  - Initial version in Ruby 1.8.2 (2004-07-29) [i386-mswin32]
 
 #
@@ -23,21 +23,21 @@ end
 class BuildVersion
 	attr_reader :major, :minor, :build
 	attr_writer :major, :minor, :build
-	
+
 	#constructor
 	def initialize(filename, major, minor, build)
 		@major = major
 		@minor = minor
 		@build = build
 		@filename = filename
-		
+
 		# read version file into memory, if it exists.
 		if File.exists?(@filename) == TRUE
 			lx = IO.readlines(@filename)
-			
+
 			# parse lines
-			lx.each do |line| 
-				lx = line.split("=")			
+			lx.each do |line|
+				lx = line.split("=")
 				if lx[0] == "VERSION"
 					# ... do nothing.
 				elsif lx[0] == "VER_MAJ"
@@ -48,42 +48,42 @@ class BuildVersion
 					@build = lx[1].to_i
 				else
 					STDERR.puts "Error! Not a VERSION file I created."
-					
+
 					@major = major
 					@minor = minor
 					@build = build
 				end
 			end
 		end
-		
+
 	end
 
 	# serialise
 	def to_s
 		"BuildVersion: v#{@major}.#{@minor}.#{build}"
 	end
-	
+
 	def IncrementBuild
 		@build = @build + 1
 	end
-	
+
 	def IncrementMinor
 		@minor = @minor + 1
 		@build = 0
 	end
-	
+
 	def IncrementMajor
 		@major = @major + 1
 		@minor = 0
 		@build = 0
 	end
-	
+
 	def WriteVersion
 		# Delete file if it exists
 		if File.exists?(@filename) == TRUE
 			File.delete(@filename)
 		end
-		
+
 		# Open a new one and write, only if it succeeded
 		fp = File.new(@filename, "w")
 		if fp != nil
@@ -93,7 +93,7 @@ class BuildVersion
 			fp.puts "VER_BUILD=#{@build}"
 			fp.close
 		end
-		
+
 		if File.exists?("version.h") == FALSE
 			# Open a new one and write, only if it succeeded
 			fp = File.new("version.h", "w")
@@ -118,21 +118,21 @@ class BuildVersion
 				fp.puts "#endif\n\n"
 			end
 		end
-		
+
 		if File.exists?("version.c") == TRUE
 			File.delete("version.c")
-		end		
+		end
 		fp = File.new("version.c", "w")
 		if fp != nil
 			fp.puts "#include <stdint.h>\n"
 			fp.puts "#include \"version.h\"\n\n"
 			fp.puts "const char* VersionTime(void)\n"
 			fp.puts "{\n"
-			fp.puts "return __TIME__;\n"
+			fp.puts "\treturn __TIME__;\n"
 			fp.puts "}\n"
 			fp.puts "const char* VersionDate(void)\n"
 			fp.puts "{\n"
-			fp.puts "return __DATE__;\n"
+			fp.puts "\treturn __DATE__;\n"
 			fp.puts "}\n"
 			fp.puts "uint16_t VersionMajor(void)\n"
 			fp.puts "{\n"
@@ -141,21 +141,21 @@ class BuildVersion
 			fp.puts "\n"
 			fp.puts "uint16_t VersionMinor(void)\n"
 			fp.puts "{\n"
-			fp.puts "	return #{@minor};\n"
+			fp.puts "\treturn #{@minor};\n"
 			fp.puts "}\n"
 			fp.puts "\n"
 			fp.puts "uint16_t VersionBuild(void)\n"
 			fp.puts "{\n"
-			fp.puts "	return #{@build};\n"
+			fp.puts "\treturn #{@build};\n"
 			fp.puts "}\n"
 			fp.puts "\n"
 			fp.puts "const char* VersionString(void)\n"
 			fp.puts "{\n"
-			fp.puts "	return (char*)\"v#{@major}." + ("00" + @minor.to_s).slice(-2,2) + "/" + ("0000" + @build.to_s).slice(-4,4) + "\";\n"
+			fp.puts "\treturn (char*)\"v#{@major}." + ("00" + @minor.to_s).slice(-2,2) + "/" + ("0000" + @build.to_s).slice(-4,4) + "\";\n"
 			fp.puts "}\n\n"
 			fp.close
-		end		
-	end	
+		end
+	end
 end
 
 if __FILE__ == $0
@@ -171,11 +171,11 @@ class Application
 				[ "--build",   	"-b",			GetoptLong::NO_ARGUMENT ],
 				[ "--help",		"-h", "-?",		GetoptLong::NO_ARGUMENT ]
 			)
-			
+
 		@func = 3
 		opts.each do |opt, arg|
 			# puts "Option: #{opt}, arg #{arg.inspect}"
-			if opt == "--major" 
+			if opt == "--major"
 				@func = 1
 			elsif opt == "--minor"
 				@func = 2
@@ -187,32 +187,32 @@ class Application
 				puts "--minor	-m	Increment minor version number"
 				puts "--build	-b	Increment build number, *default*"
 				puts "--help	-h	This screen"
-				
+
 				exit 1
 			end
 		end
-		
+
 	end
-	
-	def start		
+
+	def start
 		# create a new version, or if exists, read existing version file.
 		cBV = BuildVersion.new("version", 0,1,0)
-		
+
 		# increment build number
 		case @func
 			when 1
 				cBV.IncrementMajor
-				
+
 			when 2
 				cBV.IncrementMinor
-				
+
 			when 3
 				cBV.IncrementBuild
 		end
-		
+
 		# debugging really. no need to display.
 		puts cBV.to_s
-		
+
 		# save to disk.
 		cBV.WriteVersion
 	end

@@ -54,4 +54,6 @@ gdump.exe
 *.hlp
 alfc.1
 alfc.1.gz
+version.h
+version.c
 
