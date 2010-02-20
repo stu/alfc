@@ -1,28 +1,31 @@
-#include "headers.h"
+#include <stdint.h>
+#include "version.h"
 
+const char* VersionTime(void)
+{
+return __TIME__;
+}
+const char* VersionDate(void)
+{
+return __DATE__;
+}
 uint16_t VersionMajor(void)
 {
-	return VMAJ;
+	return 0;
 }
 
 uint16_t VersionMinor(void)
 {
-	return VMIN;
+	return 1;
 }
 
 uint16_t VersionBuild(void)
 {
-	return VBUILD;
+	return 9158;
 }
 
-char* VersionDate(void)
+const char* VersionString(void)
 {
-	return __DATE__;
+	return (char*)"v0.01/9158";
 }
-
-char* VersionTime(void)
-{
-	return __TIME__;
-}
-
 

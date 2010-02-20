@@ -1,4 +1,14 @@
-#include "headers.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include <stdarg.h>
+#include <assert.h>
+
+#include "memwatch.h"
+#include "dlist.h"
+
+#include "logwrite.h"
 
 static int			intLogFlags;
 static char		*strLogBuffer;

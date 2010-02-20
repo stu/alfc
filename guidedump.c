@@ -5,6 +5,9 @@
 #include <assert.h>
 #include <sys/stat.h>
 
+
+#include "memwatch.h"
+
 #include "dlist.h"
 #include "guideheader.h"
 #include "guideload.h"

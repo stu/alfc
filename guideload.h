@@ -6,10 +6,9 @@ extern "C"{
 
 extern uHelpFile* LoadHelpFile(char *fn);
 extern void FreeHelpFile(uHelpFile *hlp);
-
-#ifdef ALFC_DATA_STRUCTURES
-extern void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(uGlobalData*gd));
-#endif
+extern uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int link);
+extern void FreeHelpPage(uHelpPage *p);
+extern void FreeBreadCrumb(void *data);
 
 #ifdef __cplusplus
 }

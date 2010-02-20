@@ -16,9 +16,9 @@ void RegisterCommonFuncs(uGlobalData *gd, lua_State *l)
 /* LUA EXT REF */
 /* LUA END EXT REF */
 
-	lua_pushnumber(l, VMAJ); lua_setglobal(l, "VERSION_MAJ");
-	lua_pushnumber(l, VMIN); lua_setglobal(l, "VERSION_MIN");
-	lua_pushnumber(l, VBUILD); lua_setglobal(l, "VERSION_BUILD");
+	lua_pushnumber(l, VersionMajor()); lua_setglobal(l, "VERSION_MAJ");
+	lua_pushnumber(l, VersionMinor()); lua_setglobal(l, "VERSION_MIN");
+	lua_pushnumber(l, VersionBuild()); lua_setglobal(l, "VERSION_BUILD");
 
 	// colour setting constants
 	lua_pushnumber(l, e_title_foreground); lua_setglobal(l, "title_foreground");

@@ -2,6 +2,7 @@
 
 #include "guideheader.h"
 #include "guideload.h"
+#include "guidedisplay.h"
 
 
 static void BuildWindowLayout(uGlobalData *gdata)

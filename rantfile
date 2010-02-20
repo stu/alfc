@@ -4,6 +4,9 @@ require 'date'
 require 'fileutils'
 include FileUtils
 
+require 'tools/buildversion.rb'
+require 'tools/findlib.rb'
+
 _VER_MAJ = 0
 _VER_MIN = 1
 
@@ -11,119 +14,6 @@ _VER_MIN = 1
 DRIVER="NCURSES"
 PREFIX="/usr/local"
 
-
-
-def FindLib(libs, paths)
-    cwd = Dir.getwd
-
-    while paths.length > 0
-        p = paths[0]
-
-        paths[0] = nil
-        paths.delete_at(0)
-
-        ok = true
-        begin
-            Dir.chdir("#{p}")
-        rescue
-            ok = false
-        end
-
-
-        if ok == true
-            x = Dir["*"]
-            x.each do |f|
-                if f == "." or f == ".."
-                    break
-                end
-
-                begin
-                    link = File.readlink("#{p}")
-                    if link == "." or link == ".."
-                        break
-                    end
-                rescue NotImplementedError
-                    #catch specific (seems win32 throws and rescue all wont catch it)
-                rescue
-                    # all others
-                end
-
-                if  File.directory?("#{p}/#{f}")
-                    paths.insert(0, "#{p}/#{f}")
-                else
-                    libs.each do |l|
-                        if f == "lib#{l}.a"
-							Dir.chdir(cwd)
-                            return "#{p}/#{f}"
-                        elsif f == "lib#{l}.lib"
-							Dir.chdir(cwd)
-                            return "#{p}/#{f}"
-                        end
-                    end
-                end
-            end
-        end
-
-    end
-
-    Dir.chdir(cwd)
-    return "FAIL"
-end
-
-
-def FindInclude(incs, paths)
-    cwd = Dir.getwd
-
-    while paths.length > 0
-        p = paths[0]
-
-        paths[0] = nil
-        paths.delete_at(0)
-
-        ok = true
-        begin
-            Dir.chdir("#{p}")
-        rescue
-            ok = false
-        end
-
-
-        if ok == true
-            x = Dir["*"]
-            x.each do |f|
-                if f == "." or f == ".."
-                    break
-                end
-
-                begin
-                    link = File.readlink("#{p}")
-                    if link == "." or link == ".."
-                        break
-                    end
-                rescue NotImplementedError
-                    #catch specific (seems win32 throws and rescue all wont catch it)
-                rescue
-                    # all others
-                end
-
-                if  File.directory?("#{p}/#{f}")
-                    paths.insert(0, "#{p}/#{f}")
-                else
-                    incs.each do |i|
-                        if f == "#{i}"
-							Dir.chdir(cwd)
-                            return "#{p}"
-                        end
-                    end
-                end
-            end
-        end
-
-    end
-
-    Dir.chdir(cwd)
-    return "FAIL"
-end
 
 # fails with multiple lua installs
 lualib = FindLib(
@@ -200,88 +90,6 @@ case y.to_s
 		PORT_CFLAGS="-D__USE_LARGEFILE64=1 -D_FILE_OFFSET_BITS=64 -DBUILD_UNIXLIKE"
 end
 
-
-#
-# This does all the heavy lifting of the version file
-#
-class BuildVersion
-	attr_reader :major, :minor, :build
-	attr_writer :major, :minor, :build
-
-	#constructor
-	def initialize(filename, major, minor, build)
-		@major = major
-		@minor = minor
-		@build = build
-		@filename = filename
-
-		# read version file into memory, if it exists.
-		if File.exists?(@filename) == TRUE
-			lx = IO.readlines(@filename)
-
-			# parse lines
-			lx.each do |line|
-				lx = line.split("=")
-				if lx[0] == "VERSION"
-					# ... do nothing.
-				elsif lx[0] == "VER_MAJ"
-					@major = lx[1].to_i
-				elsif lx[0] == "VER_MIN"
-					@minor = lx[1].to_i
-				elsif lx[0] == "VER_BUILD"
-					@build = lx[1].to_i
-				else
-					STDERR.puts "Error! Not a VERSION file I created."
-
-					@major = major
-					@minor = minor
-					@build = build
-				end
-			end
-		else
-			puts "could not load version "  + @filename.to_s
-		end
-
-	end
-
-	# serialise
-	def to_s
-		"BuildVersion: v#{@major}.#{@minor}.#build"
-	end
-
-	def IncrementBuild
-		@build = @build + 1
-	end
-
-	def IncrementMinor
-		@minor = @minor + 1
-		@build = 0
-	end
-
-	def IncrementMajor
-		@major = @major + 1
-		@minor = 0
-		@build = 0
-	end
-
-	def WriteVersion
-		# Delete file if it exists
-		if File.exists?(@filename) == TRUE
-			File.delete(@filename)
-		end
-
-		# Open a new one and write, only if it succeeded
-		fp = File.new(@filename, "w")
-		if fp != nil
-			fp.puts "VERSION=#{@major}.#{@minor}.#{@build}"
-			fp.puts "VER_MAJ=#{@major}"
-			fp.puts "VER_MIN=#{@minor}"
-			fp.puts "VER_BUILD=#{@build}"
-			fp.close
-		end
-	end
-end
-
 CC = "gcc"
 CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DNMEMWATCH " + PORT_CFLAGS
 LIBS = ""
@@ -293,7 +101,7 @@ default_files = %w(global.lua viewer.lua startup.lua shutdown.lua options.ini co
 
 alfc = %w( dlist.o logwrite.o ini.o
 			version.o main.o memwatch.o lua_helper.o
-			lua_api.o options.o viewer.o
+			lua_api.o options.o viewer.o guidedisplay.o
 			lua_helper_viewer.o lua_common.o lua_common_api.o
 			operations.o lua_hash.o md5.o rmd160.o sha1.o
 			menu.o help.o guideload.o tree.o
@@ -322,7 +130,7 @@ task "fixversion" do
 	end
 
 	# now build lua helper files
-	sys "#{var[:lua]} lua_helper.lua"
+	sys "#{var[:lua]} tools/lua_helper.lua"
 
 	var[:cflags] = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s + " -I\"#{luainc}\" "
 end
@@ -381,7 +189,7 @@ file "#{var[:gdump]}" => %w(guidedump.o guideload.o dlist.o memwatch.o logwrite.
     sys "#{CC} -o #{var[:gdump]} #{t.prerequisites.join(' ')} -lz"
 end
 
-file "#{var[:guide]}" => %w(guide.o guideload.o dlist.o version.o memwatch.o logwrite.o) + GPORTABILITY_OBJS do |t|
+file "#{var[:guide]}" => %w(guide.o guidedisplay.o guideload.o dlist.o version.o memwatch.o logwrite.o) + GPORTABILITY_OBJS do |t|
     sys "#{CC} -o #{var[:guide]} #{t.prerequisites.join(' ')} #{var[:libs]} "
 end
 
@@ -461,7 +269,7 @@ gen Rule, 'rantfile' => 'rantfile' do
 end
 
 gen Rule, '.hlp' => '.txt' do |t|
-	sys.ruby "../helpcompiler.rb","#{t.source}","#{t.name}"
+	sys.ruby "../tools/helpcompiler.rb","#{t.source}","#{t.name}"
 end
 
 ##############################################################################

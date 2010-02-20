@@ -1,8 +1,10 @@
 #include "headers.h"
 
 #include "dlist.h"
+
 #include "guideheader.h"
 #include "guideload.h"
+#include "guidedisplay.h"
 
 // foobar for the x11 interface...
 char *start_left;
