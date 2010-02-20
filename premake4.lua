@@ -63,11 +63,11 @@ solution "alfm"
 			end
 		end
 
-		local inclua = os.pathsearch("lualib.h", "/usr/include/lua5.1:/usr/include/lua5:/usr/include/lua:/usr/include:/usr/local/include:/usr/sfw/include:/mingw/include:/opt")
-		includedirs { inclua }
-		libdirs { liblua }
-
 		configuration "linux"
+			local inclua = os.pathsearch("lualib.h", "/usr/include/lua5.1:/usr/include/lua5:/usr/include/lua:/usr/include:/usr/local/include:/usr/sfw/include:/mingw/include:/mingw/include/lua:/opt/lua/include:/opt/lua5.1/include")
+			includedirs { inclua }
+			libdirs { liblua }
+
 			buildoptions { "-D__USE_LARGEFILE64=1","-D_FILE_OFFSET_BITS=64","-DBUILD_UNIXLIKE","-D_FORTIFY_SOURCE=0"}
 
 			if _ARGS[1] == "ncurses" then
@@ -85,6 +85,9 @@ solution "alfm"
 			end
 
 		configuration "windows"
+			local inclua = os.pathsearch("lualib.h", "/usr/include/lua5.1;/usr/include/lua5;/usr/include/lua;/usr/include;/usr/local/include;/usr/sfw/include;/mingw/include;/mingw/include/lua;/opt/lua/include;/opt/lua5.1/include")
+			includedirs { inclua }
+			libdirs { liblua }
 			if _ARGS[1] == "pdcurses" then
 				defines { "DRV_NCURSES"}
 				links { "pdcurses", liblua, "regex", "iberty", "kernel32", "z" }
