@@ -83,7 +83,7 @@ static void draw_percentage(uWindow *w, uHelpPage *page)
 
 	line = page->line_count;
 	line -= w->height - 2;
-	if (line < 0)
+	if (line <= 0)
 		line = 100;
 	else
 	{
