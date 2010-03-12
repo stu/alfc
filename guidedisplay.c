@@ -349,7 +349,7 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 						{
 							uHelpBreadCrumb *b;
 
-							b = malloc(sizeof(uHelpBreadCrumb));
+							b = calloc(1, sizeof(uHelpBreadCrumb));
 							b->top_line = w->top_line;
 							b->highlight_line = page_data->highlight_link;
 							b->prev_link = strdup(page_data->name);
@@ -367,11 +367,10 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 					case ALFC_KEY_BACKSPACE:
 					case ALFC_KEY_LEFT:
 						{
-							uHelpBreadCrumb *b;
-
 							if (dlist_size(hdr->lstBreadCrumbs) > 0)
 							{
 								uHelpPage *px;
+								uHelpBreadCrumb *b = NULL;
 
 								dlist_remove(hdr->lstBreadCrumbs, dlist_tail(hdr->lstBreadCrumbs), (void*)&b);
 
@@ -390,9 +389,8 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 								else
 								{
 									status_msg(w, " FAILED TO LOAD PAGE : %s ", b->prev_link);
+									//FreeBreadCrumb(b);
 								}
-
-								FreeBreadCrumb(b);
 							}
 						}
 						break;
@@ -416,7 +414,7 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 								{
 									uHelpBreadCrumb *b;
 
-									b = malloc(sizeof(uHelpBreadCrumb));
+									b = calloc(1, sizeof(uHelpBreadCrumb));
 									b->top_line = w->top_line;
 									b->highlight_line = page_data->highlight_link;
 									b->prev_link = strdup(page_data->name);

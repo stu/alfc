@@ -16,6 +16,7 @@ bin2c
 bin2c.exe
 version
 *.log
+version.c
 defaults.h
 viewer.h
 lua_api.h

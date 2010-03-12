@@ -90,6 +90,13 @@ case y.to_s
 		PORT_CFLAGS="-D__USE_LARGEFILE64=1 -D_FILE_OFFSET_BITS=64 -DBUILD_UNIXLIKE"
 end
 
+cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
+var[:maj] = cBV.major
+var[:min] = cBV.minor
+var[:build] = cBV.build
+#cBV.WriteVersion
+
+
 CC = "gcc"
 CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DNMEMWATCH " + PORT_CFLAGS
 LIBS = ""
@@ -115,17 +122,16 @@ desc "Build the app"
 task :all => ["auxfiles", "appx", "help"] do
 end
 
-task "auxfiles" => ["fixversion", "defaults", "headers" ] do
+task "auxfiles" => ["fixversion", "defaults", "headers", "version.c" ] do
+    #cBV.WriteVersion
 end
 
-cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
-var[:maj] = cBV.major
-var[:min] = cBV.minor
-var[:build] = cBV.build
-cBV.WriteVersion
+file "version.c" do
+    cBV.WriteVersion
+end
 
 task "fixversion" do
-	s = Dir["version.o", "docs/alfc.1*"]
+	s = Dir["docs/alfc.1*"]
 	if s.length > 0
 		sys.rm s
 	end
@@ -133,7 +139,7 @@ task "fixversion" do
 	# now build lua helper files
 	sys "#{var[:lua]} tools/lua_helper.lua"
 
-	var[:cflags] = CFLAGSX + " -DVMAJ=" + cBV.major.to_s + " -DVMIN=" + cBV.minor.to_s + " -DVBUILD=" + cBV.build.to_s + " -I\"#{luainc}\" "
+	var[:cflags] = CFLAGSX + " -I\"#{luainc}\" "
 end
 
 task :headers => header_files do |t|
@@ -170,9 +176,6 @@ end
 
 task :appx => alfc + PORTABILITY_OBJS do |t|
 	sys "#{CC} -o #{var[:exec]}  #{t.prerequisites.join(' ')} #{var[:libs]}"
-
-	cBV.IncrementBuild
-	cBV.WriteVersion
 end
 
 desc "help"
@@ -215,7 +218,7 @@ end
 
 desc "Cleanup..."
 task :clean => "docs/clean" do
-	x = Dir["*.{bak,o,obj,a,gd}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"] + Dir["docs/lua_api/*"]
+	x = Dir["*.{bak,o,obj,a,gd}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"] + Dir["docs/lua_api/*"] + Dir["version.c"]
 
 	x += Dir["#{var[:gcomp]}"]
 	x += Dir["#{var[:gdump]}"]
@@ -232,7 +235,6 @@ task :clean => "docs/clean" do
 	x += Dir["viewer.h"]
 	x += Dir["gui_fonts.h"]
 	x += Dir["defaults.h"]
-	x += Dir["version.*"]
 
 	if x.length > 0
 		sys.rm_rf x

@@ -351,7 +351,10 @@ void FreeBreadCrumb(void *data)
 	uHelpBreadCrumb *b = data;
 
 	if (b->prev_link != NULL)
+	{
+		fprintf(stderr, "prev link is %s\n", b->prev_link);
 		free(b->prev_link);
+	}
 
 	free(b);
 }
