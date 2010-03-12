@@ -94,8 +94,6 @@ cBV = BuildVersion.new("version", _VER_MAJ, _VER_MIN, 0)
 var[:maj] = cBV.major
 var[:min] = cBV.minor
 var[:build] = cBV.build
-#cBV.WriteVersion
-
 
 CC = "gcc"
 CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DNMEMWATCH " + PORT_CFLAGS
@@ -122,16 +120,24 @@ desc "Build the app"
 task :all => ["auxfiles", "appx", "help"] do
 end
 
-task "auxfiles" => ["fixversion", "defaults", "headers", "version.c" ] do
-    #cBV.WriteVersion
+task "auxfiles" => ["headers", "fixversion", "version.c", "defaults", "version.c" ] do
 end
 
 file "version.c" do
-    cBV.WriteVersion
+	cBV.IncrementBuild
+	cBV.WriteVersion
+	var[:maj] = cBV.major
+	var[:min] = cBV.minor
+	var[:build] = cBV.build
 end
 
 task "fixversion" do
 	s = Dir["docs/alfc.1*"]
+	if s.length > 0
+		sys.rm s
+	end
+
+	s = Dir["version.c"]
 	if s.length > 0
 		sys.rm s
 	end
@@ -216,8 +222,7 @@ task "docs" do
 	sys "robodoc --dbxml --doc ./docs/lua_api/alfc_lua_api --singledoc --rc robodoc_lua.rc"
 end
 
-desc "Cleanup..."
-task :clean => "docs/clean" do
+def src_clean
 	x = Dir["*.{bak,o,obj,a,gd}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"] + Dir["docs/lua_api/*"] + Dir["version.c"]
 
 	x += Dir["#{var[:gcomp]}"]
@@ -245,6 +250,11 @@ task :clean => "docs/clean" do
 	end
 end
 
+desc "Cleanup..."
+task :clean => "docs/clean" do
+	src_clean
+end
+
 gen Rule, '.rlf' => '.rlf' do |t|
 end
 
@@ -259,17 +269,11 @@ gen Rule, '.o' => '.c' do |t|
 end
 
 gen Rule, '.h' => '.h' do |t|
-	x = Dir["*.{o,obj}"]
-    if x.length > 0
-        sys.rm_f x
-    end
+	src_clean
 end
 
 gen Rule, 'rantfile' => 'rantfile' do
-    x = Dir["*.{o,obj}"]
-    if x.length > 0
-        sys.rm_f x
-    end
+	src_clean
 end
 
 gen Rule, '.hlp' => '.txt' do |t|
