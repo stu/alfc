@@ -129,6 +129,18 @@ To build the documentation you need Robodoc installed
 
 The master build requires the 'rant' gem installed in Ruby.
 
+Alternatively, there is a premake4 build system in place if you
+want to build it on windows or linux and dont have the rant build system
+setup.
+
+On *nixen, you can do "premake4 gmake XXXX" where XXX is x11 or ncurses
+depending on the driver,
+
+For windows XXX is win32 or pdcurses, and you can replace gmake with vs2005 etc
+(See premake4 site for more details)
+http://industriousone.com/premake
+
+
 
 Hints, Tips and Tricks
 ======================
