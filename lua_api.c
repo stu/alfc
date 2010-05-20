@@ -22,7 +22,7 @@ uGlobalData* GetGlobalData(lua_State *L)
 
 int RegisterGlobalData(uGlobalData *gb, lua_State *l)
 {
-	lua_pushlightuserdata(l, (void*) &uGlobalData_Key); /* push address */
+	lua_pushlightuserdata(l, (void*) &uGlobalData_Key);	/* push address */
 	lua_pushlightuserdata(l, gb);
 	lua_settable(l, LUA_REGISTRYINDEX);
 
@@ -1653,6 +1653,13 @@ int gme_AddToSortList(lua_State *L)
 	return 0;
 }
 
+static void RedrawWindow(uGlobalData *gd)
+{
+	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	DrawActive(gd);
+	DrawStatusInfoLine(gd);
+}
+
 /****f* LuaAPI/RedrawWindow
  * FUNCTION
  *	Triggers a re-draw of the currently active window pane
@@ -1672,9 +1679,7 @@ int gme_RedrawWindow(lua_State *L)
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
 
-	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
-	DrawActive(gd);
-	DrawStatusInfoLine(gd);
+	RedrawWindow(gd);
 
 	return 0;
 }
@@ -2696,7 +2701,7 @@ int gme_msgbox(lua_State *L)
 		DrawAll(gd);*/
 	if (gd->mode == eMode_Directory)
 	{
-		if(gd->lstFullLeft != NULL && gd->lstFullRight != NULL)
+		if (gd->lstFullLeft != NULL && gd->lstFullRight != NULL)
 			DrawAll(gd);
 	}
 	else if (gd->mode == eMode_Viewer)
@@ -2746,29 +2751,29 @@ int gme_ShowHelp(lua_State *L)
 
 static uint32_t ConvertColourToInt(char *s)
 {
-	if(strcmp(s, "red") == 0) return CLR_RED;
-	if(strcmp(s, "blue") == 0) return CLR_BLUE;
-	if(strcmp(s, "green") == 0) return CLR_GREEN;
-	if(strcmp(s, "black") == 0) return CLR_BLACK;
-	if(strcmp(s, "brown") == 0) return CLR_BROWN;
-	if(strcmp(s, "magenta") == 0) return CLR_MAGENTA;
-	if(strcmp(s, "cyan") == 0) return CLR_CYAN;
-	if(strcmp(s, "grey") == 0) return CLR_GREY;
-	if(strcmp(s, "dark grey") == 0) return CLR_DK_GREY;
-	if(strcmp(s, "bright red") == 0) return CLR_BR_RED;
-	if(strcmp(s, "bright green") == 0) return CLR_BR_GREEN;
-	if(strcmp(s, "yellow") == 0) return CLR_YELLOW;
-	if(strcmp(s, "bright blue") == 0) return CLR_BR_BLUE;
-	if(strcmp(s, "bright magenta") == 0) return CLR_BR_MAGENTA;
-	if(strcmp(s, "bright cyan") == 0) return CLR_BR_CYAN;
-	if(strcmp(s, "white") == 0) return CLR_WHITE;
+	if (strcmp(s, "red") == 0) return CLR_RED;
+	if (strcmp(s, "blue") == 0)	return CLR_BLUE;
+	if (strcmp(s, "green") == 0) return CLR_GREEN;
+	if (strcmp(s, "black") == 0) return CLR_BLACK;
+	if (strcmp(s, "brown") == 0) return CLR_BROWN;
+	if (strcmp(s, "magenta") == 0) return CLR_MAGENTA;
+	if (strcmp(s, "cyan") == 0)	return CLR_CYAN;
+	if (strcmp(s, "grey") == 0)	return CLR_GREY;
+	if (strcmp(s, "dark grey") == 0) return CLR_DK_GREY;
+	if (strcmp(s, "bright red") == 0) return CLR_BR_RED;
+	if (strcmp(s, "bright green") == 0)	return CLR_BR_GREEN;
+	if (strcmp(s, "yellow") == 0) return CLR_YELLOW;
+	if (strcmp(s, "bright blue") == 0) return CLR_BR_BLUE;
+	if (strcmp(s, "bright magenta") == 0) return CLR_BR_MAGENTA;
+	if (strcmp(s, "bright cyan") == 0) return CLR_BR_CYAN;
+	if (strcmp(s, "white") == 0) return CLR_WHITE;
 
 	return CLR_GREY;
 }
 
 int gme_SetFileTypeColor(lua_State *L)
 {
-	uGlobalData	*gd;
+	uGlobalData *gd;
 	int ftype;
 	struct lstr clr;
 	uint32_t c;
@@ -2780,7 +2785,7 @@ int gme_SetFileTypeColor(lua_State *L)
 
 	c = ConvertColourToInt(clr.data);
 
-	switch(ftype)
+	switch (ftype)
 	{
 		case FILETYPE_DEFAULT:
 			gd->screen->init_style(STYLE_NORMAL, c, -1);
@@ -2806,5 +2811,179 @@ int gme_SetFileTypeColor(lua_State *L)
 	}
 
 	return 0;
+}
+
+static char* OneLineDialogue(uGlobalData *gd, char *descr, char *def, int maxwidth)
+{
+	uint32_t key;
+	uWindow *w;
+
+	char *buff;
+	char *buff2;
+
+	char *buff3;
+
+	int height;
+	int width;
+	char *p, *q;
+
+	buff2 = malloc(maxwidth + 16 < 128 ? maxwidth+16 : 128);
+	buff3 = malloc(maxwidth + 16);
+
+	// big enough to hold string...
+	buff = malloc(1024);
+	sprintf(buff, "\n %s \n\n\n", descr);
+
+	for (width = strlen(def) + 2 ; width < maxwidth; width++)
+		strcat(buff, " ");
+
+	strcat(buff, " \n");
+
+	sprintf(buff3, "%s", def);
+
+	height = 0;
+	width = 0;
+
+	p = buff;
+	while (*p != 0)
+	{
+		q = strchr(p, '\n');
+
+		if (q != NULL)
+		{
+			if (width < q - p)
+				width = q - p;
+			p = q + 1;
+		}
+		else
+		{
+			q = strchr(p, 0);
+			if (width < q - p)
+				width = q - p;
+			p = q;
+		}
+
+		height += 1;
+
+	};
+
+	if (width < maxwidth)
+	{
+		width = maxwidth;
+	}
+
+	width += 4;
+	height += 2;
+
+	w = calloc(1, sizeof(uWindow));
+	w->gd = gd;
+	w->screen = gd->screen;
+
+	w->offset_row = (gd->screen->get_screen_height() - height) / 2;
+	w->offset_col = (gd->screen->get_screen_width() - width) / 2;
+	w->width = width;
+	w->height = height;
+
+	gd->screen->set_style(STYLE_TITLE);
+	gd->screen->draw_border(w);
+	gd->screen->set_style(STYLE_TITLE);
+
+	p = buff;
+	height = 0;
+
+	while (*p != 0)
+	{
+		q = strchr(p, '\n');
+		if (q != NULL)
+			*q = 0;
+
+		memset(buff2, ' ', w->width);
+		memmove(buff2 + ((w->width - 2) - strlen(p)) / 2, p, strlen(p));
+		buff2[w->width - 2] = 0;
+
+		gd->screen->set_cursor(2 + w->offset_row + height, 2 + w->offset_col);
+		gd->screen->print_abs(buff2);
+
+		if (q != NULL)
+			p = q + 1;
+		else
+			p = strchr(p, 0);
+
+		height += 1;
+	}
+
+	gd->screen->set_cursor(gd->screen->get_screen_height(), gd->screen->get_screen_width());
+
+	key = 0;
+	while (!(key == ALFC_KEY_ESCAPE || key == ALFC_KEY_ENTER))
+	{
+		int idx;
+
+		gd->screen->set_style(STYLE_NORMAL);
+		gd->screen->set_cursor(w->offset_row + height, 3 + w->offset_col);
+		memset(buff2, 0x20, maxwidth);
+		memmove(buff2, buff3, strlen(buff3));
+		buff2[maxwidth] = 0;
+		gd->screen->print_abs(buff2);
+		gd->screen->set_cursor(w->offset_row + height, 3 + w->offset_col + strlen(buff3));
+
+		idx = strlen(buff3);
+
+		key = gd->screen->get_keypress();
+		switch (key)
+		{
+			case ALFC_KEY_DEL:
+			case ALFC_KEY_BACKSPACE:
+				if (idx > 0)
+				{
+					buff3[idx - 1] = 0;
+				}
+				break;
+
+			default:
+				// FIXME: Multilingual!
+				if (idx < maxwidth && key >= 0x20 && key < 0x7F)
+				{
+					buff3[idx] = key & 0xFF;
+					buff3[idx+1] = 0;
+				}
+				break;
+		}
+	}
+
+	free(w);
+	free(buff);
+	free(buff2);
+
+	gd->screen->set_style(STYLE_TITLE);
+
+	return buff3;
+}
+
+// call with description and default text
+int gme_OneLineDialogue(lua_State *L)
+{
+	uGlobalData *gd;
+	struct lstr descr;
+	struct lstr def;
+	char *result;
+	int width;
+
+	gd = GetGlobalData(L);
+
+	GET_LUA_STRING(descr, 1);
+	GET_LUA_STRING(def, 2);
+	width = luaL_checkint(L, 3);
+
+	result = OneLineDialogue(gd, descr.data, def.data, width);
+
+	lua_pushstring(L, result);
+
+	RedrawWindow(gd);
+	SwitchPanes(gd);
+	RedrawWindow(gd);
+	SwitchPanes(gd);
+
+	return 1;
 }
 

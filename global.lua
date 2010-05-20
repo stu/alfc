@@ -710,7 +710,10 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 			end
 			--debug_msg("Unknown command : " .. cmd)
 		end
+	end
 
+	function __exec_lua(s)
+		assert(loadstring(s))()
 	end
 
 	-- This function takes our list of files and sorts them
@@ -850,6 +853,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	AddCommand(":tu ","Untag all", __TagUnTagAll)
 	AddCommand(":t! ","Flip tags",	__TagFlip)
 	AddCommand(":swap ","Swap active panels", __SwapPanels)
+	AddCommand(":exec ", "Execute lua", __exec_lua)
 
 	if SystemType() ~= "WIN32" then
 		AddCommand(":sym","Symlink files", __TagSymlink)

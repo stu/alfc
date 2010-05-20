@@ -3169,10 +3169,11 @@ static void run_exec_command(uGlobalData *gd, char *sCmd)
 {
 	AddHistory(gd, sCmd);
 
-
 	// exec string via lua...
 	if (sCmd[0] == ':')
+	{
 		exec_internal_command(gd, sCmd);
+	}
 	else if (sCmd[0] == '@')
 	{
 		char *fn = ConvertDirectoryName(sCmd + 1);
@@ -3363,7 +3364,6 @@ int ALFC_main(int start_mode, char *view_file)
 					else
 					{
 						kb = ScanKey(gdata->lstHotKeys, key);
-
 						if (kb != NULL)
 						{
 							run_exec_command(gdata, kb->sCommand);
