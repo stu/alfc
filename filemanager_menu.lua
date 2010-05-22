@@ -38,7 +38,16 @@ end
 	BindKey(ALFC_KEY_F4, "Edit", [[EditFile(GetHighlightedFilename())]])
 	BindKey(ALFC_KEY_F5, "Copy", [[:tc]])
 	BindKey(ALFC_KEY_F6, "Delete", [[:td]])
-    BindKey(ALFC_KEY_F7, "Create Dir", [[:md]])
+    --BindKey(ALFC_KEY_F7, "Create Dir", [[:md]])
+    BindKey(ALFC_KEY_F7, "Create Dir", [[:exec local x
+    x = OneLineDialogue("Create Directory", "dir", 32)
+    if #trim(x) == 0 then
+		return
+	end
+	if( SetCurrentWorkingDirectory(x) == -1) then
+		CreateDirectory(trim(x))
+		SetCurrentWorkingDirectory(".")
+	end]])
 	BindKey(ALFC_KEY_F8, "Move", [[:tm]])
 
 	BindKey(ALFC_KEY_ALT + string.byte("X"), "Quit", [[:q]])
@@ -69,7 +78,8 @@ end
 	BindKey(ALFC_KEY_ALT + string.byte("H"), "Home", [[SetCurrentWorkingDirectory("$HOME")]])
 
 
-	-- ALT-A for About
+	-- ALT-A for About.. some reason my linux is not passing alt-a back to the system
+	-- so we dont get here :(
 	BindKey(ALFC_KEY_ALT + string.byte("A"), "About", [[About()]])
 	CreateMenu(ALFC_KEY_ALT + string.byte("1"), "Left Panel", BuildMenu(WINDOW_LEFT))
 
