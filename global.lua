@@ -345,10 +345,17 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 			SetOption("options", "sort_order", "date_desc")
 		end
 
+		local selected_file
+
+		selected_file = GetHighlightedFilename()
+
 		-- re-sort..
 		SortFileList()
+		SetHighlightedFile(selected_file)
 		SwitchPanes()
+		selected_file = GetHighlightedFilename()
 		SortFileList()
+		SetHighlightedFile(selected_file)
 		RedrawWindow()
 		SwitchPanes()
 		RedrawWindow()
