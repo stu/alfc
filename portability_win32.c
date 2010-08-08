@@ -166,6 +166,7 @@ int ALFC_rmdir(char *s)
 {
 	int rc;
 
+	SetFileAttributes(s, FILE_ATTRIBUTE_NORMAL);
 	rc = RemoveDirectory(s);
 
 	// 0 = fail, non zero for success
