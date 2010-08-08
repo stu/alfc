@@ -588,7 +588,11 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 					SetHiddenFlag(hflag)
 
 					ChangeDirUp()
-					RemoveDirectory(v.name)
+					if RemoveDirectory(v.name) ~= 0 then
+						buff[1+#buff] = "Failed to Delete Directory " .. v.name
+					else
+						buff[1+#buff] = "Delete Directory " .. v.name
+					end
 					SetCurrentWorkingDirectory(path1)
 				else
 					lstT[1+#lstT]=v
@@ -873,6 +877,3 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 
 	_G["DIR_BOOTSTRAP"] = 1
 end -- _G["BOOTSTRAP"]
-
-
-
