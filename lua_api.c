@@ -1653,7 +1653,7 @@ int gme_AddToSortList(lua_State *L)
 	return 0;
 }
 
-static void RedrawWindow(uGlobalData *gd)
+static void RedrawALFCWindow(uGlobalData *gd)
 {
 	DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
 	DrawActive(gd);
@@ -1679,7 +1679,7 @@ int gme_RedrawWindow(lua_State *L)
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
 
-	RedrawWindow(gd);
+	RedrawALFCWindow(gd);
 
 	return 0;
 }
@@ -2979,11 +2979,10 @@ int gme_OneLineDialogue(lua_State *L)
 
 	lua_pushstring(L, result);
 
-	RedrawWindow(gd);
+	RedrawALFCWindow(gd);
 	SwitchPanes(gd);
-	RedrawWindow(gd);
+	RedrawALFCWindow(gd);
 	SwitchPanes(gd);
 
 	return 1;
 }
-
