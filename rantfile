@@ -26,7 +26,7 @@ luainc = FindInclude(
 		["/usr/include", "/usr/local/include", "/usr/sfw/include", "/mingw/include", "/opt"]
 		)
 
-y = RUBY_PLATFORM.scan(/(mswin32|mingw32|bccwin32|msdosdjgpp|os2|amigaos|cygwin)/)
+y = RUBY_PLATFORM.scan(/(mswin32|mingw32|bccwin32|msdosdjgpp|os2|amigaos|cygwin)/)[0].to_s
 case y.to_s
 	when "mswin32", "mingw32", "bccwin32", "msdosdjgpp"
 		@strPlatform = "ALFC_WIN32"
