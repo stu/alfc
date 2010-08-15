@@ -4,8 +4,8 @@ require 'date'
 require 'fileutils'
 include FileUtils
 
-require 'tools/buildversion.rb'
-require 'tools/findlib.rb'
+require './tools/buildversion.rb'
+require './tools/findlib.rb'
 
 _VER_MAJ = 0
 _VER_MIN = 1
