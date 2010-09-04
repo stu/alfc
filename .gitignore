@@ -9,6 +9,7 @@ doc
 *.o
 *.a
 .*.marks
+*.make
 .rant.meta
 alfc
 alfc.exe
