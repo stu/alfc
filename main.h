@@ -214,6 +214,7 @@ enum eMode
 {
 	eMode_Directory = 1,
 	eMode_Viewer,
+	eMode_Editor,
 };
 
 typedef struct udtKeyBinding
@@ -500,4 +501,3 @@ extern char* gstr_WindowTitle;
 }
 #endif
 #endif // _MAIN_H
-

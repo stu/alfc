@@ -537,7 +537,7 @@ uMenu** GetActMenu(uGlobalData *gd)
 {
 	if (gd->mode == eMode_Directory)
 		return gd->file_menu;
-	else if (gd->mode == eMode_Viewer)
+	else if (gd->mode == eMode_Viewer || gd->mode == eMode_Editor)
 		return gd->viewer_menu;
 	else
 		LogInfo("UNKNOWN MENU\n");
@@ -3193,7 +3193,6 @@ int ALFC_main(int start_mode, char *view_file)
 
 	LogWrite_Startup(0, LOG_INFO | LOG_DEBUG | LOG_ERROR | LOG_STDERR, 5000);
 	LogInfo("ALFC : Another Linux File Commander - Stu George\nVersion v%i.%02i/%04i - Built on " __DATE__ "; " __TIME__ "\n", VersionMajor(), VersionMinor(), VersionBuild());
-
 	ALFC_startup();
 
 
@@ -3312,6 +3311,13 @@ int ALFC_main(int start_mode, char *view_file)
 				intFlag = 1;
 			}
 
+			if (gdata->mode == eMode_Editor && view_file != NULL)
+			{
+				ViewFile(gdata, view_file, NULL);
+				gdata->screen->init_dir_styles(gdata->screen);
+				intFlag = 1;
+			}
+
 			while (intFlag == 0 && gdata->screen->screen_isshutdown() == 0)
 			{
 				uint32_t key;
@@ -3422,6 +3428,11 @@ int ALFC_main(int start_mode, char *view_file)
 
 								case ALFC_KEY_PAGE_UP:
 									scroll_page_up(gdata);
+									break;
+
+								// do nothing on their own
+								case ALFC_KEY_ALT:
+								case ALFC_KEY_CTRL:
 									break;
 
 								default:
@@ -3616,4 +3627,3 @@ int ALFC_main(int start_mode, char *view_file)
 
 	return 0;
 }
-
