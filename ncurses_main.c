@@ -29,10 +29,12 @@ int main(int argc, char *argv[])
 			{
 				header();
 				fprintf(stderr, "\n-v\t\tVersion\n"
-					"-?\t\tHelp\n"
-					"-l DIR\t\tStart left side in directory DIR\n"
-					"-r DIR\t\tStart right side in directory DIR\n"
-					"-view FILE\tStart in viewer mode\n");
+								"-?\t\tHelp\n"
+								"-l DIR\t\tStart left side in directory DIR\n"
+								"-r DIR\t\tStart right side in directory DIR\n"
+								"-view FILE\tStart in viewer mode\n"
+								"-edit FILE\tStart in edit mode\n"
+					);
 				exit(0);
 			}
 			else if (strcmp("-v", argv[i]) == 0 || strcmp("--version", argv[i]) == 0)
@@ -46,9 +48,14 @@ int main(int argc, char *argv[])
 				i += 1;
 				start_mode = eMode_Viewer;
 			}
+			else if (strcmp("-edit", argv[i]) == 0 && 1 + i < argc)
+			{
+				view_file = argv[1 + i];
+				i += 1;
+				start_mode = eMode_Editor;
+			}
 		}
 	}
 
 	return ALFC_main(start_mode, view_file);
 }
-

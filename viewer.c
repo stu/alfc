@@ -428,6 +428,17 @@ static int DisplayCLI(uViewFile *v)
 	return 0;
 }
 
+static const char* GetEditModeString(uGlobalData *gd)
+{
+	switch(gd->mode)
+	{
+		case eMode_Viewer: return "View"; break;
+		case eMode_Editor: return "Edit"; break;
+	}
+
+	return "xxx";
+}
+
 static int DisplayFile(uViewFile *v)
 {
 	int i;
@@ -448,7 +459,7 @@ static int DisplayFile(uViewFile *v)
 	v->w->width += v->nwidth;
 
 	v->w->screen->set_style(STYLE_TITLE);
-	sprintf(buff, "[ %s ]", v->fn);
+	sprintf(buff, "[ %s : %s ]", GetEditModeString(v->gd), v->fn);
 	v->w->screen->set_cursor(1 + v->w->offset_row, v->nwidth + 3 + v->w->offset_col );
 	v->w->screen->print_abs(buff);
 
@@ -893,12 +904,11 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 	if(LoadLine == NULL)
 	{
 		ALFC_stat(fn, &stats);
-
 		de = calloc(1, sizeof(uDirEntry));
 		de->path = strdup("");
 		de->name = strdup(fn);
 		de->attrs = stats.st_mode;
-		stats.st_mode = (uint16_t)ALFC_GetFileAttrs(de)&0xFFFF;
+		stats.st_mode = ALFC_GetFileAttrs(de);
 		free(de->path);
 		free(de->name);
 		free(de);
@@ -916,7 +926,16 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 		AddHistory(gd, "View file : %s\n", fn);
 
 	old_mode = gd->mode;
-	gd->mode = eMode_Viewer;
+	switch(old_mode)
+	{
+		case eMode_Viewer:
+		case eMode_Editor:
+			break;
+
+		default:
+			gd->mode = eMode_Viewer;
+			break;
+	}
 
 	v = calloc(1, sizeof(uViewFile));
 	v->gd = gd;
@@ -936,7 +955,6 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 		rc = LoadGlobalViewerScript(v, "$HOME/.alfc/global.lua");
 
 	gd->screen->set_style(STYLE_NORMAL);
-	//v->w->screen->cls();
 	v->w->screen->window_clear(v->w);
 
 	gd->screen->set_style(STYLE_TITLE);
@@ -1044,6 +1062,11 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 						}
 						break;
 
+					// do nothing on their own
+					case ALFC_KEY_ALT:
+					case ALFC_KEY_CTRL:
+						break;
+
 					default:
 						if(key == 0)
 							break;
@@ -1071,9 +1094,10 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 							DisplayCLI(v);
 						}
 						else
-							LogInfo("Unknown key 0x%04x\n", key);
+							LogInfo("Unknown view key 0x%04x\n", key);
 						break;
 				}
+
 				DisplayCLI(v);
 			}
 
@@ -1435,4 +1459,3 @@ int gmev_SetViewMode(lua_State *L)
 
 	return 0;
 }
-

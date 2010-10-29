@@ -1,6 +1,12 @@
 solution "alfm"
 	xflag = false
 
+	if os.get() ~= "windows" then
+		b2c = "tools/bin2c"
+	else
+		b2c = "tools/bin2c.exe"
+	end
+
 	configurations { "Debug", "Release" }
 		configuration "Debug"
 			targetdir "debug"
@@ -32,22 +38,22 @@ solution "alfm"
 		prebuildcommands {
 		"ruby " .. solution().basedir .. "/tools/buildversion.rb",
 		"ruby " .. solution().basedir .. "/tools/helpcompiler.rb docs/help.txt docs/help.hlp",
-		"tools/bin2c global.lua include_global_lua > defaults.h",
-		"tools/bin2c viewer.lua include_viewer_lua >> defaults.h",
-		"tools/bin2c startup.lua include_startup_lua >> defaults.h",
-		"tools/bin2c shutdown.lua include_shutdown_lua >> defaults.h",
-		"tools/bin2c options.ini include_options_ini >> defaults.h",
-		"tools/bin2c core_extract.lua core_extract_lua >> defaults.h",
-		"tools/bin2c core_hash.lua core_hash_lua >> defaults.h",
-		"tools/bin2c viewer_languages.lua viewer_languages_lua >> defaults.h",
-		"tools/bin2c filemanager_menu.lua filemanager_menu_lua >> defaults.h",
-		"tools/bin2c hints.lua hints_lua >> defaults.h",
-		"tools/bin2c viewer_menu.lua viewer_menu_lua >> defaults.h",
-		"tools/bin2c docs/help.hlp help_hlp >> defaults.h",
+		"" .. b2c .. " global.lua include_global_lua > defaults.h",
+		"" .. b2c .. " viewer.lua include_viewer_lua >> defaults.h",
+		"" .. b2c .. " startup.lua include_startup_lua >> defaults.h",
+		"" .. b2c .. " shutdown.lua include_shutdown_lua >> defaults.h",
+		"" .. b2c .. " options.ini include_options_ini >> defaults.h",
+		"" .. b2c .. " core_extract.lua core_extract_lua >> defaults.h",
+		"" .. b2c .. " core_hash.lua core_hash_lua >> defaults.h",
+		"" .. b2c .. " viewer_languages.lua viewer_languages_lua >> defaults.h",
+		"" .. b2c .. " filemanager_menu.lua filemanager_menu_lua >> defaults.h",
+		"" .. b2c .. " hints.lua hints_lua >> defaults.h",
+		"" .. b2c .. " viewer_menu.lua viewer_menu_lua >> defaults.h",
+		"" .. b2c .. " docs/help.hlp help_hlp >> defaults.h",
 		--always build gui fonts
 		"echo \"#ifdef DRV_GUI\" > gui_fonts.h",
-		"tools/bin2c font.rlf gui_data_font >> gui_fonts.h",
-		"tools/bin2c font_small.rlf gui_data_font_small >> gui_fonts.h",
+		"" .. b2c .. " font.rlf gui_data_font >> gui_fonts.h",
+		"" .. b2c .. " font_small.rlf gui_data_font_small >> gui_fonts.h",
 		"echo \"#endif\" >> gui_fonts.h",
 
 		-- gen lua files

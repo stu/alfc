@@ -1,4 +1,4 @@
-if _G["VIEWER_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Viewer then
+if _G["VIEWER_BOOTSTRAP"] ~= 1 and (GetMode() == eMode_Viewer or GetMode() == eMode_Editor ) then
 
 	-- globals
 	cmds = {}

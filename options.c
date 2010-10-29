@@ -410,12 +410,12 @@ void LoadOptions(uGlobalData *gdata)
 	char *x;
 	char *fmt;
 
-
 	gdata->optfilename = ConvertDirectoryName("$HOME/.alfc/options.ini");
 	gdata->optfile = INI_load(gdata->optfilename);
 
 	if(gdata->optfile == NULL)
 	{
+		LogInfo("Creating base configuration files\n");
 		CreateHomeDirectory();
 		CreateIfNotExist("$HOME/.alfc/options.ini", include_options_ini, include_options_ini_SIZE);
 		CreateIfNotExist("$HOME/.alfc/global.lua", include_global_lua, include_global_lua_SIZE);

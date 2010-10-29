@@ -216,6 +216,7 @@ int gmec_Version(lua_State *L)
  *	mode:
  *	o 1 = eMode_Directory
  *	o 2 = eMode_Viewer
+ *  o 3 = eMode_Editor
  * EXAMPLE
  if GetMode() == eMode_Viewer then
  debug_msg("Script is running inside the viewer")

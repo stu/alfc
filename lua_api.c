@@ -2546,7 +2546,7 @@ int gme_Menu(lua_State *L)
 		DrawMenu(gd, NULL, 0);
 		DrawAll(gd);
 	}
-	else if (gd->mode == eMode_Viewer)
+	else if (gd->mode == eMode_Viewer || gd->mode == eMode_Editor)
 	{
 		DrawMenu(gd, GetViewerData(L), 0);
 		return ViewerDrawAllLua(L);
@@ -2704,7 +2704,7 @@ int gme_msgbox(lua_State *L)
 		if (gd->lstFullLeft != NULL && gd->lstFullRight != NULL)
 			DrawAll(gd);
 	}
-	else if (gd->mode == eMode_Viewer)
+	else if (gd->mode == eMode_Viewer || gd->mode == eMode_Editor)
 	{
 		return ViewerDrawAllLua(L);
 	}
@@ -2739,7 +2739,7 @@ int gme_ShowHelp(lua_State *L)
 	{
 		DrawAll(gd);
 	}
-	else if (gd->mode == eMode_Viewer)
+	else if (gd->mode == eMode_Viewer || gd->mode == eMode_Editor)
 	{
 		return ViewerDrawAllLua(L);
 	}

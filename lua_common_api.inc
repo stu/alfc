@@ -74,6 +74,7 @@ void RegisterCommonFuncs(uGlobalData *gd, lua_State *l)
 
 	lua_pushnumber(l, eMode_Directory); lua_setglobal(l, "eMode_Directory");
 	lua_pushnumber(l, eMode_Viewer); lua_setglobal(l, "eMode_Viewer");
+	lua_pushnumber(l, eMode_Editor); lua_setglobal(l, "eMode_Editor");
 
 	lua_pushnumber(l, eOp_Copy); lua_setglobal(l, "eOp_Copy");
 	lua_pushnumber(l, eOp_Move); lua_setglobal(l, "eOp_Move");
@@ -93,4 +94,3 @@ void RegisterCommonFuncs(uGlobalData *gd, lua_State *l)
 
 	lua_settop(l, 0);
 }
-
