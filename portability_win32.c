@@ -103,7 +103,7 @@ uint32_t ALFC_GetFileAttrs(uDirEntry *de)
 	char *x;
 	uint32_t z;
 
-	x = malloc(strlen(de->path) + strlen(de->name) + 16);
+	x = calloc(1, strlen(de->path) + strlen(de->name) + 16);
 
 	if(strlen(de->path) > 0)
 	{
@@ -119,9 +119,10 @@ uint32_t ALFC_GetFileAttrs(uDirEntry *de)
 		// My test system shows default of AHS flags.
 		if(strcasecmp(de->name, "pagefile.sys") == 0)
 			z = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_ARCHIVE;
-
-		if(strcasecmp(de->name, "hiberfil.sys") == 0)
+		else if(strcasecmp(de->name, "hiberfil.sys") == 0)
 			z = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_ARCHIVE;
+		else
+			z = 0;
 	}
 
 	if(de->name[0] == '.')
