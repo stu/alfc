@@ -225,58 +225,65 @@ static void gui_trigger_redraw(void)
 static uint32_t gui_get_keypress(void)
 {
 	key k;
-	uint32_t x = 0;
+	uint32_t x;
 
+	x = 0;
 	k = get_key();
 
 	if((k.ctrl & 1) == 1)
-		x = ALFC_KEY_CTRL + k.c + 'A' - 1;
-	else if((k.ctrl & 2) == 2)
-		x = ALFC_KEY_ALT + toupper(k.c);
+	{
+		x += ALFC_KEY_CTRL;// + k.c + 'A' - 1;
+	}
+
+	if((k.ctrl & 2) == 2)
+	{
+		x += ALFC_KEY_ALT; // + toupper(k.c);
+	}
+
+	if(k.c >= RLKEY_START_CODE)
+	{
+		switch(k.c)
+		{
+			case RLKEY_F1: x += ALFC_KEY_F01; break;
+			case RLKEY_F2: x += ALFC_KEY_F02; break;
+			case RLKEY_F3: x += ALFC_KEY_F03; break;
+			case RLKEY_F4: x += ALFC_KEY_F04; break;
+			case RLKEY_F5: x += ALFC_KEY_F05; break;
+			case RLKEY_F6: x += ALFC_KEY_F06; break;
+			case RLKEY_F7: x += ALFC_KEY_F07; break;
+			case RLKEY_F8: x += ALFC_KEY_F08; break;
+			case RLKEY_F9: x += ALFC_KEY_F09; break;
+			case RLKEY_F10: x += ALFC_KEY_F10; break;
+			case RLKEY_F11: x += ALFC_KEY_F11; break;
+			case RLKEY_F12: x += ALFC_KEY_F12; break;
+			case RLKEY_LEFT: x += ALFC_KEY_LEFT; break;
+			case RLKEY_RIGHT: x += ALFC_KEY_RIGHT; break;
+			case RLKEY_UP: x += ALFC_KEY_UP; break;
+			case RLKEY_DOWN: x += ALFC_KEY_DOWN; break;
+			case RLKEY_INSERT: x += ALFC_KEY_INS; break;
+			case RLKEY_DELETE: x += ALFC_KEY_DEL; break;
+			case RLKEY_HOME: x += ALFC_KEY_HOME; break;
+			case RLKEY_END: x += ALFC_KEY_END; break;
+			case RLKEY_PRIOR: x += ALFC_KEY_PAGE_UP; break;
+			case RLKEY_NEXT: x += ALFC_KEY_PAGE_DOWN; break;
+			case RLKEY_BACK: x += ALFC_KEY_BACKSPACE; break;
+		}
+	}
 	else
 	{
-		if(k.c >= RLKEY_START_CODE)
+		switch(k.c)
 		{
-			switch(k.c)
-			{
-				case RLKEY_F1: x = ALFC_KEY_F01; break;
-				case RLKEY_F2: x = ALFC_KEY_F02; break;
-				case RLKEY_F3: x = ALFC_KEY_F03; break;
-				case RLKEY_F4: x = ALFC_KEY_F04; break;
-				case RLKEY_F5: x = ALFC_KEY_F05; break;
-				case RLKEY_F6: x = ALFC_KEY_F06; break;
-				case RLKEY_F7: x = ALFC_KEY_F07; break;
-				case RLKEY_F8: x = ALFC_KEY_F08; break;
-				case RLKEY_F9: x = ALFC_KEY_F09; break;
-				case RLKEY_F10: x = ALFC_KEY_F10; break;
-				case RLKEY_F11: x = ALFC_KEY_F11; break;
-				case RLKEY_F12: x = ALFC_KEY_F12; break;
-				case RLKEY_LEFT: x = ALFC_KEY_LEFT; break;
-				case RLKEY_RIGHT: x = ALFC_KEY_RIGHT; break;
-				case RLKEY_UP: x = ALFC_KEY_UP; break;
-				case RLKEY_DOWN: x = ALFC_KEY_DOWN; break;
-				case RLKEY_INSERT: x = ALFC_KEY_INS; break;
-				case RLKEY_DELETE: x = ALFC_KEY_DEL; break;
-				case RLKEY_HOME: x = ALFC_KEY_HOME; break;
-				case RLKEY_END: x = ALFC_KEY_END; break;
-				case RLKEY_PRIOR: x = ALFC_KEY_PAGE_UP; break;
-				case RLKEY_NEXT: x = ALFC_KEY_PAGE_DOWN; break;
-				case RLKEY_BACK: x = ALFC_KEY_BACKSPACE; break;
-			}
-		}
-		else
-		{
-			switch(k.c)
-			{
-				case 0x08: x = ALFC_KEY_DEL; break;
-				case 0x09: x = ALFC_KEY_TAB; break;
-				case 0x0D: x = ALFC_KEY_ENTER; break;
-				case 0x1B: x = ALFC_KEY_ESCAPE; break;
+			case 0x08: x += ALFC_KEY_DEL; break;
+			case 0x09: x += ALFC_KEY_TAB; break;
+			case 0x0D: x += ALFC_KEY_ENTER; break;
+			case 0x1B: x += ALFC_KEY_ESCAPE; break;
 
-				default:
+			default:
+				if(k.c >= 0x20 && k.c < 0x7F && x != 0)
+					x += toupper(k.c); //+ 'A' - 1;
+				else
 					x = k.c;
-					break;
-			}
+				break;
 		}
 	}
 

@@ -280,13 +280,12 @@ static uint32_t nc_get_keypress(void)
 	// PDCurses has ALT_0 ...
 
 	else if ((ch >= ALT_0) && (toupper(ch) <= ALT_Z)) // for mingw this is ALT-A to ALT-Z
-
 	{
 		// windows seems to hit here for ALT keys
-		if(ch >= ALT_0 && ch <= ALT_9)
-		key = ALFC_KEY_ALT + (ch - ALT_0) + '0';
+		if (ch >= ALT_0 && ch <= ALT_9)
+			key = ALFC_KEY_ALT + (ch - ALT_0) + '0';
 		else
-		key = ALFC_KEY_ALT + (toupper(ch) - ALT_A) + 'A';
+			key	= ALFC_KEY_ALT + (toupper(ch) - ALT_A) + 'A';
 	}
 #else
 	else if ((ch >= 0x80) && (ch <= 0xFF))
@@ -300,8 +299,7 @@ static uint32_t nc_get_keypress(void)
 	}
 	else if ((ch == '[') || (ch == 27))
 	{ /* start of escape sequence */
-		ch = getch();
-
+		ch = wgetch(stdscr);
 		// Linux (xterm) seems to hit here for ALT keys
 		ch = toupper(ch);
 		if ((ch != '[') && (ch != 0x27)) /* ALT key */
@@ -310,84 +308,221 @@ static uint32_t nc_get_keypress(void)
 			ch = 0;
 	}
 	else if (ch == '`')
-	{ /* CTRL key */
-		ch = getch();
+	{
+		/* CTRL key */
+		ch = wgetch(stdscr);
 		if ((ch < 256) && isalpha(ch))
 		{
 			ch = toupper(ch);
 			key = ALFC_KEY_CTRL + toupper(ch) - 1; //((ch - 'A') + 1);
 		}
 		else
+		{
 			key = 0;
+			switch (ch)
+			{
+#if KEY_DC != 8
+				case 0x08:
+					key = ALFC_KEY_CTRL + ALFC_KEY_DEL;
+					break;
+#endif
+				case 9:
+					key = ALFC_KEY_CTRL + ALFC_KEY_TAB;
+					break;
+				case 0x0D:
+					key = ALFC_KEY_CTRL + ALFC_KEY_ENTER;
+					break;
+				case 0x0A:
+					key = ALFC_KEY_CTRL + ALFC_KEY_ENTER;
+					break;
+				case 0x1B:
+					key = ALFC_KEY_CTRL + ALFC_KEY_ESCAPE;
+					break;
+
+				case KEY_UP:
+					key = ALFC_KEY_CTRL + ALFC_KEY_UP;
+					break;
+				case KEY_DOWN:
+					key = ALFC_KEY_CTRL + ALFC_KEY_DOWN;
+					break;
+				case KEY_LEFT:
+					key = ALFC_KEY_CTRL + ALFC_KEY_LEFT;
+					break;
+				case KEY_RIGHT:
+					key = ALFC_KEY_CTRL + ALFC_KEY_RIGHT;
+					break;
+				case KEY_PPAGE:
+					key = ALFC_KEY_CTRL + ALFC_KEY_PAGE_UP;
+					break;
+				case KEY_NPAGE:
+					key = ALFC_KEY_CTRL + ALFC_KEY_PAGE_DOWN;
+					break;
+				case KEY_HOME:
+					key = ALFC_KEY_CTRL + ALFC_KEY_HOME;
+					break;
+				case KEY_END:
+					key = ALFC_KEY_CTRL + ALFC_KEY_END;
+					break;
+				case KEY_DC:
+					key = ALFC_KEY_CTRL + ALFC_KEY_DEL;
+					break;
+				case KEY_SLEFT:
+					key = ALFC_KEY_CTRL + ALFC_KEY_SLEFT;
+					break;
+				case KEY_SRIGHT:
+					key = ALFC_KEY_CTRL + ALFC_KEY_SRIGHT;
+					break;
+				case 127:
+					key = ALFC_KEY_CTRL + ALFC_KEY_DEL;
+					break;
+				case KEY_BACKSPACE:
+					key = ALFC_KEY_CTRL + ALFC_KEY_BACKSPACE;
+					break;
+			}
+		}
 	}
 	else
 	{
 		switch (ch)
 		{
 #if KEY_DC != 8
+#ifdef CTL_BKSP
+			case CTL_BKSP:
+				key = ALFC_KEY_CTRL + ALFC_KEY_BACKSPACE;
+				break;
+#endif
 			case 0x08:
 				key = ALFC_KEY_DEL;
 				break;
 #endif
+#ifdef CTL_TAB
+			case CTL_TAB:
+				key = ALFC_KEY_CTRL + ALFC_KEY_TAB;
+				break;
+#endif
+
 			case 9:
 				key = ALFC_KEY_TAB;
 				break;
-			case 0x0D:
-				key = ALFC_KEY_ENTER;
+#ifdef CTL_ENTER
+			case CTL_ENTER:
+				key = ALFC_KEY_CTRL + ALFC_KEY_ENTER;
 				break;
+#endif
+
+			case 0x0D:
 			case 0x0A:
 				key = ALFC_KEY_ENTER;
 				break;
+
 			case 0x1B:
 				key = ALFC_KEY_ESCAPE;
 				break;
+#ifdef CTL_UP
+			case CTL_UP:
+				key = ALFC_KEY_CTRL + ALFC_KEY_UP;
+				break;
+#endif
 
 			case KEY_UP:
 				key = ALFC_KEY_UP;
 				break;
+#ifdef CTL_DOWN
+			case CTL_DOWN:
+				key = ALFC_KEY_CTRL + ALFC_KEY_DOWN;
+				break;
+#endif
+
 			case KEY_DOWN:
 				key = ALFC_KEY_DOWN;
 				break;
+#ifdef CTL_LEFT
+			case CTL_LEFT:
+				key = ALFC_KEY_CTRL + ALFC_KEY_LEFT;
+				break;
+#endif
+
 			case KEY_LEFT:
 				key = ALFC_KEY_LEFT;
 				break;
+
+#ifdef CTL_RIGHT
+			case CTL_RIGHT:
+				key = ALFC_KEY_CTRL + ALFC_KEY_RIGHT;
+				break;
+#endif
+
 			case KEY_RIGHT:
 				key = ALFC_KEY_RIGHT;
 				break;
+
+#ifdef CTL_PGUP
+			case CTL_PGUP:
+				key = ALFC_KEY_CTRL + ALFC_KEY_PAGE_UP;
+				break;
+#endif
+
 			case KEY_PPAGE:
 				key = ALFC_KEY_PAGE_UP;
 				break;
+
+#ifdef CTL_PGDN
+			case CTL_PGDN:
+				key = ALFC_KEY_CTRL + ALFC_KEY_PAGE_DOWN;
+				break;
+#endif
+
 			case KEY_NPAGE:
 				key = ALFC_KEY_PAGE_DOWN;
 				break;
+
+#ifdef CTL_HOME
+			case CTL_HOME:
+				key = ALFC_KEY_CTRL + ALFC_KEY_HOME;
+				break;
+#endif
+
 			case KEY_HOME:
 				key = ALFC_KEY_HOME;
 				break;
+
+#ifdef CTL_END
+			case CTL_END:
+				key = ALFC_KEY_CTRL + ALFC_KEY_END;
+				break;
+#endif
+
 			case KEY_END:
 				key = ALFC_KEY_END;
 				break;
+
 			case KEY_DC:
 				key = ALFC_KEY_DEL;
 				break;
+
 			case KEY_SLEFT:
 				key = ALFC_KEY_SLEFT;
 				break;
+
 			case KEY_SRIGHT:
 				key = ALFC_KEY_SRIGHT;
 				break;
+
 			case 127:
 				key = ALFC_KEY_DEL;
 				break;
+
 			case KEY_BACKSPACE:
+				// SGEO : 20101217 - remove CTRL from here...
 				key = ALFC_KEY_BACKSPACE;
 				break;
 
 			default:
 				if ((ch > 0) && (ch <= 26))
-					key = ALFC_KEY_CTRL + ch + 'A' - 1; // CTRL keys
+					key = ALFC_KEY_CTRL + ch + 'A' - 1;	// CTRL keys
+				break;
 		}
 	}
-
 	return key;
 }
 
