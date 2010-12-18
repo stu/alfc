@@ -762,7 +762,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE x, LPSTR y, int z)
 		while(*p != 0 && *p != 0x20)
 			p++;
 
-		if(*p == 0x20)
+		if(*p == 0x20 || *p == 0x0)
 		{
 			cli[count] = calloc(1, (p - q) + 8);
 			memmove(cli[count], q, (p-q));
