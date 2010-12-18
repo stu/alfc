@@ -10,8 +10,8 @@ require './tools/findlib.rb'
 _VER_MAJ = 0
 _VER_MIN = 1
 
-DRIVER="GUI"	# NCURSES, GUI
-#DRIVER="NCURSES"
+#DRIVER="GUI"	# NCURSES, GUI
+DRIVER="NCURSES"
 PREFIX="/usr/local"
 
 
@@ -26,7 +26,7 @@ luainc = FindInclude(
 		["/usr/include", "/usr/local/include", "/usr/sfw/include", "/mingw/include", "/opt"]
 		)
 
-y = RUBY_PLATFORM.scan(/(mswin32|mingw32|bccwin32|msdosdjgpp|os2|amigaos|cygwin)/)[0].to_s
+y = RUBY_PLATFORM.scan(/(mswin32|mingw32|bccwin32|msdosdjgpp|os2|amigaos|cygwin)/).flatten[0].to_s
 case y.to_s
 	when "mswin32", "mingw32", "bccwin32", "msdosdjgpp"
 		@strPlatform = "ALFC_WIN32"
@@ -78,7 +78,7 @@ case y.to_s
 		var[:exec_boot] = "./"
 
 		if DRIVER=="NCURSES"
-			var[:libs] = "-lm -lncurses #{lualib} -ldl -lz"
+			var[:libs] = "-lm -lncursesw #{lualib} -ldl -lz"
 			PORTABILITY_OBJS = %w( portability_unix.o ncurses_main.o ncurses_interface.o)
 			GPORTABILITY_OBJS = %w( portability_unix.o ncurses_guide.o ncurses_interface.o)
 		else
@@ -314,7 +314,7 @@ task :make =>  ["clean", "bin2c.o", "auxfiles", "docs"] do
 		fp.puts "else"
 		fp.puts "ifeq ($(PLATFORM),ALFC_UNIXLIKE)"
 		fp.puts "ifeq ($(DRIVER),NCURSES)"
-		fp.puts "PLATFORM_LIBS=-lm -lncurses -llua5.1 -lz"
+		fp.puts "PLATFORM_LIBS=-lm -lncursesw -llua5.1 -lz"
 		fp.puts "PLATFORM_OBJS=portability_unix.o ncurses_main.o ncurses_interface.o"
 		fp.puts "else"
 		fp.puts "PLATFORM_LIBS=-lm -llua5.1 -lX11 -lz"
