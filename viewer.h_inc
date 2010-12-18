@@ -42,6 +42,8 @@ typedef struct udtViewFile
 	int		nwidth;
 	int		redraw;
 
+	int		intColPos;
+
 	int		crlf_type;
 	int		quit_flag;
 

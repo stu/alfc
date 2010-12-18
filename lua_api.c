@@ -1684,16 +1684,45 @@ int gme_RedrawWindow(lua_State *L)
 	return 0;
 }
 
+
+int gme_EditFile(lua_State *L)
+{
+	struct lstr name;
+	uGlobalData *gd;
+	gd = GetGlobalData(L);
+	assert(gd != NULL);
+	int mode;
+
+	mode = gd->mode;
+
+	gd->mode = eMode_Editor;
+
+	GET_LUA_STRING(name, 1);
+
+	ViewFile(gd, name.data, NULL);
+	gd->mode = mode;
+	DrawAll(gd);
+	gd->screen->init_dir_styles(gd->screen);
+
+	return 0;
+}
+
 int gme_ViewFile(lua_State *L)
 {
 	struct lstr name;
 	uGlobalData *gd;
 	gd = GetGlobalData(L);
 	assert(gd != NULL);
+int mode;
+
+	mode = gd->mode;
+
+	gd->mode = eMode_Viewer;
 
 	GET_LUA_STRING(name, 1);
 
 	ViewFile(gd, name.data, NULL);
+	gd->mode = mode;
 	DrawAll(gd);
 	gd->screen->init_dir_styles(gd->screen);
 

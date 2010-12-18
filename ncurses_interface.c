@@ -1,10 +1,10 @@
 #ifdef DRV_NCURSES
-#include "headers.h"
-#ifndef __WIN32__
-#include <signal.h>
-#endif
-#include <curses.h>
-#include <ctype.h>
+	#include "headers.h"
+	#ifndef __WIN32__
+		#include <signal.h>
+	#endif
+	#include <curses.h>
+	#include <ctype.h>
 
 static int intCurCol;
 static int intCurRow;
@@ -16,9 +16,9 @@ static int intStyle;
 static int intUpdates;
 static int intResized;
 
-#ifndef __WIN32__
+	#ifndef __WIN32__
 static void terminate_signal(int a);
-#endif
+	#endif
 
 static void setcursor(int row, int col);
 
@@ -28,20 +28,20 @@ struct udtStyles
 	int s_on;
 	int s_off;
 } styles[32] =
+{
 	{
-		{
 		0, 0, 0
-		},
-		{
+	},
+	{
 		STYLE_TITLE, A_NORMAL, A_NORMAL
-		},
-		{
+	},
+	{
 		STYLE_NORMAL, A_NORMAL, A_NORMAL
-		},
-		{
+	},
+	{
 		STYLE_HIGHLIGHT, A_NORMAL, A_NORMAL
-		},
-	};
+	},
+};
 
 struct udtStyleColors
 {
@@ -545,7 +545,7 @@ static void init_style(int style, uint32_t fg, uint32_t bg)
 
 static void nc_init_style(int style, uint32_t fg, uint32_t bg)
 {
-	if(bg == -1)
+	if (bg == -1)
 		bg = style_colors[style].bg;
 
 	style_colors[style].fg = fg;
@@ -634,7 +634,7 @@ static int nc_screen_init(uScreenDriver *scr)
 
 	keypad(stdscr, TRUE); // gimme the keypad
 	raw(); // fork me raw
-	meta(stdscr, TRUE); // fork me meta
+	meta(stdscr, TRUE);	// fork me meta
 
 	intMaxHeight = scr->get_screen_height();
 	intMaxWidth = scr->get_screen_width();
@@ -661,12 +661,12 @@ static int nc_screen_init(uScreenDriver *scr)
 	// init to black
 	init_style(STYLE_TITLE, CLR_CYAN, CLR_BLACK);
 	init_style(STYLE_NORMAL, CLR_GREY, CLR_BLACK);
-	init_style(STYLE_HIGHLIGHT, CLR_YELLOW, CLR_BLACK); // highlight line
+	init_style(STYLE_HIGHLIGHT, CLR_YELLOW, CLR_BLACK);	// highlight line
 	scr->set_style(STYLE_NORMAL);
 	//scr->cls();
 
 	init_style(STYLE_TITLE, scr->gd->clr_title_fg, scr->gd->clr_title_bg); // title bar
-	init_style(STYLE_NORMAL, scr->gd->clr_foreground, scr->gd->clr_background); // default
+	init_style(STYLE_NORMAL, scr->gd->clr_foreground, scr->gd->clr_background);	// default
 	init_style(STYLE_HIGHLIGHT, scr->gd->clr_hi_foreground, scr->gd->clr_hi_background); // highlight line
 
 	init_dir_styles_masterlist(scr);
@@ -747,13 +747,13 @@ static void nc_set_style(int style)
 	setcolour(style, styles[style].s_on);
 }
 
-#ifndef __WIN32__
+	#ifndef __WIN32__
 static void terminate_signal(int a)
 {
 	nc_screen_deinit();
 	exit(-1);
 }
-#endif
+	#endif
 
 static int nc_resized(void)
 {
@@ -804,37 +804,37 @@ static void nc_going_exec(void)
 }
 
 uScreenDriver screen =
-	{
+{
 	NULL,
 
 	driver_name,
 
-	nc_screen_init, // init screen
-	    nc_screen_deinit, // uninit
-	    nc_cls, // clear scren
-	    nc_get_screen_height,
-	    nc_get_screen_width,
-	    nc_get_keypress,
-	    nc_print_string,
-	    nc_print_string_abs,
-	    nc_set_style,
-	    setcursor,
-	    erase_eol,
-	    nc_draw_frame,
-	    nc_clear_window,
-	    nc_init_style,
-	    nc_print_hline,
-	    nc_print_vline,
-	    nc_set_updates,
-	    nc_get_updates,
+	nc_screen_init,	// init screen
+	nc_screen_deinit, // uninit
+	nc_cls,	// clear scren
+	nc_get_screen_height,
+	nc_get_screen_width,
+	nc_get_keypress,
+	nc_print_string,
+	nc_print_string_abs,
+	nc_set_style,
+	setcursor,
+	erase_eol,
+	nc_draw_frame,
+	nc_clear_window,
+	nc_init_style,
+	nc_print_hline,
+	nc_print_vline,
+	nc_set_updates,
+	nc_get_updates,
 
-	    init_dir_styles,
-	    init_view_styles,
-	    nc_resized,
-	    nc_isshutdown,
-	    nc_updatewindow,
-	    nc_trigger_redraw,
-	    nc_going_exec
-	};
+	init_dir_styles,
+	init_view_styles,
+	nc_resized,
+	nc_isshutdown,
+	nc_updatewindow,
+	nc_trigger_redraw,
+	nc_going_exec
+};
 #endif
 

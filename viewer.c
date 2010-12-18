@@ -12,6 +12,12 @@
  * colors
  */
 
+
+static void UpdateCursor(uViewFile *v)
+{
+	v->w->screen->set_cursor(v->w->offset_row + 2 + v->intHLine, 4 + v->w->offset_col + v->intColPos + 1);
+}
+
 static void FreeBufferLines(uViewFile *v)
 {
 	int i;
@@ -407,6 +413,9 @@ static int DisplayStatus(uViewFile *v)
 	v->w->screen->print_abs(buff);
 	v->w->screen->set_style(STYLE_NORMAL);
 
+	if(v->gd->mode != eMode_Viewer)
+		UpdateCursor(v);
+
 	return 0;
 }
 
@@ -640,6 +649,41 @@ static int vw_scroll_home(uViewFile *v)
 	}
 
 	return 0;
+}
+
+static void vwe_goto_end_line(uViewFile *v)
+{
+	int j;
+	int ln;
+
+	j = 0;
+
+	ln = v->intHLine + v->intTLine;
+	v->intColPos = 1;
+
+	while(j < v->lines[ln].length)
+	{
+		switch(v->lines[ln].off[j])
+		{
+			case 0x09:
+				j += 1;
+				v->intColPos = 1 + (v->intColPos / v->tabsize) * v->tabsize;
+				v->intColPos += v->tabsize;
+				break;
+
+			case 0x07:		// bell
+			case 0x08:		// backspace
+			case 0x0A:		// cr+lf
+			case 0x0D:
+				j += 1;
+				break;
+
+			default:
+				v->intColPos += 1;
+				j += 1;
+				break;
+		}
+	}
 }
 
 static int vw_scroll_end(uViewFile *v)
@@ -885,7 +929,11 @@ void ViewerDrawAll(uViewFile *v)
 	DisplayCLI(v);
 
 	v->w->screen->set_updates(1);
+
+	if(v->gd->mode == eMode_Editor)
+		UpdateCursor(v);
 }
+
 
 // LoadLine is a callback for reading from a Lua table data structure.
 // if its NULL we assume FN is a valid file, otherwise its the window title.
@@ -920,15 +968,29 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 
 	gd->screen->init_view_styles(gd->screen);
 
-	if(LoadLine != NULL)
-		AddHistory(gd, "View buffer : %s\n", fn);
+	if(gd->mode == eMode_Viewer)
+	{
+		if(LoadLine != NULL)
+		{
+			AddHistory(gd, "View buffer : %s\n", fn);
+		}
+		else
+		{
+			AddHistory(gd, "View file : %s\n", fn);
+		}
+	}
 	else
-		AddHistory(gd, "View file : %s\n", fn);
+	{
+		AddHistory(gd, "Edit File : %s\n", fn);
+	}
+
 
 	old_mode = gd->mode;
 	switch(old_mode)
 	{
 		case eMode_Viewer:
+			break;
+
 		case eMode_Editor:
 			break;
 
@@ -945,6 +1007,7 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 	v->intTLine = 0;
 	v->intHLine = 0;
 	v->tabsize = 8;
+	v->intColPos = 1;
 	v->ftype = strdup("");
 
 	v->lstHotKeys = malloc(sizeof(DList));
@@ -979,7 +1042,8 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 			uKeyBinding *kb;
 			int mnu;
 
-			v->w->screen->set_cursor(v->w->screen->get_screen_height()-1, 4 + strlen(v->command));
+			if(gd->mode != eMode_Viewer)
+				v->w->screen->set_cursor(v->w->screen->get_screen_height()-1, 4 + strlen(v->command));
 
 			mnu = ScanMenuOpen(v->gd, key);
 
@@ -1004,101 +1068,222 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 			}
 			else
 			{
-				switch(key)
+				switch(gd->mode)
 				{
-					case ALFC_KEY_DOWN:
-						vw_scroll_down(v);
-						break;
-
-					case ALFC_KEY_UP:
-						vw_scroll_up(v);
-						break;
-
-					case ALFC_KEY_PAGE_DOWN:
-						vw_scroll_page_down(v);
-						break;
-
-					case ALFC_KEY_PAGE_UP:
-						vw_scroll_page_up(v);
-						break;
-
-					case ALFC_KEY_END:
-						vw_scroll_end(v);
-						break;
-
-					case ALFC_KEY_HOME:
-						vw_scroll_home(v);
-						break;
-
-					case ALFC_KEY_LEFT:
-						vw_scroll_left(v);
-						break;
-
-					case ALFC_KEY_RIGHT:
-						vw_scroll_right(v);
-						break;
-
-					case ALFC_KEY_ENTER:
-						if(v->command_length > 0)
+					case eMode_Viewer:
+						switch(key)
 						{
-							AddHistory(gd, v->command);
+							case ALFC_KEY_DOWN:
+								vw_scroll_down(v);
+								break;
 
-							// exec string via lua...
-							if(v->command[0] == ':')
-								exec_internal_viewer_command(v, v->command);
-							else if(v->command[0] == '@')
-							{
-								char *fn = ConvertDirectoryName(v->command+1);
-								ExecuteViewerScript(v, fn);
-								free(fn);
-							}
-							else
-							{
-								ExecuteViewerString(v, v->command);
-							}
+							case ALFC_KEY_UP:
+								vw_scroll_up(v);
+								break;
 
-							v->command_length = 0;
-							v->command[v->command_length] = 0;
-						}
-						break;
+							case ALFC_KEY_PAGE_DOWN:
+								vw_scroll_page_down(v);
+								break;
 
-					// do nothing on their own
-					case ALFC_KEY_ALT:
-					case ALFC_KEY_CTRL:
-						break;
+							case ALFC_KEY_PAGE_UP:
+								vw_scroll_page_up(v);
+								break;
 
-					default:
-						if(key == 0)
-							break;
+							case ALFC_KEY_END:
+								vw_scroll_end(v);
+								break;
 
-						// terminal could send ^H (0x08) or ASCII DEL (0x7F)
-						if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
-						{
-							if(key == ALFC_KEY_DEL)
-							{
+							case ALFC_KEY_HOME:
+								vw_scroll_home(v);
+								break;
+
+							case ALFC_KEY_LEFT:
+								vw_scroll_left(v);
+								break;
+
+							case ALFC_KEY_RIGHT:
+								vw_scroll_right(v);
+								break;
+
+							case ALFC_KEY_ENTER:
 								if(v->command_length > 0)
 								{
-									v->command_length -= 1;
-									v->command[v->command_length] = 0;
-								}
-							}
-							else
-							{
-								if(v->command_length < v->w->screen->get_screen_width() - 10)
-								{
-									v->command[v->command_length++] = key;
-									v->command[v->command_length] = 0;
-								}
-							}
+									AddHistory(gd, v->command);
 
-							DisplayCLI(v);
+									// exec string via lua...
+									if(v->command[0] == ':')
+										exec_internal_viewer_command(v, v->command);
+									else if(v->command[0] == '@')
+									{
+										char *fn = ConvertDirectoryName(v->command+1);
+										ExecuteViewerScript(v, fn);
+										free(fn);
+									}
+									else
+									{
+										ExecuteViewerString(v, v->command);
+									}
+
+									v->command_length = 0;
+									v->command[v->command_length] = 0;
+								}
+								break;
+
+							// do nothing on their own
+							case ALFC_KEY_ALT:
+							case ALFC_KEY_CTRL:
+								break;
+
+							default:
+								if(key == 0)
+									break;
+
+								// terminal could send ^H (0x08) or ASCII DEL (0x7F)
+								if((key == ALFC_KEY_DEL || key == ALFC_KEY_BACKSPACE) || (key >= ' ' && key <= 0x7F))
+								{
+									if(key == ALFC_KEY_DEL || key == ALFC_KEY_BACKSPACE)
+									{
+										if(v->command_length > 0)
+										{
+											v->command_length -= 1;
+											v->command[v->command_length] = 0;
+										}
+									}
+									else
+									{
+										if(v->command_length < v->w->screen->get_screen_width() - 10)
+										{
+											v->command[v->command_length++] = key;
+											v->command[v->command_length] = 0;
+										}
+									}
+
+									DisplayCLI(v);
+								}
+								else
+									LogInfo("Unknown view key 0x%04x\n", key);
+								break;
 						}
-						else
-							LogInfo("Unknown view key 0x%04x\n", key);
+
+	/************************************************************************/
+	/************************************************************************/
+	/************************************************************************/
+	/************************************************************************/
+	/************************************************************************/
+	/************************************************************************/
+
+
+					case eMode_Editor:
+						switch(key)
+						{
+							case ALFC_KEY_DOWN:
+								vw_scroll_down(v);
+								break;
+
+							case ALFC_KEY_UP:
+								vw_scroll_up(v);
+								break;
+
+							case ALFC_KEY_PAGE_DOWN:
+								vw_scroll_page_down(v);
+								break;
+
+							case ALFC_KEY_PAGE_UP:
+								vw_scroll_page_up(v);
+								break;
+
+							case ALFC_KEY_CTRL + ALFC_KEY_END:
+								vw_scroll_end(v);
+								break;
+
+							case ALFC_KEY_CTRL + ALFC_KEY_HOME:
+								vw_scroll_home(v);
+								break;
+
+							case ALFC_KEY_END:
+								vwe_goto_end_line(v);
+								break;
+
+							case ALFC_KEY_HOME:
+								v->intColPos = 1;
+								break;
+
+							case ALFC_KEY_LEFT:
+								v->intColPos -= 1;
+								v->redraw = 0;
+								UpdateCursor(v);
+								break;
+
+							case ALFC_KEY_RIGHT:
+								v->intColPos += 1;
+								v->redraw = 0;
+								UpdateCursor(v);
+								break;
+
+							case ALFC_KEY_ENTER:
+								if(v->command_length > 0)
+								{
+									AddHistory(gd, v->command);
+
+									// exec string via lua...
+									if(v->command[0] == ':')
+										exec_internal_viewer_command(v, v->command);
+									else if(v->command[0] == '@')
+									{
+										char *fn = ConvertDirectoryName(v->command+1);
+										ExecuteViewerScript(v, fn);
+										free(fn);
+									}
+									else
+									{
+										ExecuteViewerString(v, v->command);
+									}
+
+									v->command_length = 0;
+									v->command[v->command_length] = 0;
+								}
+								break;
+
+							// do nothing on their own
+							case ALFC_KEY_ALT:
+							case ALFC_KEY_CTRL:
+								break;
+
+							default:
+								if(key == 0)
+									break;
+
+								// terminal could send ^H (0x08) or ASCII DEL (0x7F)
+								if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
+								{
+									if(key == ALFC_KEY_DEL)
+									{
+										if(v->command_length > 0)
+										{
+											v->command_length -= 1;
+											v->command[v->command_length] = 0;
+										}
+									}
+									else
+									{
+										if(v->command_length < v->w->screen->get_screen_width() - 10)
+										{
+											v->command[v->command_length++] = key;
+											v->command[v->command_length] = 0;
+										}
+									}
+
+									DisplayCLI(v);
+								}
+								else
+									LogInfo("Unknown view key 0x%04x\n", key);
+								break;
+						}
 						break;
 				}
 
 				DisplayCLI(v);
+				UpdateCursor(v);
 			}
 
 

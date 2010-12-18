@@ -2,7 +2,7 @@
 
 static void header(void)
 {
-	fprintf(stderr, "ALFC v%i.%02i/%04i\n", VersionMajor(), VersionMinor(), VersionBuild());
+	fprintf(stderr, "ALFC v%i.%02i/%04i :: Built %s\n", VersionMajor(), VersionMinor(), VersionBuild(), VersionDate());
 }
 
 int main(int argc, char *argv[])

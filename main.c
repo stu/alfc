@@ -3247,7 +3247,7 @@ int ALFC_main(int start_mode, char *view_file)
 
 		// screen too small to show nds columns
 		// date coumns waste too much space.
-		// todo - separate the date/time columns??
+		//TODO: - separate the date/time columns??
 		//LogInfo("Screen is %i.%i\n", gdata->screen->get_screen_width(), gdata->screen->get_screen_height());
 
 		if (gdata->screen->get_screen_width() <= 80)

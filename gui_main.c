@@ -1,5 +1,10 @@
 #include "headers.h"
 
+static void header(void)
+{
+	fprintf(stderr, "ALFC v%i.%02i/%04i :: Built %s\n", VersionMajor(), VersionMinor(), VersionBuild(), VersionDate());
+}
+
 int rlmain(int argc, char *argv[])
 {
 	int i;
@@ -7,7 +12,7 @@ int rlmain(int argc, char *argv[])
 	char *view_file = NULL;
 
 
-	for(i=1; i<argc; i++)
+	for(i=0; i < argc; i += 1)
 	{
 		if(argv[i][0] == '-')
 		{
@@ -23,6 +28,7 @@ int rlmain(int argc, char *argv[])
 			}
 			else if(strcmp("-?", argv[i]) == 0 || strcmp("--help", argv[i]) == 0)
 			{
+				header();
 				fprintf(stderr, "\n-v\t\tVersion\n"
 								"-?\t\tHelp\n"
 								"-l DIR\t\tStart left side in directory DIR\n"
@@ -34,13 +40,13 @@ int rlmain(int argc, char *argv[])
 			}
 			else if(strcmp("-v", argv[i]) == 0 || strcmp("--version", argv[i]) == 0)
 			{
-				fprintf(stderr, "ALFC v%i.%02i/%04i\n", VersionMajor(), VersionMinor(), VersionBuild());
+				header();
 				exit(0);
 			}
-			else if(strcmp("-view", argv[i]) == 0 && 1+i < argc)
+			else if(strcmp("-view", argv[i]) == 0 && 1 + i < argc)
 			{
 				view_file = argv[1+i];
-				i+=1;
+				i += 1;
 				start_mode = eMode_Viewer;
 			}
 			else if (strcmp("-edit", argv[i]) == 0 && 1 + i < argc)
