@@ -1164,6 +1164,7 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 									LogInfo("Unknown view key 0x%04x\n", key);
 								break;
 						}
+						break;
 
 	/************************************************************************/
 	/************************************************************************/
