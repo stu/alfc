@@ -15,7 +15,7 @@
 
 static void UpdateCursor(uViewFile *v)
 {
-	v->w->screen->set_cursor(v->w->offset_row + 2 + v->intHLine, 4 + v->w->offset_col + v->intColPos + 1);
+	v->w->screen->set_cursor(v->w->offset_row + 2 + v->intHLine, 4 + v->w->offset_col + v->intColPos + 0);
 }
 
 static void FreeBufferLines(uViewFile *v)
