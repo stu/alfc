@@ -115,7 +115,7 @@ static uint32_t nc_convert_colour(int color)
 
 static void setcolour(int bgc, int fgc)
 {
-	int x;
+	//int x;
 
 	if (bgc > CLR_DK_GREY)
 	{
@@ -123,7 +123,7 @@ static void setcolour(int bgc, int fgc)
 		fgc |= A_BOLD;
 	}
 
-	x = attrset(COLOR_PAIR(bgc) | fgc);
+	attrset(COLOR_PAIR(bgc) | fgc);
 }
 
 static void dr_outchar(int s)

@@ -103,14 +103,14 @@ static void help_draw_page(uWindow *w, uHelpPage *page_data)
 	int wide;
 	int style = STYLE_HELP_NORMAL;
 	int line;
-	int width;
+	//int width;
 	int i;
 	int last_link;
 
 	w->screen->set_updates(0);
 
 	line = w->top_line;
-	width = w->width - 2;
+	//width = w->width - 2;
 	w->screen->set_style(style);
 	i = 0;
 

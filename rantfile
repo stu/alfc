@@ -78,11 +78,11 @@ case y.to_s
 		var[:exec_boot] = "./"
 
 		if DRIVER=="NCURSES"
-			var[:libs] = "-lm -lncursesw #{lualib} -ldl -lz"
+			var[:libs] = "-lncursesw #{lualib} -ldl -lz -lm"
 			PORTABILITY_OBJS = %w( portability_unix.o ncurses_main.o ncurses_interface.o)
 			GPORTABILITY_OBJS = %w( portability_unix.o ncurses_guide.o ncurses_interface.o)
 		else
-			var[:libs] = "-lm #{lualib} -lX11 -ldl -lz"
+			var[:libs] = "#{lualib} -lX11 -ldl -lz -lm"
 			PORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_main.o guicore.o)
 			GPORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_guide.o guicore.o)
 		end
@@ -96,7 +96,7 @@ var[:min] = cBV.minor
 var[:build] = cBV.build
 
 CC = "gcc"
-CFLAGSX = "-D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DNMEMWATCH " + PORT_CFLAGS
+CFLAGSX = "-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -O2 -Wall -Werror -pedantic -ggdb -g3 -std=gnu99 -DNMEMWATCH " + PORT_CFLAGS
 LIBS = ""
 
 header_files = %w(rantfile main.h)

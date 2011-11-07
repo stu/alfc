@@ -822,12 +822,12 @@ static char** decompose_args(char *cli)
 	char *p, *q;
 	char **args;
 	int i;
-	int quote;
+	//int quote;
 
 	args = calloc(1, 64 * sizeof(char*));
 
 	p = cli;
-	quote = 0;
+	//quote = 0;
 	i = 0;
 
 	args[i] = calloc(1, 1024);

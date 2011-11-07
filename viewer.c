@@ -1040,12 +1040,12 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 
 			key = gd->screen->get_keypress();
 			uKeyBinding *kb;
-			int mnu;
+			//int mnu;
 
 			if(gd->mode != eMode_Viewer)
 				v->w->screen->set_cursor(v->w->screen->get_screen_height()-1, 4 + strlen(v->command));
 
-			mnu = ScanMenuOpen(v->gd, key);
+			//mnu = ScanMenuOpen(v->gd, key);
 
 			kb = ScanKey(v->lstHotKeys, key);
 			if(kb != NULL)

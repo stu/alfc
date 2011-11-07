@@ -12,7 +12,7 @@ char* gstr_WindowTitle = "Another Linux File Commander";
 
 void msgbox(uGlobalData *gd, char *str)
 {
-	uint32_t key;
+	//uint32_t key;
 	uWindow *w;
 
 	char *buff;
@@ -96,7 +96,7 @@ void msgbox(uGlobalData *gd, char *str)
 
 	gd->screen->set_cursor(gd->screen->get_screen_height(), gd->screen->get_screen_width());
 
-	key = gd->screen->get_keypress();
+	gd->screen->get_keypress();
 
 	free(w);
 	free(buff);
@@ -360,7 +360,7 @@ char* GetDateTimeString(char *fmt, time_t t)
 
 void about_window(uGlobalData *gd)
 {
-	uint32_t key;
+	//uint32_t key;
 	uWindow *w;
 
 	char *buff;
@@ -452,7 +452,7 @@ void about_window(uGlobalData *gd)
 
 	gd->screen->set_cursor(gd->screen->get_screen_height(), gd->screen->get_screen_width());
 
-	key = gd->screen->get_keypress();
+	gd->screen->get_keypress();
 
 	free(w);
 	free(buff);
@@ -1485,9 +1485,8 @@ static void DrawFileInfo(uWindow *win)
 	int size_offset;
 	int attr_offset;
 
-	int i;
-
-	i = win->top_line + win->highlight_line;
+	//int i;
+	//i = win->top_line + win->highlight_line;
 
 	de = GetHighlightedFile(GetActList(win->gd), win->highlight_line, win->top_line);
 	win->screen->set_style(STYLE_TITLE);
@@ -2120,7 +2119,7 @@ int scroll_end(uGlobalData *gd)
 int scroll_up(uGlobalData *gd)
 {
 	uWindow *w;
-	int scroll_depth;
+	//int scroll_depth;
 	int size_off;
 	int max_namelen;
 	int date_off;
@@ -2132,7 +2131,7 @@ int scroll_up(uGlobalData *gd)
 		return -1;
 	}
 
-	scroll_depth = get_scroll_depth(w);
+	//scroll_depth = get_scroll_depth(w);
 	size_off = CalcSizeOff(w, w->width - 3);
 	date_off = CalcDateOff(w, size_off);
 	max_namelen = date_off - 2;
@@ -2693,7 +2692,7 @@ void scroll_page_up(uGlobalData *gd)
 {
 	int tl;
 	int depth;
-	int fc;
+	//int fc;
 	int hl;
 
 	uDirEntry *de;
@@ -2709,7 +2708,7 @@ void scroll_page_up(uGlobalData *gd)
 
 	tl = GetActWindow(gd)->top_line;
 	depth = GetActWindow(gd)->height - 2;
-	fc = dlist_size(GetActList(gd));
+	//fc = dlist_size(GetActList(gd));
 	hl = GetActWindow(gd)->highlight_line;
 
 	if (dlist_size(GetActList(gd)) < depth)

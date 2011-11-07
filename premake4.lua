@@ -76,10 +76,10 @@ solution "alfm"
 		libdirs { liblua }
 
 		configuration "linux"
-			buildoptions { "-D__USE_LARGEFILE64=1","-D_FILE_OFFSET_BITS=64","-DBUILD_UNIXLIKE","-D_FORTIFY_SOURCE=0"}
+			buildoptions { "-D__USE_LARGEFILE64=1","-D_FILE_OFFSET_BITS=64","-DBUILD_UNIXLIKE","-U_FORTIFY_SOURCE", "-D_FORTIFY_SOURCE=0"}
 			if _ARGS[1] == "ncurses" then
 				defines { "DRV_NCURSES","BUILD_UNIXLIKE"}
-				links { "m", "ncurses", libluaxx, "dl", "z" }
+				links { "m", "ncursesw", libluaxx, "dl", "z" }
 				files { "portability_unix.c", "ncurses_main.c", "ncurses_interface.c" }
 				excludes { "gui_main.c", "guicore.c", "portability_win32.c" }
 				xflag = true
@@ -131,16 +131,16 @@ solution "alfm"
 			libdirs { liblua }
 
 		configuration "linux"
-			buildoptions { "-D__USE_LARGEFILE64=1","-D_FILE_OFFSET_BITS=64","-DBUILD_UNIXLIKE","-D_FORTIFY_SOURCE=0"}
+			buildoptions { "-D__USE_LARGEFILE64=1","-D_FILE_OFFSET_BITS=64","-DBUILD_UNIXLIKE","-U_FORTIFY_SOURCE", "-D_FORTIFY_SOURCE=0"}
 			if _ARGS[1] == "ncurses" then
 				defines { "DRV_NCURSES","BUILD_UNIXLIKE"}
-				links { "m", "ncurses", libluaxx, "dl", "z" }
+				links { "ncursesw", libluaxx, "dl", "z", "m" }
 				files { "portability_unix.c", "ncurses_guide.c", "ncurses_interface.c" }
 				excludes { "gui_main.c", "guicore.c", "portability_win32.c", "gui_guide.c", "gui_interface.c" }
 				xflag = true
 			elseif _ARGS[1] == "x11" then
 				defines { "DRV_GUI","BUILD_UNIXLIKE"}
-				links { "m", libluaxx, "X11", "dl", "z" }
+				links { libluaxx, "X11", "dl", "z", "m" }
 				files { "portability_unix.c", "gui_guide.c", "gui_interface.c", "guicore.c" }
 				excludes { "portability_win32.c", "ncurses_guide.c" }
 				xflag = true

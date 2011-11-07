@@ -119,7 +119,7 @@ uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int link)
 	while (e != NULL)
 	{
 		char *x;
-		char *z;
+		//char *z;
 
 		uint16_t *p;
 		int col;
@@ -135,7 +135,7 @@ uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int link)
 		p = page->lines[page->line_count - 1];
 
 		col = 0;
-		z = x;
+		//z = x;
 
 		last_x = x;
 		last_p = p;
