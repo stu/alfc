@@ -10,7 +10,7 @@ solution "alfm"
 	configurations { "Debug", "Release" }
 		configuration "Debug"
 			targetdir "debug"
-			defines { "DEBUG", "MEMWATCH"}
+			defines { "DEBUG", "NMEMWATCH"}
 			flags { "Symbols" }
 
 		configuration "Release"
