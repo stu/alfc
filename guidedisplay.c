@@ -168,6 +168,14 @@ static void help_draw_page(uWindow *w, uHelpPage *page_data)
 
 			wide++;
 		}
+		
+		while (wide < page_data->width)
+		{
+			w->screen->set_style(style);
+			display_char(w, ' ');
+			
+			wide++;
+		}
 
 		w->screen->set_style(STYLE_HELP_NORMAL);
 		line += 1;
