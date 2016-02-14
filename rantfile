@@ -95,7 +95,7 @@ var[:maj] = cBV.major
 var[:min] = cBV.minor
 var[:build] = cBV.build
 
-CC = "gcc"
+CC = "clang"
 CFLAGSX = "-O2 -Wall -pedantic -ggdb -g3 -std=gnu99 " + PORT_CFLAGS
 LIBS = ""
 
