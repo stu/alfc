@@ -4,7 +4,7 @@ solution "alfm"
 	configurations { "Debug", "Release" }
 		configuration "Debug"
 			targetdir "debug"
-			defines { "DEBUG", "MEMWATCH"}
+			defines { "DEBUG" }
 			flags { "Symbols" }
 
 		configuration "Release"
@@ -104,7 +104,7 @@ solution "alfm"
 	project "guide"
 		kind "ConsoleApp"
 		language "C"
-		files { "guide.c", "guideload.c", "guidedisplay.c", "dlist.c", "version.c", "memwatch.c", "logwrite.c" }
+		files { "guide.c", "guideload.c", "guidedisplay.c", "dlist.c", "version.c", "logwrite.c" }
 	  	objdir "obj"
 	  	includedirs { "." }
 	  	targetdir "."
@@ -156,7 +156,7 @@ solution "alfm"
 	project "gdump"
 		kind "ConsoleApp"
 		language "C"
-		files { "guidedump.c", "guideload.c", "dlist.c", "memwatch.c", "logwrite.c" }
+		files { "guidedump.c", "guideload.c", "dlist.c", "logwrite.c" }
 	  	objdir "obj"
 	  	links { "z" }
 	  	targetdir "."

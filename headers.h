@@ -28,8 +28,6 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-#include "memwatch.h"
-
 #include "dlist.h"
 #include "ini.h"
 #include "logwrite.h"

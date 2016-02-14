@@ -5,7 +5,6 @@
 #include <stdarg.h>
 #include <assert.h>
 
-#include "memwatch.h"
 #include "dlist.h"
 
 #include "logwrite.h"

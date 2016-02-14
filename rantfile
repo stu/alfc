@@ -96,7 +96,7 @@ var[:min] = cBV.minor
 var[:build] = cBV.build
 
 CC = "gcc"
-CFLAGSX = "-O2 -Wall -pedantic -ggdb -g3 -std=gnu99 -DNMEMWATCH " + PORT_CFLAGS
+CFLAGSX = "-O2 -Wall -pedantic -ggdb -g3 -std=gnu99 " + PORT_CFLAGS
 LIBS = ""
 
 header_files = %w(rantfile main.h)
@@ -105,7 +105,7 @@ default_files = %w(global.lua viewer.lua startup.lua shutdown.lua options.ini co
 			core_hash.lua viewer_languages.lua filemanager_menu.lua hints.lua viewer_menu.lua)
 
 alfc = %w( dlist.o logwrite.o ini.o
-			version.o main.o memwatch.o lua_helper.o
+			version.o main.o lua_helper.o
 			lua_api.o options.o viewer.o guidedisplay.o
 			lua_helper_viewer.o lua_common.o lua_common_api.o
 			operations.o lua_hash.o md5.o rmd160.o sha1.o
@@ -189,17 +189,17 @@ desc "help"
 task :help => ["auxfiles", "#{var[:gdump]}", "#{var[:guide]}"] do
 end
 
-file "#{var[:gcomp]}" => %w(guidecompiler.o dlist.o memwatch.o logwrite.o) do |t|
+file "#{var[:gcomp]}" => %w(guidecompiler.o dlist.o logwrite.o) do |t|
 	sys "#{CC} -o #{var[:gcomp]} #{t.prerequisites.join(' ')} -lz"
     sys "#{var[:exec_boot]}#{var[:gcomp]} docs/guide_create.txt guide_create.gd"
     sys "#{var[:exec_boot]}#{var[:gcomp]} docs/help.txt help.gd"
 end
 
-file "#{var[:gdump]}" => %w(guidedump.o guideload.o dlist.o memwatch.o logwrite.o) do |t|
+file "#{var[:gdump]}" => %w(guidedump.o guideload.o dlist.o logwrite.o) do |t|
     sys "#{CC} -o #{var[:gdump]} #{t.prerequisites.join(' ')} -lz"
 end
 
-file "#{var[:guide]}" => %w(guide.o guidedisplay.o guideload.o dlist.o version.o memwatch.o logwrite.o) + GPORTABILITY_OBJS do |t|
+file "#{var[:guide]}" => %w(guide.o guidedisplay.o guideload.o dlist.o version.o logwrite.o) + GPORTABILITY_OBJS do |t|
     sys "#{CC} -o #{var[:guide]} #{t.prerequisites.join(' ')} #{var[:libs]} "
 end
 
@@ -223,7 +223,7 @@ task "docs" do
 end
 
 def src_clean
-	x = Dir["*.{bak,o,obj,a,gd}"] + Dir["#{var[:exec]}"] + Dir["memwatch.log"] + Dir["docs/lua_api/*"] + Dir["version.c"]
+	x = Dir["*.{bak,o,obj,a,gd}"] + Dir["#{var[:exec]}"] + Dir["docs/lua_api/*"] + Dir["version.c"]
 
 	x += Dir["#{var[:gcomp]}"]
 	x += Dir["#{var[:gdump]}"]

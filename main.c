@@ -3201,12 +3201,6 @@ int ALFC_main(int start_mode, char *view_file)
 	setenv("ALFC", "$HOME/.alfc/scripts", 0);
 #endif
 
-
-#ifdef MEMWATCH
-	//remove("memwatch.log");
-	//mwInit();
-#endif
-
 	gdata = NewGlobalData();
 
 	if (gdata != NULL)
@@ -3608,11 +3602,6 @@ int ALFC_main(int start_mode, char *view_file)
 
 	ALFC_shutdown();
 	LogWrite_Shutdown();
-
-
-#ifdef MEMWATCH
-	//mwTerm();
-#endif
 
 	return 0;
 }
