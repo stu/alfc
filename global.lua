@@ -214,6 +214,45 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 		return r
 	end
 
+	-- View the command list
+	function __ViewCommandList()
+		local buff = {}
+		local k, v
+		
+		local f = 0
+		local q = {}
+		
+		for k,v in pairs(cmds) do
+			q[1 + #q] = k
+			if #trim(k) > f then
+				f = #trim(k)
+			end
+		end
+		
+		table.sort(q)
+		
+		f = f + 1
+		buff[1 + #buff] = "Internal command list"
+		buff[1 + #buff] = ""
+		
+		--for k,v in pairs(cmds) do
+		for _, k in pairs(q) do
+			
+			v = cmds[k]
+		
+			local kk = string.rep(" ", f)
+		
+			-- kk = k .. kk
+			-- kk = string.sub(kk, 1, f)
+			kk = kk .. trim(k)
+			kk = string.sub(kk, 0 - f)
+			
+			buff[1 + #buff] = "" .. kk .. " == " .. v.desc .. ""
+		end
+		buff[1 + #buff] = ""
+		
+		ViewLuaTable("Command list", buff);
+	end
 
 	-- This is an internal function that parses the internal
 	-- command line
@@ -865,6 +904,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	AddCommand(":t! ","Flip tags",	__TagFlip)
 	AddCommand(":swap ","Swap active panels", __SwapPanels)
 	AddCommand(":exec ", "Execute lua", __exec_lua)
+	AddCommand(":help ", "List commands", __ViewCommandList)
 
 	if SystemType() ~= "WIN32" then
 		AddCommand(":sym","Symlink files", __TagSymlink)
