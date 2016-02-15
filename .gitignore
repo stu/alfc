@@ -20,8 +20,10 @@ version
 version.c
 defaults.h
 viewer.h
+vblist.h
 lua_api.h
 lua_common.h
+lua_helper_vblist.c
 lua_helper_viewer.c
 lua_common_api.c
 lua_helper.c
