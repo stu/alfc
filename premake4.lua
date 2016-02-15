@@ -25,7 +25,7 @@ solution "alfm"
 		kind "ConsoleApp"
 		language "C"
 		targetdir "."
-		files { "*.h", "*.c", "lua_common_api.c", "lua_common_api.h", "lua_helper.c","lua_helper.h", "lua_helper_viewer.c", "lau_helper_viewer.h", "version.c","version.h"	}
+		files { "*.h", "*.c", "lua_common_api.c", "lua_common_api.h", "lua_helper.c","lua_helper.h", "lua_helper_viewer.c", "lau_helper_viewer.h", "version.c","version.h", "vblist.c", "vblist.h", "lua_helper_vblist.c", "lua_helper_vblist.h" }
 		excludes { "bin2c.c", "gcomp.c", "guide.c", "guidedump.c", "gdump.c", "ncurses_guide.c", "guide_guide.c" }
 		includedirs { "." }
 		objdir "obj"
@@ -44,11 +44,8 @@ solution "alfm"
 		"tools/bin2c hints.lua hints_lua >> defaults.h",
 		"tools/bin2c viewer_menu.lua viewer_menu_lua >> defaults.h",
 		"tools/bin2c docs/help.hlp help_hlp >> defaults.h",
-		--always build gui fonts
-		"echo \"#ifdef DRV_GUI\" > gui_fonts.h",
-		"tools/bin2c font.rlf gui_data_font >> gui_fonts.h",
-		"tools/bin2c font_small.rlf gui_data_font_small >> gui_fonts.h",
-		"echo \"#endif\" >> gui_fonts.h",
+		"tools/bin2c list.lua include_list_lua >> defaults.h",
+		"tools/bin2c list_menu.lua list_menu_lua >> defaults.h",
 
 		-- gen lua files
 		"lua " .. solution().basedir .. "/tools/lua_helper.lua",
@@ -130,6 +127,7 @@ solution "alfm"
 		links { "z" }
 		targetdir "."
 
+
 if _ACTION ~= "clean" then
 	if xflag == false then
 		if os.get() == "linux" then
@@ -147,4 +145,11 @@ if _ACTION == "clean" then
 	os.rmdir "obj"
 	os.rmdir "debug"
 	os.rmdir "release"
+
+	local ff = os.matchfiles("*.bak", "version.c", "lua_helper.c", "lua_common_api.c", "lua_helper_viewer.c", "lua_helper_vblist.c", "lua_common.h", "lua_api.h", "viewer.h", "vblist.h", "defaults.h")
+	local k,v
+	for k,v in ipairs(ff) do
+		os.remove("" .. v)
+	end
+
 end
