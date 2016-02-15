@@ -51,13 +51,7 @@
 #include "tree.h"
 
 // screen config
-#ifdef DRV_NCURSES
 #include "ncurses_interface.h"
-#endif
-#ifdef DRV_GUI
-#include "gui_interface.h"
-#endif
-
 
 
 #ifdef __MINGW_H
