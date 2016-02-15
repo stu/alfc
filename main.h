@@ -214,6 +214,7 @@ enum eMode
 {
 	eMode_Directory = 1,
 	eMode_Viewer,
+	eMode_VB_List
 };
 
 typedef struct udtKeyBinding
@@ -295,6 +296,7 @@ struct udtScreenDriver
 
 	void (*init_dir_styles)(uScreenDriver *scr);
 	void (*init_view_styles)(uScreenDriver *scr);
+	void (*init_list_styles)(uScreenDriver *scr);
 	int (*screen_isresized)(void);
 	int (*screen_isshutdown)(void);
 	void (*update_window)(void);
@@ -387,6 +389,7 @@ struct udtGlobals
 
 	uMenu		*file_menu[MAX_MENU];
 	uMenu		*viewer_menu[MAX_MENU];
+	uMenu		*list_menu[MAX_MENU];
 };
 
 enum
@@ -434,6 +437,7 @@ extern int godir(uGlobalData *gd, char *dir);
 extern int updir(uGlobalData *gd);
 extern int downdir(uGlobalData *gd);
 extern int change_dir(uGlobalData *gd, char *dir);
+extern char* replace(const char *in, char a, char b);
 
 extern uMenu** GetActMenu(uGlobalData *gd);
 extern DList* GetActGlob(uGlobalData *gd);
@@ -479,7 +483,7 @@ extern void about_window(uGlobalData *gd);
 extern void UpdateDir(uGlobalData *gd, char *set_to_highlight);
 extern int TagWithGlob(uGlobalData *gd, char *pattern);
 extern int TagWithFilter(uGlobalData *gd, char *pattern);
-extern DList* GetFiles(uGlobalData *gd, char *path);
+extern DList* GetFiles(char *path);
 extern int ALFC_main(int start_mode, char *view_file);
 extern void DrawCLI(uGlobalData *gd);
 

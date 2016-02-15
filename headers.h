@@ -42,6 +42,10 @@
 
 #include "viewer.h"
 #include "lua_helper_viewer.h"
+
+#include "vblist.h"
+#include "lua_helper_vblist.h"
+
 #include "lua_common.h"
 #include "lua_common_api.h"
 #include "lua_hash.h"

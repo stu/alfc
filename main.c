@@ -8,7 +8,7 @@ char *start_right = NULL;
 
 int intFlag = 0;
 
-char* gstr_WindowTitle = "Another Linux File Commander";
+char* gstr_WindowTitle = " Another Linux File Commander ";
 
 void msgbox(uGlobalData *gd, char *str)
 {
@@ -104,8 +104,7 @@ void msgbox(uGlobalData *gd, char *str)
 	gd->screen->set_style(STYLE_TITLE);
 }
 
-
-void DrawNoFile(uWindow *w, int style)
+static void DrawNoFile(uWindow *w, int style)
 {
 	char *buff;
 
@@ -194,9 +193,10 @@ static void FreeMenus(uGlobalData *gd)
 {
 	FreeMenuData(gd->file_menu);
 	FreeMenuData(gd->viewer_menu);
+	FreeMenuData(gd->list_menu);
 }
 
-static char* replace(const char *in, char a, char b)
+char* replace(const char *in, char a, char b)
 {
 	char *x = malloc(strlen(in) + 4);
 	char *p = x;
@@ -374,14 +374,14 @@ void about_window(uGlobalData *gd)
 	// big enough to hold string...
 	buff = malloc(1024);
 	sprintf(buff, "\n"
-			"Welcome to Another Linux File Commander\n"
+			"%s\n"
 			"By Stu George\n"
 			"\n"
 			"Version %i.%02i.%04i\n"
 			"Compiled on %s - %s\n"
 			"\n"
 			"Licensed under the GNU GPL v2\n"
-			"\n", VersionMajor(), VersionMinor(), VersionBuild(), VersionDate(), VersionTime());
+			"\n", gstr_WindowTitle, VersionMajor(), VersionMinor(), VersionBuild(), VersionDate(), VersionTime());
 
 	height = 0;
 	width = 0;
@@ -539,6 +539,8 @@ uMenu** GetActMenu(uGlobalData *gd)
 		return gd->file_menu;
 	else if (gd->mode == eMode_Viewer)
 		return gd->viewer_menu;
+	else if (gd->mode == eMode_VB_List)
+		return gd->list_menu;
 	else
 		LogInfo("UNKNOWN MENU\n");
 
@@ -958,7 +960,7 @@ void CalcDirStats(uGlobalData *gd, uWindow *w, DList *lstFiles)
 	}
 }
 
-DList* GetFiles(uGlobalData *gd, char *path)
+DList* GetFiles(char *path)
 {
 	DList *lstF;
 	DIR *d;
@@ -972,7 +974,7 @@ DList* GetFiles(uGlobalData *gd, char *path)
 
 	cpath = replace(path, '\\', '/');
 
-	assert(gd != NULL);
+	//assert(gd != NULL);
 	//assert(GetActWindow(gd) != NULL);
 
 	d = opendir(cpath);
@@ -1852,6 +1854,8 @@ void DrawMenuLine(uScreenDriver *screen, DList *lstHotKeys)
 	e = dlist_head(lstHotKeys);
 	q = buff;
 
+	*q++ = ' ';
+	
 	while (e != NULL)
 	{
 		uKeyBinding *kb;
@@ -2396,7 +2400,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 			dlist_destroy(gd->lstFullLeft);
 			free(gd->lstFullLeft);
 		}
-		gd->lstFullLeft = GetFiles(gd, gd->left_dir);
+		gd->lstFullLeft = GetFiles(gd->left_dir);
 		CalcDirStats(gd, gd->win_left, gd->lstFullLeft);
 
 		if (gd->lstLeft != NULL)
@@ -2429,7 +2433,7 @@ void UpdateDir(uGlobalData *gd, char *set_to_highlight)
 			dlist_destroy(gd->lstFullRight);
 			free(gd->lstFullRight);
 		}
-		gd->lstFullRight = GetFiles(gd, gd->right_dir);
+		gd->lstFullRight = GetFiles(gd->right_dir);
 		CalcDirStats(gd, gd->win_right, gd->lstFullRight);
 
 		if (gd->lstRight != NULL)
@@ -3192,10 +3196,9 @@ int ALFC_main(int start_mode, char *view_file)
 	uGlobalData *gdata;
 
 	LogWrite_Startup(0, LOG_INFO | LOG_DEBUG | LOG_ERROR | LOG_STDERR, 5000);
-	LogInfo("ALFC : Another Linux File Commander - Stu George\nVersion v%i.%02i/%04i - Built on " __DATE__ "; " __TIME__ "\n", VersionMajor(), VersionMinor(), VersionBuild());
+	LogInfo("ALFC :%s- Stu George\nVersion v%i.%02i/%04i - Built on " __DATE__ "; " __TIME__ "\n", gstr_WindowTitle, VersionMajor(), VersionMinor(), VersionBuild());
 
 	ALFC_startup();
-
 
 #ifndef __WIN32__
 	setenv("ALFC", "$HOME/.alfc/scripts", 0);
@@ -3235,8 +3238,8 @@ int ALFC_main(int start_mode, char *view_file)
 		gdata->screen->cls();
 
 		gdata->screen->set_style(STYLE_TITLE);
-		gdata->screen->set_cursor(1, ((gdata->screen->get_screen_width() - (strlen(" Welcome to Another Linux File Commander ") - 8)) / 2));
-		gdata->screen->print(" Welcome to Another Linux File Commander ");
+		gdata->screen->set_cursor(1, ((gdata->screen->get_screen_width() - (strlen(gstr_WindowTitle) - 8)) / 2));
+		gdata->screen->print(gstr_WindowTitle);
 		BuildWindowLayout(gdata);
 
 
@@ -3268,13 +3271,17 @@ int ALFC_main(int start_mode, char *view_file)
 		LogWrite_SetFlags(LogWrite_GetFlags() & ~LOG_STDERR);
 
 
+		// reset mode so we always load the global lua
+		int old_mode = gdata->mode;
+		gdata->mode = eMode_Directory;
 		// load it, if it fails, try looking in home as a fallback
 		rc = LoadGlobalScript(gdata, INI_get(gdata->optfile, "scripts", "global_funcs"));
 		if (rc < 0)
 		{
 			rc = LoadGlobalScript(gdata, "$HOME/.alfc/global.lua");
 		}
-
+		gdata->mode = old_mode;
+		
 		if (rc == 0)
 		{
 			LogInfo("\n" LUA_RELEASE "; " LUA_COPYRIGHT "\n" LUA_AUTHORS "\n\n");
@@ -3302,6 +3309,13 @@ int ALFC_main(int start_mode, char *view_file)
 			if (gdata->mode == eMode_Viewer && view_file != NULL)
 			{
 				ViewFile(gdata, view_file, NULL);
+				gdata->screen->init_dir_styles(gdata->screen);
+				intFlag = 1;
+			}
+			
+			if(gdata->mode == eMode_VB_List)
+			{
+				ListFile(gdata);
 				gdata->screen->init_dir_styles(gdata->screen);
 				intFlag = 1;
 			}

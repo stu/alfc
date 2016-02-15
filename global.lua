@@ -6,7 +6,7 @@
 		Directory Mode,
 ]]
 
-if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
+if _G["DIR_BOOTSTRAP"] ~= 1  then
 
 	-- GLOBAL DEF
 	cmds = {}		-- for quick commands
@@ -888,10 +888,10 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	AddCommand(":g ","Filter file list with glob", __Glob)
 	AddCommand(":g+ ","Add glob to filter list",__GlobAdd)
 	AddCommand(":s ","Make both panels same", __MakeInactivePaneSame)
-	AddCommand(":j ","Jump", __Jump)
+	AddCommand(":j ","Jump to first name that matches", __Jump)
 	AddCommand(":cd ","Change directory", __ChangeDir)
 	AddCommand(":md ","Create directory", __CreateDir)
-	AddCommand(":so ","Set sort order", __SortOrder)
+	AddCommand(":so ","Set sort order (na, nd, sa, sd, da, dd)", __SortOrder)
 	AddCommand(":td ","Delete tagged files", __TagDelete)
 	AddCommand(":tc ","Copy tagged files", __TagCopy)
 	AddCommand(":tm ","Move tagged files", __TagMove)
@@ -900,11 +900,11 @@ if _G["DIR_BOOTSTRAP"] ~= 1 and GetMode() == eMode_Directory then
 	AddCommand(":ta ","Tag all files AND directories", __TagAll)
 	AddCommand(":taf ","Tag all files (but not dirs)", __TagAllFiles)
 	AddCommand(":tad ","Tag all directories (but not files)", __TagAllDirs)
-	AddCommand(":tu ","Untag all", __TagUnTagAll)
-	AddCommand(":t! ","Flip tags",	__TagFlip)
+	AddCommand(":tu ","Untag all currently tagged files", __TagUnTagAll)
+	AddCommand(":t! ","Flip tags on tagged vs untagged files", __TagFlip)
 	AddCommand(":swap ","Swap active panels", __SwapPanels)
 	AddCommand(":exec ", "Execute lua", __exec_lua)
-	AddCommand(":help ", "List commands", __ViewCommandList)
+	AddCommand(":help ", "List internal commands", __ViewCommandList)
 
 	if SystemType() ~= "WIN32" then
 		AddCommand(":sym","Symlink files", __TagSymlink)

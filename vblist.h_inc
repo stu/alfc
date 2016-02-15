@@ -1,0 +1,55 @@
+#ifndef VBLIST_H
+#define VBLIST_H
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+
+typedef struct udtListFile
+{
+	uWindow *w;
+	
+	char	*currDir;
+	
+	int		intColOffset;
+	int		intMaxCol;
+	
+	int		nwidth;
+	int		redraw;
+
+	int		crlf_type;
+	int		quit_flag;
+
+	int		compress_filesize;
+	
+	int		command_length;
+	char	command[128];
+
+	uGlobalData *gd;
+	char 		*gcode;
+	lua_State *_GL;
+
+	char		columns[16];
+	
+	DList		*lstHotKeys;
+	
+	DList		*lstFilter;
+	DList		*lstGlob;
+	
+	DList		*lstFiles;
+	DList		*lstFullFiles;
+} uListFile;
+
+
+extern int ListFile(uGlobalData *gd);
+extern int RegisterListData(uListFile *v, lua_State *l);
+
+/* LUA EXT REF */
+/* LUA END EXT REF */
+
+#ifdef __cplusplus
+}
+#endif
+#endif // VBLIST_H
+
+

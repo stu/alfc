@@ -32,13 +32,19 @@ int main(int argc, char *argv[])
 					"-?\t\tHelp\n"
 					"-l DIR\t\tStart left side in directory DIR\n"
 					"-r DIR\t\tStart right side in directory DIR\n"
-					"-view FILE\tStart in viewer mode\n");
+					"-view FILE\tStart in viewer mode\n"
+					"-list\tStart in List mode\n"
+					);
 				exit(0);
 			}
 			else if (strcmp("-v", argv[i]) == 0 || strcmp("--version", argv[i]) == 0)
 			{
 				header();
 				exit(0);
+			}
+			else if(strcmp("-list", argv[i]) == 0)
+			{
+				start_mode = eMode_VB_List;
 			}
 			else if (strcmp("-view", argv[i]) == 0 && 1 + i < argc)
 			{

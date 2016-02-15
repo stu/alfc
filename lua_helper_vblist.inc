@@ -1,6 +1,6 @@
 #include "headers.h"
 
-int ExecuteGlobalViewerString(uViewFile *gb, char *sn)
+int ExecuteGlobalListString(uListFile *gb, char *sn)
 {
 	char *outbuff;
 	int maxsize;
@@ -45,18 +45,15 @@ int ExecuteGlobalViewerString(uViewFile *gb, char *sn)
 }
 
 /* register lua funcs */
-void RegisterViewerFuncs(uViewFile *gb, lua_State *l)
+void RegisterListFuncs(uListFile *lf, lua_State *l)
 {
 	luaL_openlibs(l);
 
-	RegisterLuaFuncs(gb->gd, l);
-	RegisterViewerData(gb, l);
+	RegisterLuaFuncs(lf->gd, l);
+	RegisterListData(lf, l);
 
 /* LUA EXT REF */
 /* LUA END EXT REF */
-
-	lua_pushnumber(l, eView_Hex); lua_setglobal(l, "eView_Hex");
-	lua_pushnumber(l, eView_Text); lua_setglobal(l, "eView_Text");
 
 	lua_settop(l, 0);
 }

@@ -216,6 +216,7 @@ int gmec_Version(lua_State *L)
  *	mode:
  *	o 1 = eMode_Directory
  *	o 2 = eMode_Viewer
+ *	o 3 = eMode_VB_List
  * EXAMPLE
  if GetMode() == eMode_Viewer then
  debug_msg("Script is running inside the viewer")
@@ -668,7 +669,7 @@ int gmec_GetFileListFromPath(lua_State *L)
 	GET_LUA_STRING(d, 1);
 
 	dir = ConvertDirectoryName(d.data);
-	lst = GetFiles(gd, dir);
+	lst = GetFiles(dir);
 
 	if (lst != NULL)
 	{

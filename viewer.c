@@ -207,7 +207,6 @@ static void PrintLine(uViewFile *v, int ln, int i)
 
 	buff = malloc(width);
 
-
 	// Feeling lazy
 	switch(v->nwidth)
 	{
@@ -343,6 +342,8 @@ static void PrintLine(uViewFile *v, int ln, int i)
 
 	v->w->screen->print_abs(buff);
 	v->w->screen->set_style(STYLE_NORMAL);
+	
+	free(buff);
 }
 
 static int DisplayStatus(uViewFile *v)
@@ -406,6 +407,8 @@ static int DisplayStatus(uViewFile *v)
 	v->w->screen->set_style(STYLE_TITLE);
 	v->w->screen->print_abs(buff);
 	v->w->screen->set_style(STYLE_NORMAL);
+	
+	free(buff);
 
 	return 0;
 }
@@ -944,8 +947,8 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 
 	// incase its a HUUUUUUUUUUGE file, throw up a vague title screen
 	gd->screen->set_style(STYLE_TITLE);
-	gd->screen->set_cursor(1, ((gd->screen->get_screen_width() - (strlen(" Welcome to Another Linux File Commander ") - 8))/2));
-	gd->screen->print(" Welcome to Another Linux File Commander ");
+	gd->screen->set_cursor(1, ((gd->screen->get_screen_width() - (strlen(gstr_WindowTitle) - 8))/2));
+	gd->screen->print(gstr_WindowTitle);
 
 	if(ALFC_IsDir(stats.st_mode) != 0)
 	{

@@ -7,13 +7,15 @@
 /**
   * pre: list != NULL
   */
-void FreeDList(DList *list)
+DList* FreeDList(DList *list)
 {
 	if(list == NULL)
-		return;
+		return list;
 
 	dlist_destroy(list);
 	free(list);
+	
+	return list;
 }
 
 

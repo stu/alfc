@@ -1694,8 +1694,20 @@ int gme_ViewFile(lua_State *L)
 	GET_LUA_STRING(name, 1);
 
 	ViewFile(gd, name.data, NULL);
-	DrawAll(gd);
-	gd->screen->init_dir_styles(gd->screen);
+	
+	if(gd->mode == eMode_Directory)
+	{
+		DrawAll(gd);	
+		gd->screen->init_dir_styles(gd->screen);
+	}
+	else if(gd->mode == eMode_Viewer)
+	{
+		gd->screen->init_view_styles(gd->screen);
+	}
+	else if(gd->mode == eMode_VB_List)
+	{
+		gd->screen->init_list_styles(gd->screen);
+	}
 
 	return 0;
 }
@@ -2551,6 +2563,10 @@ int gme_Menu(lua_State *L)
 		DrawMenu(gd, GetViewerData(L), 0);
 		return ViewerDrawAllLua(L);
 	}
+	else if (gd->mode == eMode_VB_List)
+	{
+		// TODO: eMode_VB_List
+	}
 	else
 		LogInfo("UNKNOWN DRAW ALL ON MENU\n");
 
@@ -2708,6 +2724,10 @@ int gme_msgbox(lua_State *L)
 	{
 		return ViewerDrawAllLua(L);
 	}
+	else if(gd->mode == eMode_VB_List)
+	{
+		// TODO: eMode_VB_List
+	}
 	else
 		LogInfo("UNKNOWN DRAW ALL ON MENU\n");
 
@@ -2742,6 +2762,10 @@ int gme_ShowHelp(lua_State *L)
 	else if (gd->mode == eMode_Viewer)
 	{
 		return ViewerDrawAllLua(L);
+	}
+	else if(gd->mode == eMode_VB_List)
+	{
+		// TODO: eMode_VB_List
 	}
 	else
 		LogInfo("UNKNOWN DRAW ALL ON MENU\n");

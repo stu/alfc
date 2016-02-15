@@ -468,6 +468,11 @@ static void init_view_styles(uScreenDriver *scr)
 	init_style(STYLE_VIEW_EDIT_EOL, CLR_BR_GREEN, CLR_BLACK); // end of line marker in viewer...
 }
 
+static void init_list_styles(uScreenDriver *scr)
+{
+	init_style(STYLE_VIEW_EDIT_EOL, CLR_BR_GREEN, CLR_BLACK); // end of line marker in viewer...
+}
+
 static int nc_screen_init(uScreenDriver *scr)
 {
 	int i;
@@ -675,31 +680,32 @@ uScreenDriver screen =
 	driver_name,
 
 	nc_screen_init, // init screen
-	    nc_screen_deinit, // uninit
-	    nc_cls, // clear scren
-	    nc_get_screen_height,
-	    nc_get_screen_width,
-	    nc_get_keypress,
-	    nc_print_string,
-	    nc_print_string_abs,
-	    nc_set_style,
-	    setcursor,
-	    erase_eol,
-	    nc_draw_frame,
-	    nc_clear_window,
-	    nc_init_style,
-	    nc_print_hline,
-	    nc_print_vline,
-	    nc_set_updates,
-	    nc_get_updates,
+	nc_screen_deinit, // uninit
+	nc_cls, // clear scren
+	nc_get_screen_height,
+	nc_get_screen_width,
+	nc_get_keypress,
+	nc_print_string,
+	nc_print_string_abs,
+	nc_set_style,
+	setcursor,
+	erase_eol,
+	nc_draw_frame,
+	nc_clear_window,
+	nc_init_style,
+	nc_print_hline,
+	nc_print_vline,
+	nc_set_updates,
+	nc_get_updates,
 
-	    init_dir_styles,
-	    init_view_styles,
-	    nc_resized,
-	    nc_isshutdown,
-	    nc_updatewindow,
-	    nc_trigger_redraw,
-	    nc_going_exec
+	init_dir_styles,
+	init_view_styles,
+	init_list_styles,
+	nc_resized,
+	nc_isshutdown,
+	nc_updatewindow,
+	nc_trigger_redraw,
+	nc_going_exec
 	};
 #endif
 

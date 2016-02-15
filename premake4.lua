@@ -17,17 +17,17 @@ solution "alfm"
 		kind "ConsoleApp"
 		language "C"
 		files "bin2c.c"
-	  	objdir "obj"
-        targetdir "tools"
+		objdir "obj"
+		targetdir "tools"
 
    -- relies on bin2c being built
 	project "alfc"
 		kind "ConsoleApp"
 		language "C"
 		targetdir "."
-		files { "*.h", "*.c", "lua_common_api.c", "lua_common_api.h", "lua_helper.c","lua_helper.h", "lua_helper_viewer.c", "lau_helper_viewer.h", "version.c","version.h"  }
+		files { "*.h", "*.c", "lua_common_api.c", "lua_common_api.h", "lua_helper.c","lua_helper.h", "lua_helper_viewer.c", "lau_helper_viewer.h", "version.c","version.h"	}
 		excludes { "bin2c.c", "gcomp.c", "guide.c", "guidedump.c", "gdump.c", "ncurses_guide.c", "guide_guide.c" }
-	 	includedirs { "." }
+		includedirs { "." }
 		objdir "obj"
 		prebuildcommands {
 		"ruby " .. solution().basedir .. "/tools/buildversion.rb",
@@ -71,43 +71,27 @@ solution "alfm"
 
 		configuration "linux"
 			buildoptions { "-D__USE_LARGEFILE64=1","-D_FILE_OFFSET_BITS=64","-DBUILD_UNIXLIKE","-D_FORTIFY_SOURCE=0"}
-			if _ARGS[1] == "ncurses" then
-				defines { "DRV_NCURSES","BUILD_UNIXLIKE"}
-				links { "m", "ncurses", libluaxx, "dl", "z" }
-				files { "portability_unix.c", "ncurses_main.c", "ncurses_interface.c" }
-				excludes { "gui_main.c", "guicore.c", "portability_win32.c" }
-				xflag = true
-			elseif _ARGS[1] == "x11" then
-				defines { "DRV_GUI","BUILD_UNIXLIKE"}
-				links { "m", libluaxx, "X11", "dl", "z" }
-				files { "portability_unix.c", "gui_main.c", "gui_interface.c", "guicore.c" }
-				excludes { "portability_win32.c", "gui_guide.c", "ncurses_main.c", "ncurses_guide.c" }
-				xflag = true
-			end
+			defines { "DRV_NCURSES","BUILD_UNIXLIKE"}
+			links { "m", "ncurses", libluaxx, "dl", "z" }
+			files { "portability_unix.c", "ncurses_main.c", "ncurses_interface.c" }
+			excludes { "gui_main.c", "guicore.c", "portability_win32.c" }
+			xflag = true
 
 		configuration "windows"
-			if _ARGS[1] == "pdcurses" then
-				defines { "DRV_NCURSES", "BUILD_WIN32"}
-				links { "pdcurses", libluaxx, "regex", "iberty", "kernel32", "z" }
-				files { "portability_win32.c", "ncurses_main.c", "ncurses_interface.c" }
-				excludes { "gui_main.c", "guicore.c", "portability_unix.c" }
-				xflag = true
-			elseif _ARGS[1] == "win32" then
-				defines { "DRV_GUI", "BUILD_WIN32"}
-				links { libluaxx,"regex", "iberty", "kernel32", "z", "user32", "gdi32" }
-				files { "portability_win32.c", "gui_main.c", "gui_interface.c", "guicore.c" }
-				excludes { "portability_unix.c", "gui_guide.c", "ncurses_main.c", "ncurses_guide.c" }
-				xflag = true
-			end
+			defines { "DRV_NCURSES", "BUILD_WIN32"}
+			links { "pdcurses", libluaxx, "regex", "iberty", "kernel32", "z" }
+			files { "portability_win32.c", "ncurses_main.c", "ncurses_interface.c" }
+			excludes { "gui_main.c", "guicore.c", "portability_unix.c" }
+			xflag = true
 
 	-- guide relies on alfm being built (uses some of its files)
 	project "guide"
 		kind "ConsoleApp"
 		language "C"
 		files { "guide.c", "guideload.c", "guidedisplay.c", "dlist.c", "version.c", "logwrite.c" }
-	  	objdir "obj"
-	  	includedirs { "." }
-	  	targetdir "."
+		objdir "obj"
+		includedirs { "." }
+		targetdir "."
 
 		libluaxx = "lua5"
 		liblua = os.findlib("lua")
@@ -126,51 +110,36 @@ solution "alfm"
 
 		configuration "linux"
 			buildoptions { "-D__USE_LARGEFILE64=1","-D_FILE_OFFSET_BITS=64","-DBUILD_UNIXLIKE","-D_FORTIFY_SOURCE=0"}
-			if _ARGS[1] == "ncurses" then
-				defines { "DRV_NCURSES","BUILD_UNIXLIKE"}
-				links { "m", "ncurses", libluaxx, "dl", "z" }
-				files { "portability_unix.c", "ncurses_guide.c", "ncurses_interface.c" }
-				excludes { "gui_main.c", "guicore.c", "portability_win32.c", "gui_guide.c", "gui_interface.c" }
-				xflag = true
-			elseif _ARGS[1] == "x11" then
-				defines { "DRV_GUI","BUILD_UNIXLIKE"}
-				links { "m", libluaxx, "X11", "dl", "z" }
-				files { "portability_unix.c", "gui_guide.c", "gui_interface.c", "guicore.c" }
-				excludes { "portability_win32.c", "ncurses_guide.c" }
-				xflag = true
-			end
+			defines { "DRV_NCURSES","BUILD_UNIXLIKE"}
+			links { "m", "ncurses", libluaxx, "dl", "z" }
+			files { "portability_unix.c", "ncurses_guide.c", "ncurses_interface.c" }
+			excludes { "gui_main.c", "guicore.c", "portability_win32.c", "gui_guide.c", "gui_interface.c" }
+			xflag = true
 
 		configuration "windows"
-			if _ARGS[1] == "win32" then
-				defines { "DRV_GUI", "BUILD_WIN32"}
-				links { libluaxx, "regex", "iberty", "kernel32","user32", "gdi32","z" }
-				files { "portability_win32.c", "gui_main.c", "gui_interface.c", "guicore.c" }
-				xflag = true
-			elseif _ARGS[1] == "pdcurses" then
-				defines { "DRV_NCURSES", "BUILD_WIN32"}
-				links { "pdcurses", libluaxx, "regex", "iberty", "kernel32", "z" }
-				files { "portability_win32.c", "ncurses_main.c", "ncurses_interface.c" }
-				xflag = true
-			end
+			defines { "DRV_NCURSES", "BUILD_WIN32"}
+			links { "pdcurses", libluaxx, "regex", "iberty", "kernel32", "z" }
+			files { "portability_win32.c", "ncurses_main.c", "ncurses_interface.c" }
+			xflag = true
 
 	project "gdump"
 		kind "ConsoleApp"
 		language "C"
 		files { "guidedump.c", "guideload.c", "dlist.c", "logwrite.c" }
-	  	objdir "obj"
-	  	links { "z" }
-	  	targetdir "."
+		objdir "obj"
+		links { "z" }
+		targetdir "."
 
 if _ACTION ~= "clean" then
 	if xflag == false then
 		if os.get() == "linux" then
-			drv_string = "ncurses or x11"
+			drv_string = "ncurses"
 		elseif os.get() == "windows" then
-			drv_string = "pdcurses or win32"
+			drv_string = "pdcurses"
 		else
 			drv_string = " UNKNOWN OS " .. os.get()
 		end
-		error("Select system (gmake, vs2005, etc) and appropriate driver " .. drv_string .. "\neg: premake4 gmake x11", 0)
+		error("Select system (gmake, vs2005, etc) and appropriate driver " .. drv_string .. "\neg: premake4 gmake", 0)
 	end
 end
 

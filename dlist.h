@@ -23,7 +23,7 @@ typedef struct DList
 	void			(*destroy)(void *data);
 } DList;
 
-extern void FreeDList(DList *lst);
+extern DList* FreeDList(DList *lst);
 extern DList* NewDList(void (*destroy)(void *data));
 extern void dlist_init(DList *list, void (*destroy)(void *data));
 extern void dlist_destroy(DList *list);

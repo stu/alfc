@@ -91,19 +91,16 @@ LIBS = ""
 header_files = %w(rantfile main.h)
 
 default_files = %w(global.lua viewer.lua startup.lua shutdown.lua options.ini core_extract.lua
-			core_hash.lua viewer_languages.lua filemanager_menu.lua hints.lua viewer_menu.lua)
+			core_hash.lua viewer_languages.lua filemanager_menu.lua hints.lua viewer_menu.lua 
+			list.lua list_menu.lua)
 
 alfc = %w( dlist.o logwrite.o ini.o
 			version.o main.o lua_helper.o
 			lua_api.o options.o viewer.o guidedisplay.o
 			lua_helper_viewer.o lua_common.o lua_common_api.o
 			operations.o lua_hash.o md5.o rmd160.o sha1.o
-			menu.o help.o guideload.o tree.o
+			menu.o help.o guideload.o tree.o vblist.o lua_helper_vblist.o
 			)
-
-if DRIVER=="GUI"
-	default_files += %w(font.rlf font_small.rlf)
-end
 
 desc "Build the app"
 task :all => ["auxfiles", "appx", "help"] do
@@ -148,6 +145,7 @@ file "defaults.h" => ["#{var[:bin2c]}"] + default_files	 do |t|
 	sys.rm_f "options.o"
 	sys "#{var[:exec_boot]}#{var[:bin2c]} global.lua include_global_lua > defaults.h"
 	sys "#{var[:exec_boot]}#{var[:bin2c]} viewer.lua include_viewer_lua >> defaults.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} list.lua include_list_lua >> defaults.h"
 	sys "#{var[:exec_boot]}#{var[:bin2c]} startup.lua include_startup_lua >> defaults.h"
 	sys "#{var[:exec_boot]}#{var[:bin2c]} shutdown.lua include_shutdown_lua >> defaults.h"
 	sys "#{var[:exec_boot]}#{var[:bin2c]} options.ini include_options_ini >> defaults.h"
@@ -157,13 +155,8 @@ file "defaults.h" => ["#{var[:bin2c]}"] + default_files	 do |t|
 	sys "#{var[:exec_boot]}#{var[:bin2c]} filemanager_menu.lua filemanager_menu_lua >> defaults.h"
 	sys "#{var[:exec_boot]}#{var[:bin2c]} hints.lua hints_lua >> defaults.h"
 	sys "#{var[:exec_boot]}#{var[:bin2c]} viewer_menu.lua viewer_menu_lua >> defaults.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} list_menu.lua list_menu_lua >> defaults.h"	
 	sys "#{var[:exec_boot]}#{var[:bin2c]} docs/help.hlp help_hlp >> defaults.h"
-
-	#always build gui fonts
-	sys "echo \"#ifdef DRV_GUI\" > gui_fonts.h"
-	sys "#{var[:exec_boot]}#{var[:bin2c]} font.rlf gui_data_font >> gui_fonts.h"
-	sys "#{var[:exec_boot]}#{var[:bin2c]} font_small.rlf gui_data_font_small >> gui_fonts.h"
-	sys "echo \"#endif\" >> gui_fonts.h"
 end
 
 
@@ -224,10 +217,12 @@ def src_clean
 	x += Dir["lua_helper.c"]
 	x += Dir["lua_common_api.c"]
 	x += Dir["lua_helper_viewer.c"]
+	x += Dir["lua_helper_vblist.c"]
 
 	x += Dir["lua_common.h"]
 	x += Dir["lua_api.h"]
 	x += Dir["viewer.h"]
+    x += Dir["vblist.h"]
 	x += Dir["gui_fonts.h"]
 	x += Dir["defaults.h"]
 
