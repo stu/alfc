@@ -621,6 +621,22 @@ void push_file(lua_State *L, uDirEntry *de, int idx, char *path)
 	else
 		lua_pushnumber(L, 0);
 	lua_settable(L, -3);
+	
+
+	lua_pushstring(L, "executable");
+#ifndef __WIN32__
+	if (ALFC_IsExec(de->name, de->attrs) == 0 && ALFC_IsDir(de->attrs) != 0)
+		lua_pushnumber(L, 1);
+	else
+		lua_pushnumber(L, 0);
+#else
+	if (ALFC_IsExec(de->name, de->attrs) != 0 && ALFC_IsDir(de->attrs) == 0)
+		lua_pushnumber(L, 1);
+	else
+		lua_pushnumber(L, 0);
+#endif
+	lua_settable(L, -3);
+	
 
 	lua_pushstring(L, "tagged");
 	lua_pushnumber(L, de->tagged);

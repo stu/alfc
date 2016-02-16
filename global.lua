@@ -261,6 +261,23 @@ if _G["DIR_BOOTSTRAP"] ~= 1  then
 		SetQuitAppFlag(1)
 	end
 
+	function __FilterExec(command)
+		local cmd
+
+		-- reset
+		AddFilter("")
+		AddGlob("")
+		
+		cmd = trim(command)
+		
+		local fl = GetFileList()
+		for k, v in ipairs(fl) do
+			if v.executable == 1 then
+				AddGlob(v.name)
+			end
+		end		
+	end
+	
 	function __FilterAdd(command)
 		local cmd
 
@@ -885,6 +902,7 @@ if _G["DIR_BOOTSTRAP"] ~= 1  then
 	AddCommand(":q ", "Quit ALFC", __QuitApp)
 	AddCommand(":f ", "Filter file list with regexp", __Filter)
 	AddCommand(":f+ ","Add regexp to filter list",	__FilterAdd)
+	AddCommand(":fx ","Filter all executables",	__FilterExec)
 	AddCommand(":g ","Filter file list with glob", __Glob)
 	AddCommand(":g+ ","Add glob to filter list",__GlobAdd)
 	AddCommand(":s ","Make both panels same", __MakeInactivePaneSame)

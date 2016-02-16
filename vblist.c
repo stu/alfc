@@ -2,6 +2,8 @@
 
 #include "headers.h"
 
+#define OFF_COL		12
+
 void SetListFiles(uListFile *lf, DList *lstF)
 {
 	lf->lstFiles = lstF;
@@ -645,6 +647,46 @@ static void PrintFileLine(uListFile *lf, uDirEntry *de, int i, uWindow *win, int
 
 	win->screen->set_style(style);
 
+	p = buff + (win->width - 12);
+
+	#ifndef __WIN32__
+		// do attributes :: "Attr: rwxrwxrwx"
+		memmove(p, "---------", 9);
+
+		if ((de->attrs & S_IRUSR) == S_IRUSR)
+			p[0] = 'r';
+		if ((de->attrs & S_IWUSR) == S_IWUSR)
+			p[1] = 'w';
+		if ((de->attrs & S_IXUSR) == S_IXUSR)
+			p[2] = 'x';
+
+		if ((de->attrs & S_IRGRP) == S_IRGRP)
+			p[3] = 'r';
+		if ((de->attrs & S_IWGRP) == S_IWGRP)
+			p[4] = 'w';
+		if ((de->attrs & S_IXGRP) == S_IXGRP)
+			p[5] = 'x';
+
+		if ((de->attrs & S_IROTH) == S_IROTH)
+			p[6] = 'r';
+		if ((de->attrs & S_IWOTH) == S_IWOTH)
+			p[7] = 'w';
+		if ((de->attrs & S_IXOTH) == S_IXOTH)
+			p[8] = 'x';
+#else
+		memmove(p, "-----", 5);
+		if ((de->attrs & FILE_ATTRIBUTE_HIDDEN) == FILE_ATTRIBUTE_HIDDEN)
+			p[0] = 'H';
+		if ((de->attrs & FILE_ATTRIBUTE_SYSTEM) == FILE_ATTRIBUTE_SYSTEM)
+			p[1] = 'S';
+		if ((de->attrs & FILE_ATTRIBUTE_COMPRESSED) == FILE_ATTRIBUTE_COMPRESSED)
+			p[2] = 'C';
+		if ((de->attrs & FILE_ATTRIBUTE_ARCHIVE) == FILE_ATTRIBUTE_ARCHIVE)
+			p[3] = 'A';
+		if ((de->attrs & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY)
+			p[4] = 'R';
+#endif
+
 	if (HaveColumnDate(lf) == 1)
 	{
 		char *dst;
@@ -756,7 +798,7 @@ void DisplayList(uListFile *lf)
 
 	i = 0;
 
-	size_off = CalcSizeOff(lf, win->width - 3);
+	size_off = CalcSizeOff(lf, win->width - OFF_COL);
 	date_off = CalcDateOff(lf, size_off);
 	name_len = date_off - 2;
 
@@ -966,7 +1008,7 @@ static int go_scroll_up(uListFile *lf)
 	}
 
 	scroll_depth = get_scroll_depth(lf->w);
-	size_off = CalcSizeOff(lf, w->width - 3);
+	size_off = CalcSizeOff(lf, w->width - OFF_COL);
 	date_off = CalcDateOff(lf, size_off);
 	max_namelen = date_off - 2;
 
@@ -1010,7 +1052,7 @@ static int go_scroll_down(uListFile *lf)
 		return -1;
 
 	scroll_depth = get_scroll_depth(w);
-	size_off = CalcSizeOff(lf, w->width - 3);
+	size_off = CalcSizeOff(lf, w->width - OFF_COL);
 	date_off = CalcDateOff(lf, size_off);
 	max_namelen = date_off - 2;
 
@@ -1054,7 +1096,7 @@ void go_scroll_page_down(uListFile *lf)
 
 	lf->gd->screen->set_updates(0);
 
-	size_off = CalcSizeOff(lf, lf->w->width - 3);
+	size_off = CalcSizeOff(lf, lf->w->width - OFF_COL);
 	date_off = CalcDateOff(lf, size_off);
 	max_namelen = date_off - 2;
 
@@ -1128,7 +1170,7 @@ void go_scroll_page_up(uListFile *lf)
 
 	lf->gd->screen->set_updates(0);
 
-	size_off = CalcSizeOff(lf, lf->w->width - 3);
+	size_off = CalcSizeOff(lf, lf->w->width - OFF_COL);
 	date_off = CalcDateOff(lf, size_off);
 	max_namelen = date_off - 2;
 
