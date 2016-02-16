@@ -14,6 +14,13 @@ void SetListFullFiles(uListFile *lf, DList *lstF)
 	lf->gd->lstFullLeft = lf->lstFullFiles;
 }
 
+static int get_scroll_depth(uWindow *w)
+{
+	if (dlist_size(GetActList(w->gd)) < w->height - 2)
+		return dlist_size(GetActList(w->gd));
+	else
+		return(w->height - 2) -	4;
+}
 
 int ExecuteListString(uListFile *lf, char *sn)
 {
@@ -669,6 +676,8 @@ static void PrintFileLine(uListFile *lf, uDirEntry *de, int i, uWindow *win, int
 	free(buff);
 }
 
+
+
 static void DrawNoFile(uWindow *w, int style)
 {
 	char *buff;
@@ -796,7 +805,6 @@ void ListDrawAll(uListFile *lf)
 	lf->w->screen->set_updates(1);
 }
 
-
 void UpdateListDir(uListFile *lf, char *set_to_highlight)
 {
 	lf->gd->screen->set_updates(0);
@@ -846,6 +854,336 @@ void UpdateListDir(uListFile *lf, char *set_to_highlight)
 	lf->gd->screen->set_updates(1);
 }
 
+
+static int go_updir(uListFile *lf)
+{
+	char cpath[256];
+	char *scan;
+	char *q;
+
+	getcwd(cpath, 256);
+
+	scan = replace(cpath, '\\', '/');
+
+	q = strchr(scan, 0x0);
+	if(q != NULL)
+	{
+		q -= 1;
+		while(*q != '/' && q != scan)
+			q -= 1;
+
+		q++;
+	}
+	else
+	{
+		q = scan;
+	}
+
+	if (chdir("..") != 0)
+	{
+		free(scan);
+		LogInfo("Could not change up directory\n");
+		return -1;
+	}
+
+	UpdateListDir(lf, q);
+	free(scan);
+
+	return 0;
+}
+
+
+static int go_downdir(uListFile *lf)
+{
+	uDirEntry *de;
+
+	de = GetHighlightedFile(GetActList(lf->gd), lf->w->highlight_line, lf->w->top_line);
+
+	if (ALFC_IsDir(de->attrs) != 0)
+		return -1;
+
+	if (chdir(de->name) != 0)
+	{
+		LogInfo("Could not change to directory %s\n", de->name);
+		return -1;
+	}
+
+	UpdateListDir(lf, NULL);
+
+	return 0;
+}
+
+static int go_scroll_home(uListFile *lf)
+{
+	lf->w->top_line = 0;
+	lf->w->highlight_line = 0;
+	DisplayList(lf);
+
+	return 0;
+}
+
+static int go_scroll_end(uListFile *lf)
+{
+	int d = lf->w->height - 2;
+	int c = dlist_size(GetActList(lf->gd));
+	int tl;
+
+	tl = c - d;
+
+	if (tl < 0)
+	{
+		lf->w->top_line = 0;
+		lf->w->highlight_line = c - 1;
+	}
+	else
+	{
+		lf->w->top_line = tl;
+		lf->w->highlight_line = d - 1;
+	}
+
+	//DrawFileListWindow(GetActWindow(gd), GetActList(gd), GetActDPath(gd));
+	//DrawActive(gd);
+
+	DisplayList(lf);
+
+	return 0;
+}
+
+
+static int go_scroll_up(uListFile *lf)
+{
+	uWindow *w;
+	int scroll_depth;
+	int size_off;
+	int max_namelen;
+	int date_off;
+
+	w = lf->w;
+
+	if (w->highlight_line == 0 && w->top_line == 0)
+	{
+		return -1;
+	}
+
+	scroll_depth = get_scroll_depth(lf->w);
+	size_off = CalcSizeOff(lf, w->width - 3);
+	date_off = CalcDateOff(lf, size_off);
+	max_namelen = date_off - 2;
+
+	if ((w->top_line == 0 && w->highlight_line > 0) || (w->highlight_line > 4 && w->top_line > 0))
+	{
+		uDirEntry *de;
+
+		w->highlight_line -= 1;
+
+		de = GetHighlightedFile(GetActList(lf->gd), w->highlight_line + 1, w->top_line);
+		PrintFileLine(lf, de, w->highlight_line + 1, w, max_namelen, size_off, date_off);
+
+		de = GetHighlightedFile(GetActList(lf->gd), w->highlight_line, w->top_line);
+		PrintFileLine(lf, de, w->highlight_line, w, max_namelen, size_off, date_off);
+
+		//DrawActiveFileInfo(gd);
+	}
+	else
+	{
+		w->top_line -= 1;
+		//DrawFileListWindow(w, GetActList(w->gd), GetActDPath(w->gd));
+		//DrawActive(gd);
+		DisplayList(lf);
+		lf->redraw = 1;
+	}
+
+	return 0;
+}
+
+static int go_scroll_down(uListFile *lf)
+{
+	uWindow *w;
+	int scroll_depth;
+	int size_off;
+	int date_off;
+	int max_namelen;
+
+	w = lf->w;
+
+	if (w->top_line + w->highlight_line + 1 >= dlist_size(GetActList(lf->gd)))
+		return -1;
+
+	scroll_depth = get_scroll_depth(w);
+	size_off = CalcSizeOff(lf, w->width - 3);
+	date_off = CalcDateOff(lf, size_off);
+	max_namelen = date_off - 2;
+
+
+	// hl is 0 based
+	if ((w->highlight_line + 1 < scroll_depth) || (w->top_line + 1 + w->highlight_line >= dlist_size(GetActList(lf->gd)) - 4))
+	{
+		uDirEntry *de;
+
+		w->highlight_line += 1;
+
+		de = GetHighlightedFile(GetActList(lf->gd), w->highlight_line - 1, w->top_line);
+		PrintFileLine(lf, de, w->highlight_line - 1, w, max_namelen, size_off, date_off);
+
+		de = GetHighlightedFile(GetActList(lf->gd), w->highlight_line, w->top_line);
+		PrintFileLine(lf, de, w->highlight_line, w, max_namelen, size_off, date_off);
+
+		//DrawActiveFileInfo(gd);
+	}
+	else
+	{
+		w->top_line += 1;
+		DisplayList(lf);
+		lf->redraw = 1;
+	}
+
+	return 0;
+}
+
+void go_scroll_page_down(uListFile *lf)
+{
+	int tl;
+	int depth;
+	int fc;
+	int hl;
+
+	uDirEntry *de;
+	int size_off;
+	int date_off;
+	int max_namelen;
+
+	lf->gd->screen->set_updates(0);
+
+	size_off = CalcSizeOff(lf, lf->w->width - 3);
+	date_off = CalcDateOff(lf, size_off);
+	max_namelen = date_off - 2;
+
+	tl = lf->w->top_line;
+	depth = lf->w->height - 2;
+	fc = dlist_size(GetActList(lf->gd));
+	hl = lf->w->highlight_line;
+
+	if (dlist_size(GetActList(lf->gd)) < depth)
+	{
+		// file list is smaller than our window size, so just bottom out.
+		depth = dlist_size(GetActList(lf->gd));
+
+		lf->w->highlight_line = depth - 1;
+
+		de = GetHighlightedFile(GetActList(lf->gd), hl, lf->w->top_line);
+		PrintFileLine(lf, de, hl, lf->w, max_namelen, size_off, date_off);
+
+		de = GetHighlightedFile(GetActList(lf->gd), lf->w->highlight_line, lf->w->top_line);
+		PrintFileLine(lf, de, lf->w->highlight_line, lf->w, max_namelen, size_off, date_off);
+
+		//DrawActiveFileInfo(gd);
+	}
+	else if (hl < depth - 5)
+	{
+		// move cursor to bottom of current page
+		lf->w->highlight_line = depth - 5;
+
+		de = GetHighlightedFile(GetActList(lf->gd), hl, lf->w->top_line);
+		PrintFileLine(lf, de, hl, lf->w, max_namelen, size_off, date_off);
+
+		de = GetHighlightedFile(GetActList(lf->gd), lf->w->highlight_line, lf->w->top_line);
+		PrintFileLine(lf, de, lf->w->highlight_line, lf->w, max_namelen, size_off, date_off);
+
+		//DrawActiveFileInfo(gd);
+	}
+	else
+	{
+		// scroll actual page
+		int c;
+
+		c = fc - tl;
+		c -= hl;
+
+		if (c > depth)
+		{
+			lf->w->top_line += depth - 1;
+			DisplayList(lf);
+		}
+		else
+		{
+			// whats left is less than an end of page
+			go_scroll_end(lf);
+		}
+	}
+
+	lf->gd->screen->set_updates(1);
+}
+
+void go_scroll_page_up(uListFile *lf)
+{
+	int tl;
+	int depth;
+	int fc;
+	int hl;
+
+	uDirEntry *de;
+	int size_off;
+	int date_off;
+	int max_namelen;
+
+	lf->gd->screen->set_updates(0);
+
+	size_off = CalcSizeOff(lf, lf->w->width - 3);
+	date_off = CalcDateOff(lf, size_off);
+	max_namelen = date_off - 2;
+
+	tl = lf->w->top_line;
+	depth = lf->w->height - 2;
+	fc = dlist_size(GetActList(lf->gd));
+	hl = lf->w->highlight_line;
+
+	if (dlist_size(GetActList(lf->gd)) < depth)
+	{
+		// file list is smaller than our window size, so just top out.
+		depth = dlist_size(GetActList(lf->gd));
+
+		if (lf->w->highlight_line == 0)
+			return;
+
+		lf->w->highlight_line = 0;
+
+		de = GetHighlightedFile(GetActList(lf->gd), hl, lf->w->top_line);
+		PrintFileLine(lf, de, hl, lf->w, max_namelen, size_off, date_off);
+
+		de = GetHighlightedFile(GetActList(lf->gd), lf->w->highlight_line, lf->w->top_line);
+		PrintFileLine(lf, de, lf->w->highlight_line, lf->w, max_namelen, size_off, date_off);
+
+		//DrawActiveFileInfo(gd);
+	}
+	else if (hl > 5)
+	{
+		// move cursor to top of current page
+		lf->w->highlight_line = 5;
+
+		de = GetHighlightedFile(GetActList(lf->gd), hl, lf->w->top_line);
+		PrintFileLine(lf, de, hl, lf->w, max_namelen, size_off, date_off);
+
+		de = GetHighlightedFile(GetActList(lf->gd), lf->w->highlight_line, lf->w->top_line);
+		PrintFileLine(lf, de, lf->w->highlight_line, lf->w, max_namelen, size_off, date_off);
+
+		//DrawActiveFileInfo(gd);
+	}
+	else
+	{
+		// scroll actual page
+		if (tl > depth)
+		{
+			lf->w->top_line -= depth - 1;
+			DisplayList(lf);
+		}
+		else
+		{
+			go_scroll_home(lf);
+		}
+	}
+
+	lf->gd->screen->set_updates(1);
+}
 
 int ListFile(uGlobalData *gd)
 {
@@ -946,6 +1284,8 @@ int ListFile(uGlobalData *gd)
 			{
 				ExecuteGlobalListString(lf, kb->sCommand);
 			}
+
+			lf->redraw = 1;
 		}
 		else
 		{
@@ -972,6 +1312,7 @@ int ListFile(uGlobalData *gd)
 
 						lf->command_length = 0;
 						lf->command[lf->command_length] = 0;
+						lf->redraw = 1;
 					}
 					else
 					{
@@ -990,28 +1331,40 @@ int ListFile(uGlobalData *gd)
 					}
 					break;
 
+					case ALFC_KEY_LEFT:
+						go_updir(lf);
+						lf->redraw = 1;
+						break;
+
+					case ALFC_KEY_RIGHT:
+						go_downdir(lf);
+						lf->redraw = 1;
+						GetActWindow(gd)->top_line = 0;
+						GetActWindow(gd)->highlight_line = 0;
+						break;
+
 					case ALFC_KEY_UP:
-						scroll_up(lf->gd);
+						go_scroll_up(lf);
 						break;
 
 					case ALFC_KEY_DOWN:
-						scroll_down(lf->gd);
+						go_scroll_down(lf);
 						break;
 
 					case ALFC_KEY_HOME:
-						scroll_home(lf->gd);
+						go_scroll_home(lf);
 						break;
 
 					case ALFC_KEY_END:
-						scroll_end(lf->gd);
+						go_scroll_end(lf);
 						break;
 
 					case ALFC_KEY_PAGE_DOWN:
-						scroll_page_down(lf->gd);
+						go_scroll_page_down(lf);
 						break;
 
 					case ALFC_KEY_PAGE_UP:
-						scroll_page_up(lf->gd);
+						go_scroll_page_up(lf);
 						break;
 
 				default:
