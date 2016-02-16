@@ -28,9 +28,9 @@ end
 
 	if SystemType() == "UNIX" then
 		BindKey(ALFC_KEY_F1, "Help", [[ShowHelp("/usr/local/share/alfc/help.hlp", "Main")]])
-    else
+	else
 		BindKey(ALFC_KEY_F1, "Help", [[ShowHelp("$HOME/.alfc/help.hlp", "Main")]])
-    end
+	end
 
 
 	BindKey(ALFC_KEY_F2, "Menu", [[Menu()]])
@@ -38,10 +38,10 @@ end
 	BindKey(ALFC_KEY_F4, "Edit", [[EditFile(GetHighlightedFilename())]])
 	BindKey(ALFC_KEY_F5, "Copy", [[:tc]])
 	BindKey(ALFC_KEY_F6, "Delete", [[:td]])
-    --BindKey(ALFC_KEY_F7, "Create Dir", [[:md]])
-    BindKey(ALFC_KEY_F7, "Create Dir", [[:exec local x
-    x = OneLineDialogue("Create Directory", "dir", 32)
-    if #trim(x) == 0 then
+	--BindKey(ALFC_KEY_F7, "Create Dir", [[:md]])
+	BindKey(ALFC_KEY_F7, "Create Dir", [[:exec local x
+	x = OneLineDialogue("Create Directory", "dir", 32)
+	if #trim(x) == 0 then
 		return
 	end
 	if( SetCurrentWorkingDirectory(x) == -1) then
@@ -85,15 +85,13 @@ end
 
 	CreateMenu(ALFC_KEY_ALT + string.byte("F"), "File", {
 				{ key = string.byte('h'), name = "Hidden", code = [[if GetOption("options", "show_hidden") == "false" then SetOption("options", "show_hidden", "true") else SetOption("options", "show_hidden", "false") end SetCurrentWorkingDirectory(GetCurrentWorkingDirectory())]]},
-                { key = string.byte('x'), name = "Exit", code = [[__QuitApp()]]},
+				{ key = string.byte('x'), name = "Exit", code = [[__QuitApp()]]},
 				{ key = string.byte('a'), name = "About", code = [[About()]] },
 				{ key = ALFC_KEY_F1, name = "Help", code = [[if SystemType() == "UNIX" then
 		ShowHelp("/usr/local/share/alfc/help.hlp", "Main")
-    else
+	else
 		ShowHelp("$HOME/.alfc/help.hlp", "Main")
-    end]] },
+	end]] },
 			})
-
-
 
 	CreateMenu(ALFC_KEY_ALT + string.byte("2"), "Right Panel", BuildMenu(WINDOW_RIGHT))

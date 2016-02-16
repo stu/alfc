@@ -260,6 +260,14 @@ if _G["DIR_BOOTSTRAP"] ~= 1  then
 	function __QuitApp()
 		SetQuitAppFlag(1)
 	end
+	
+	function __HelpGuide(command)
+		if SystemType() == "UNIX" then
+			ShowHelp("/usr/local/share/alfc/help.hlp", "Main")
+		else
+			ShowHelp("$HOME/.alfc/help.hlp", "Main")
+		end
+	end
 
 	function __FilterExec(command)
 		local cmd
@@ -924,6 +932,11 @@ if _G["DIR_BOOTSTRAP"] ~= 1  then
 	AddCommand(":exec ", "Execute lua", __exec_lua)
 	AddCommand(":help ", "List internal commands", __ViewCommandList)
 
+	
+	
+	AddCommand(":guide ", "Help Guide", __HelpGuide)
+	
+	
 	if SystemType() ~= "WIN32" then
 		AddCommand(":sym","Symlink files", __TagSymlink)
 	end

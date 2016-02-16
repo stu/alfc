@@ -600,11 +600,6 @@ static void PrintFileLine(uListFile *lf, uDirEntry *de, int i, uWindow *win, int
 #endif
 
 				sprintf(buff + size_off, "%10" PRIu64, xx);
-				//#if __WORDSIZE == 64
-				//				sprintf(buff + size_off, "%10lu", xx);
-				//#else
-				//				sprintf(buff + size_off, "%10llu", xx);
-				//#endif
 			}
 			else
 			{

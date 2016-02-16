@@ -17,6 +17,10 @@ keyboard commands for the FM go here
 \section{Main:Viewer}
 \emph{ALFC} has an inbuilt viewer.
 
+\section{Main:List}
+\emph{ALFC} has a kind of superficial clone of the famous DOS utility, List.COM
+from Vernon Buerg. It gives you a single pane window, enter slects and goes
+into an automatic view content mode.
 
 \section{Main}
 Welcome to \emph{Another Linux File Commander}, herein written as \emph{ALFC}.
