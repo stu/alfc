@@ -73,14 +73,14 @@ A lot of \textsl{ALFC}'s power comes from its scriptability which is drive by th
 This user guide makes the assumption in its text and examples that you have not altered the
 basic out-of-the-box configuration.
 
-We do not assume one particular platform, as \textsl{ALFC} can be run on either \xmswin\ or \xlin, and we will endevour to mark any platform specific examples. \xbe\ is a bit different but close enough to be posix compatible, it just has a different directory layout.
+We do not assume one particular platform, as \textsl{ALFC} can be run on either \xmswin\ or \xlin, and we will endevour to mark any platform specific examples. \xbe\ is a bit different but close enough to be POSIX compatible, it just has a different directory layout.
 
-\xlin\ can be used interchangably with almost any other posix compliant operating systems such as FreeBSD or Haiku.
+\xlin\ can be used interchangeably with almost any other POSIX compliant operating systems such as FreeBSD or Haiku.
 
 \vfill \eject
 \section{Configuration}
 \index{Configuration}
-Configuration is achieved through \textsl{ALFC}'s main option file as well as its lua scripting files.
+Configuration is achieved through \textsl{ALFC}'s main option file as well as its Lua scripting files.
 
 \subsection{Configuration Files}
 \index{Configuration!Config Files}
@@ -98,7 +98,7 @@ Older versions of \xmswin\ such as the Windows 98 and Windows ME family;
 \\eg: C:\textbackslash Windows\textbackslash Profiles\textbackslash username\textbackslash .alfc}}}
 \end{flushleft}
 
-Posix and Unix systems store it in the home directory;
+POSIX and Unix systems store it in the home directory;
 \begin{flushleft}
 \framebox{\parbox{\xboxsize}{LINUX\\\texttt{\$(HOME)/.alfc}}}
 \end{flushleft}
@@ -114,7 +114,7 @@ BeOS / Haiku is a little different;
 
 \subsection{File Attributes}
 A file or directory can have several attributes attached to it. Under \xmswin, they can be Archive, Read-Only, 
-Compressed, System and Hidden. Under \xlin, they can be Executable, Readable, Writeable, Hidden.
+Compressed, System and Hidden. Under \xlin, they can be Executable, Readable, Writable, Hidden.
 
 \subsubsection{Executable}
 Applies to \xlin only.
@@ -124,7 +124,7 @@ Applies to both \xlin\ and \xmswin.
 
 \subsubsection{Hidden Files}
 \begin{center}
-\framebox{\parbox{\xboxsize}{WINDOWS\\On \xmswin, any file that starts with a dot eg \texttt{'.netbeans'} will have its attribute shown as hidden, even when it does not have a hidden attribute.}}
+\framebox{\parbox{\xboxsize}{WINDOWS\\On \xmswin, any file that starts with a dot e.g. \texttt{'.netbeans'} will have its attribute shown as hidden, even when it does not have a hidden attribute.}}
 \end{center}
 
 \subsubsection{Writable}
@@ -153,7 +153,7 @@ Globbing has two special characters, the ? and the *;
     \hline
     Character & Description & Example \\ \hline
     ? & Single character & ?at = Cat, Bat, Hat\\ \hline
-    * & Multi character Wildcaard & d*n = don, down, doooooown, dominican \\ \hline
+    * & Multi character Wildcard & d*n = don, down, doooooown, dominican \\ \hline
     \hline
     \end{tabular}
 \end{center}
@@ -181,7 +181,7 @@ Thank you for reading.
 
 \subsection{Licensing}
 \index{Licensing}
-The binary application, source code and accompanying documention/manuals are all
+The binary application, source code and accompanying documentation/manuals are all
 available under the \index{GNU GPL}GNU \index{GPL}GPL v2 license.
 
 \subsection{Trademarks}

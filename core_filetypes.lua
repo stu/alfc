@@ -35,7 +35,7 @@ function DecomposeFiletypes()
     filetypes.archives.color = "bright red"
 
     filetypes.docs = {}
-    filetypes.docs.extensions = { "README", "INSTALL", "*.txt", "*.doc", "*.me", "*.log", "*.tex", "*.pdf", "*.ps" }
+    filetypes.docs.extensions = { "README", "INSTALL", "*.ini", "*.txt", "*.doc", "*.me", "*.log", "*.tex", "*.pdf", "*.ps" }
     filetypes.docs.type = FILETYPE_DOC
     filetypes.docs.color = "green"
 

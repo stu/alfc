@@ -105,6 +105,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 \section{Main:About:Credits}
+\\
 Stu George - Most everything\\
 Nate       - Originally did the rlcore code.\\
 Lua Team   - Lua\\

@@ -1,10 +1,10 @@
 #ifdef DRV_NCURSES
-#include "headers.h"
-#ifndef __WIN32__
-#include <signal.h>
-#endif
-#include <curses.h>
-#include <ctype.h>
+	#include "headers.h"
+	#ifndef __WIN32__
+		#include <signal.h>
+	#endif
+	#include <curses.h>
+	#include <ctype.h>
 
 static int intCurCol;
 static int intCurRow;
@@ -16,9 +16,9 @@ static int intStyle;
 static int intUpdates;
 static int intResized;
 
-#ifndef __WIN32__
+	#ifndef __WIN32__
 static void terminate_signal(int a);
-#endif
+	#endif
 
 static void setcursor(int row, int col);
 
@@ -28,20 +28,20 @@ struct udtStyles
 	int s_on;
 	int s_off;
 } styles[32] =
+{
 	{
-		{
 		0, 0, 0
-		},
-		{
+	},
+	{
 		STYLE_TITLE, A_NORMAL, A_NORMAL
-		},
-		{
+	},
+	{
 		STYLE_NORMAL, A_NORMAL, A_NORMAL
-		},
-		{
+	},
+	{
 		STYLE_HIGHLIGHT, A_NORMAL, A_NORMAL
-		},
-	};
+	},
+};
 
 struct udtStyleColors
 {
@@ -115,7 +115,7 @@ static uint32_t nc_convert_colour(int color)
 
 static void setcolour(int bgc, int fgc)
 {
-	int x;
+	//int x;
 
 	if (bgc > CLR_DK_GREY)
 	{
@@ -123,7 +123,7 @@ static void setcolour(int bgc, int fgc)
 		fgc |= A_BOLD;
 	}
 
-	x = attrset(COLOR_PAIR(bgc) | fgc);
+	attrset(COLOR_PAIR(bgc) | fgc);
 }
 
 static void dr_outchar(int s)
@@ -280,13 +280,12 @@ static uint32_t nc_get_keypress(void)
 	// PDCurses has ALT_0 ...
 
 	else if ((ch >= ALT_0) && (toupper(ch) <= ALT_Z)) // for mingw this is ALT-A to ALT-Z
-
 	{
 		// windows seems to hit here for ALT keys
-		if(ch >= ALT_0 && ch <= ALT_9)
-		key = ALFC_KEY_ALT + (ch - ALT_0) + '0';
+		if (ch >= ALT_0 && ch <= ALT_9)
+			key = ALFC_KEY_ALT + (ch - ALT_0) + '0';
 		else
-		key = ALFC_KEY_ALT + (toupper(ch) - ALT_A) + 'A';
+			key	= ALFC_KEY_ALT + (toupper(ch) - ALT_A) + 'A';
 	}
 #else
 	else if ((ch >= 0x80) && (ch <= 0xFF))
@@ -300,8 +299,7 @@ static uint32_t nc_get_keypress(void)
 	}
 	else if ((ch == '[') || (ch == 27))
 	{ /* start of escape sequence */
-		ch = getch();
-
+		ch = wgetch(stdscr);
 		// Linux (xterm) seems to hit here for ALT keys
 		ch = toupper(ch);
 		if ((ch != '[') && (ch != 0x27)) /* ALT key */
@@ -310,84 +308,221 @@ static uint32_t nc_get_keypress(void)
 			ch = 0;
 	}
 	else if (ch == '`')
-	{ /* CTRL key */
-		ch = getch();
+	{
+		/* CTRL key */
+		ch = wgetch(stdscr);
 		if ((ch < 256) && isalpha(ch))
 		{
 			ch = toupper(ch);
 			key = ALFC_KEY_CTRL + toupper(ch) - 1; //((ch - 'A') + 1);
 		}
 		else
+		{
 			key = 0;
+			switch (ch)
+			{
+#if KEY_DC != 8
+				case 0x08:
+					key = ALFC_KEY_CTRL + ALFC_KEY_DEL;
+					break;
+#endif
+				case 9:
+					key = ALFC_KEY_CTRL + ALFC_KEY_TAB;
+					break;
+				case 0x0D:
+					key = ALFC_KEY_CTRL + ALFC_KEY_ENTER;
+					break;
+				case 0x0A:
+					key = ALFC_KEY_CTRL + ALFC_KEY_ENTER;
+					break;
+				case 0x1B:
+					key = ALFC_KEY_CTRL + ALFC_KEY_ESCAPE;
+					break;
+
+				case KEY_UP:
+					key = ALFC_KEY_CTRL + ALFC_KEY_UP;
+					break;
+				case KEY_DOWN:
+					key = ALFC_KEY_CTRL + ALFC_KEY_DOWN;
+					break;
+				case KEY_LEFT:
+					key = ALFC_KEY_CTRL + ALFC_KEY_LEFT;
+					break;
+				case KEY_RIGHT:
+					key = ALFC_KEY_CTRL + ALFC_KEY_RIGHT;
+					break;
+				case KEY_PPAGE:
+					key = ALFC_KEY_CTRL + ALFC_KEY_PAGE_UP;
+					break;
+				case KEY_NPAGE:
+					key = ALFC_KEY_CTRL + ALFC_KEY_PAGE_DOWN;
+					break;
+				case KEY_HOME:
+					key = ALFC_KEY_CTRL + ALFC_KEY_HOME;
+					break;
+				case KEY_END:
+					key = ALFC_KEY_CTRL + ALFC_KEY_END;
+					break;
+				case KEY_DC:
+					key = ALFC_KEY_CTRL + ALFC_KEY_DEL;
+					break;
+				case KEY_SLEFT:
+					key = ALFC_KEY_CTRL + ALFC_KEY_SLEFT;
+					break;
+				case KEY_SRIGHT:
+					key = ALFC_KEY_CTRL + ALFC_KEY_SRIGHT;
+					break;
+				case 127:
+					key = ALFC_KEY_CTRL + ALFC_KEY_DEL;
+					break;
+				case KEY_BACKSPACE:
+					key = ALFC_KEY_CTRL + ALFC_KEY_BACKSPACE;
+					break;
+			}
+		}
 	}
 	else
 	{
 		switch (ch)
 		{
 #if KEY_DC != 8
+#ifdef CTL_BKSP
+			case CTL_BKSP:
+				key = ALFC_KEY_CTRL + ALFC_KEY_BACKSPACE;
+				break;
+#endif
 			case 0x08:
 				key = ALFC_KEY_DEL;
 				break;
 #endif
+#ifdef CTL_TAB
+			case CTL_TAB:
+				key = ALFC_KEY_CTRL + ALFC_KEY_TAB;
+				break;
+#endif
+
 			case 9:
 				key = ALFC_KEY_TAB;
 				break;
-			case 0x0D:
-				key = ALFC_KEY_ENTER;
+#ifdef CTL_ENTER
+			case CTL_ENTER:
+				key = ALFC_KEY_CTRL + ALFC_KEY_ENTER;
 				break;
+#endif
+
+			case 0x0D:
 			case 0x0A:
 				key = ALFC_KEY_ENTER;
 				break;
+
 			case 0x1B:
 				key = ALFC_KEY_ESCAPE;
 				break;
+#ifdef CTL_UP
+			case CTL_UP:
+				key = ALFC_KEY_CTRL + ALFC_KEY_UP;
+				break;
+#endif
 
 			case KEY_UP:
 				key = ALFC_KEY_UP;
 				break;
+#ifdef CTL_DOWN
+			case CTL_DOWN:
+				key = ALFC_KEY_CTRL + ALFC_KEY_DOWN;
+				break;
+#endif
+
 			case KEY_DOWN:
 				key = ALFC_KEY_DOWN;
 				break;
+#ifdef CTL_LEFT
+			case CTL_LEFT:
+				key = ALFC_KEY_CTRL + ALFC_KEY_LEFT;
+				break;
+#endif
+
 			case KEY_LEFT:
 				key = ALFC_KEY_LEFT;
 				break;
+
+#ifdef CTL_RIGHT
+			case CTL_RIGHT:
+				key = ALFC_KEY_CTRL + ALFC_KEY_RIGHT;
+				break;
+#endif
+
 			case KEY_RIGHT:
 				key = ALFC_KEY_RIGHT;
 				break;
+
+#ifdef CTL_PGUP
+			case CTL_PGUP:
+				key = ALFC_KEY_CTRL + ALFC_KEY_PAGE_UP;
+				break;
+#endif
+
 			case KEY_PPAGE:
 				key = ALFC_KEY_PAGE_UP;
 				break;
+
+#ifdef CTL_PGDN
+			case CTL_PGDN:
+				key = ALFC_KEY_CTRL + ALFC_KEY_PAGE_DOWN;
+				break;
+#endif
+
 			case KEY_NPAGE:
 				key = ALFC_KEY_PAGE_DOWN;
 				break;
+
+#ifdef CTL_HOME
+			case CTL_HOME:
+				key = ALFC_KEY_CTRL + ALFC_KEY_HOME;
+				break;
+#endif
+
 			case KEY_HOME:
 				key = ALFC_KEY_HOME;
 				break;
+
+#ifdef CTL_END
+			case CTL_END:
+				key = ALFC_KEY_CTRL + ALFC_KEY_END;
+				break;
+#endif
+
 			case KEY_END:
 				key = ALFC_KEY_END;
 				break;
+
 			case KEY_DC:
 				key = ALFC_KEY_DEL;
 				break;
+
 			case KEY_SLEFT:
 				key = ALFC_KEY_SLEFT;
 				break;
+
 			case KEY_SRIGHT:
 				key = ALFC_KEY_SRIGHT;
 				break;
+
 			case 127:
 				key = ALFC_KEY_DEL;
 				break;
+
 			case KEY_BACKSPACE:
+				// SGEO : 20101217 - remove CTRL from here...
 				key = ALFC_KEY_BACKSPACE;
 				break;
 
 			default:
 				if ((ch > 0) && (ch <= 26))
-					key = ALFC_KEY_CTRL + ch + 'A' - 1; // CTRL keys
+					key = ALFC_KEY_CTRL + ch + 'A' - 1;	// CTRL keys
+				break;
 		}
 	}
-
 	return key;
 }
 
@@ -410,12 +545,18 @@ static void init_style(int style, uint32_t fg, uint32_t bg)
 
 static void nc_init_style(int style, uint32_t fg, uint32_t bg)
 {
-	if(bg == -1)
+	if (bg == -1)
 		bg = style_colors[style].bg;
 
 	style_colors[style].fg = fg;
 	style_colors[style].bg = bg;
 	init_style(style, fg, bg);
+}
+
+
+static void init_list_styles(uScreenDriver *scr)
+{
+	init_style(STYLE_VIEW_EDIT_EOL, CLR_BR_GREEN, CLR_BLACK); // end of line marker in viewer...
 }
 
 static void init_dir_styles(uScreenDriver *scr)
@@ -468,11 +609,6 @@ static void init_view_styles(uScreenDriver *scr)
 	init_style(STYLE_VIEW_EDIT_EOL, CLR_BR_GREEN, CLR_BLACK); // end of line marker in viewer...
 }
 
-static void init_list_styles(uScreenDriver *scr)
-{
-	init_style(STYLE_VIEW_EDIT_EOL, CLR_BR_GREEN, CLR_BLACK); // end of line marker in viewer...
-}
-
 static int nc_screen_init(uScreenDriver *scr)
 {
 	int i;
@@ -504,7 +640,7 @@ static int nc_screen_init(uScreenDriver *scr)
 
 	keypad(stdscr, TRUE); // gimme the keypad
 	raw(); // fork me raw
-	meta(stdscr, TRUE); // fork me meta
+	meta(stdscr, TRUE);	// fork me meta
 
 	intMaxHeight = scr->get_screen_height();
 	intMaxWidth = scr->get_screen_width();
@@ -531,12 +667,12 @@ static int nc_screen_init(uScreenDriver *scr)
 	// init to black
 	init_style(STYLE_TITLE, CLR_CYAN, CLR_BLACK);
 	init_style(STYLE_NORMAL, CLR_GREY, CLR_BLACK);
-	init_style(STYLE_HIGHLIGHT, CLR_YELLOW, CLR_BLACK); // highlight line
+	init_style(STYLE_HIGHLIGHT, CLR_YELLOW, CLR_BLACK);	// highlight line
 	scr->set_style(STYLE_NORMAL);
 	//scr->cls();
 
 	init_style(STYLE_TITLE, scr->gd->clr_title_fg, scr->gd->clr_title_bg); // title bar
-	init_style(STYLE_NORMAL, scr->gd->clr_foreground, scr->gd->clr_background); // default
+	init_style(STYLE_NORMAL, scr->gd->clr_foreground, scr->gd->clr_background);	// default
 	init_style(STYLE_HIGHLIGHT, scr->gd->clr_hi_foreground, scr->gd->clr_hi_background); // highlight line
 
 	init_dir_styles_masterlist(scr);
@@ -617,13 +753,13 @@ static void nc_set_style(int style)
 	setcolour(style, styles[style].s_on);
 }
 
-#ifndef __WIN32__
+	#ifndef __WIN32__
 static void terminate_signal(int a)
 {
 	nc_screen_deinit();
 	exit(-1);
 }
-#endif
+	#endif
 
 static int nc_resized(void)
 {
@@ -674,14 +810,14 @@ static void nc_going_exec(void)
 }
 
 uScreenDriver screen =
-	{
+{
 	NULL,
 
 	driver_name,
 
-	nc_screen_init, // init screen
+	nc_screen_init,	// init screen
 	nc_screen_deinit, // uninit
-	nc_cls, // clear scren
+	nc_cls,	// clear scren
 	nc_get_screen_height,
 	nc_get_screen_width,
 	nc_get_keypress,
@@ -706,6 +842,5 @@ uScreenDriver screen =
 	nc_updatewindow,
 	nc_trigger_redraw,
 	nc_going_exec
-	};
+};
 #endif
-

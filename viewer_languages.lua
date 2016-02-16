@@ -53,7 +53,7 @@ lang.text.name = "Text"
 lang.text.type = "Plain Text"
 lang.text.tab = 8
 lang.text.tabs_to_spaces = false
-lang.text.extensions = { ".txt", ".doc", ".me", ".log" }
+lang.text.extensions = { ".ini", ".txt", ".doc", ".me", ".log" }
 
 -- Latex/Tex
 lang.latex = {}
