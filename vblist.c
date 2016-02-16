@@ -1367,6 +1367,10 @@ int ListFile(uGlobalData *gd)
 						lf->redraw = 1;
 					}
 					break;
+					
+					case 0x21B:	// ESC-ESC
+						lf->quit_flag = 1;
+						break;
 
 					case ALFC_KEY_LEFT:
 						go_updir(lf);
@@ -1409,9 +1413,9 @@ int ListFile(uGlobalData *gd)
 						break;
 
 					// terminal could send ^H (0x08) or ASCII DEL (0x7F)
-					if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
+					if ((key == ALFC_KEY_BACKSPACE || key == ALFC_KEY_DEL) || (key >= ' ' && key <= 0x7F))
 					{
-						if(key == ALFC_KEY_DEL)
+						if ((key == ALFC_KEY_DEL || key == ALFC_KEY_BACKSPACE))
 						{
 							if(lf->command_length > 0)
 							{

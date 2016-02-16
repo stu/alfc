@@ -1052,9 +1052,9 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 							break;
 
 						// terminal could send ^H (0x08) or ASCII DEL (0x7F)
-						if(key == ALFC_KEY_DEL || (key >= ' ' && key <= 0x7F))
+						if ((key == ALFC_KEY_BACKSPACE || key == ALFC_KEY_DEL) || (key >= ' ' && key <= 0x7F))
 						{
-							if(key == ALFC_KEY_DEL)
+							if ((key == ALFC_KEY_DEL || key == ALFC_KEY_BACKSPACE))
 							{
 								if(v->command_length > 0)
 								{
