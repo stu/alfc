@@ -143,6 +143,8 @@ uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int link)
 
 		while (*x != 0x0)
 		{
+			int slashed = 0;
+			
 			if (x[0] == '\\')
 			{
 				if (strncmp(x, "\\emph{", 6) == 0)
@@ -154,6 +156,8 @@ uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int link)
 
 					flags |= HLP_F_EMPH;
 					x += 6;
+					
+					slashed = 1;
 				}
 				else if (strncmp(x, "\\bold{", 6) == 0)
 				{
@@ -164,6 +168,7 @@ uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int link)
 
 					flags |= HLP_F_BOLD;
 					x += 6;
+					slashed = 1;
 				}
 				else if (strncmp(x, "\\link{", 5) == 0)
 				{
@@ -213,84 +218,76 @@ uHelpPage* HelpReflowPage(uHelpFile *hlp, char *section, int width, int link)
 
 					page->_links[page->link_count - 1]->show = calloc(1, 4+(p - q));
 					memmove(page->_links[page->link_count - 1]->show, q, p - q);
+					
+					slashed = 1;
+				}
+			}
+			
+			if(slashed == 0)
+			{
+				if (*x == '}')
+				{
+					assert(stack_depth > 0);
+	
+					stack_depth -= 1;
+					flags = stack[stack_depth];
+	
+					x++;
 				}
 				else
 				{
-					char c;
-
-					c = x[20];
-					x[20] = 0;
-
-					fprintf(stderr, "unkown at %s\n", x);
-					fflush(stderr);
-
-					x[20] = c;
-
-					exit(0);
-				}
-			}
-			else if (*x == '}')
-			{
-				assert(stack_depth > 0);
-
-				stack_depth -= 1;
-				flags = stack[stack_depth];
-
-				x++;
-			}
-			else
-			{
-				switch ((*x & 0xFF))
-				{
-					case 0x0A:
-					case 0x0D:
-						x++;
-						break;
-
-					default:
-						{
-							*p = ((*x & 0xFF) | (flags << 8));
-
-							if ((*x & 0xFF) == 0x20)
-							{
-								last_p = p;
-								last_x = x;
-								last_flags = flags;
-							}
-
-
-							if ((flags & (HLP_F_LINK1 | HLP_F_LINK2)) != 0)
-							{
-								assert(page->_links != NULL);
-								assert(page->link_count > 0);
-								page->_links[page->link_count - 1]->display_length += 1;
-							}
-
-							p++;
+					switch ((*x & 0xFF))
+					{
+						case 0x0A:
+						case 0x0D:
 							x++;
-							col++;
-
-							if (col == page->width)
+							break;
+	
+						default:
 							{
-								int last_flags_min_link;
-
-								last_flags_min_link = last_flags & ~(HLP_F_LINK1 | HLP_F_LINK2);
-
-								while (last_p < p)
-									*last_p++ = ((0x00) | (last_flags_min_link << 8));
-
-								x = last_x;
-								flags = last_flags;
-
-								while (*x == 0x20)
-									x++;
-
-								newline(page);
-								p = page->lines[page->line_count - 1];
-								col = 0;
+								*p = ((*x & 0xFF) | (flags << 8));
+	
+								if ((*x & 0xFF) == 0x20)
+								{
+									last_p = p;
+									last_x = x;
+									last_flags = flags;
+								}
+	
+	
+								if ((flags & (HLP_F_LINK1 | HLP_F_LINK2)) != 0)
+								{
+									assert(page->_links != NULL);
+									assert(page->link_count > 0);
+									page->_links[page->link_count - 1]->display_length += 1;
+								}
+	
+								p++;
+								x++;
+								col++;
+	
+								if (col == page->width)
+								{
+									int last_flags_min_link;
+	
+									last_flags_min_link = last_flags & ~(HLP_F_LINK1 | HLP_F_LINK2);
+	
+									while (last_p < p)
+										*last_p++ = ((0x00) | (last_flags_min_link << 8));
+	
+									x = last_x;
+									flags = last_flags;
+	
+									while (*x == 0x20)
+										x++;
+	
+									newline(page);
+									p = page->lines[page->line_count - 1];
+									col = 0;
+								}
 							}
-						}
-						break;
+							break;
+					}
 				}
 			}
 		}
@@ -352,7 +349,7 @@ void FreeBreadCrumb(void *data)
 
 	if (b->prev_link != NULL)
 	{
-		fprintf(stderr, "prev link is %s\n", b->prev_link);
+		//fprintf(stderr, "prev link is %s\n", b->prev_link);
 		free(b->prev_link);
 	}
 
