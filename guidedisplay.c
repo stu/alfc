@@ -168,12 +168,12 @@ static void help_draw_page(uWindow *w, uHelpPage *page_data)
 
 			wide++;
 		}
-		
+
 		while (wide < page_data->width)
 		{
 			w->screen->set_style(style);
 			display_char(w, ' ');
-			
+
 			wide++;
 		}
 
@@ -427,6 +427,9 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 									b->highlight_line = page_data->highlight_link;
 									b->prev_link = strdup(page_data->name);
 									dlist_ins(hdr->lstBreadCrumbs, b);
+
+									w->top_line = 0;
+									page_data->highlight_link = 0;
 
 									FreeHelpPage(page_data);
 									page_data = px;

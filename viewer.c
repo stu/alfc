@@ -991,6 +991,11 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 			{
 				switch(key)
 				{
+					
+					case ALFC_KEY_ESCAPE:
+						v->quit_flag = 1;
+						break;
+					
 					case ALFC_KEY_DOWN:
 						vw_scroll_down(v);
 						break;

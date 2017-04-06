@@ -760,6 +760,18 @@ if _G["DIR_BOOTSTRAP"] ~= 1  then
 
 		-- if empty string and we hit enter, fire whats under active cursor
 		if #command == 0 then
+			
+			local _a_fn = GetHighlightedFilename()
+			local _a_d = GetCurrentWorkingDirectory()
+		
+			local pe = personal_exec
+			if pe ~= nil then				
+				if pe(_a_d .. pathsep .. _a_fn) == true then
+					return
+				end
+			end
+		
+		
 			-- works with param replacement for execute
 			command = "@f"
 			execute(command)

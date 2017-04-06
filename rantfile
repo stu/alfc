@@ -10,6 +10,7 @@ require './tools/findlib.rb'
 _VER_MAJ = 0
 _VER_MIN = 1
 
+#DRIVER="GUI"	# NCURSES, GUI
 DRIVER="NCURSES"
 PREFIX="/usr/local"
 
@@ -38,11 +39,15 @@ case y.to_s
 		var[:gdump] = "gdump.exe"
 		var[:exec_boot] = ".\\"
 
-		
-		var[:libs] = "-lpdcurses -llua -lregex -liberty -lkernel32 -lz"
-		PORTABILITY_OBJS = %w( portability_win32.o ncurses_main.o ncurses_interface.o)
-		GPORTABILITY_OBJS = %w( portability_win32.o ncurses_guide.o ncurses_interface.o)
-		
+		if DRIVER=="NCURSES"
+			var[:libs] = "-lpdcurses -llua -lregex -liberty -lkernel32 -lz"
+			PORTABILITY_OBJS = %w( portability_win32.o ncurses_main.o ncurses_interface.o)
+			GPORTABILITY_OBJS = %w( portability_win32.o ncurses_guide.o ncurses_interface.o)
+		else
+			var[:libs] = "-llua -lregex -liberty -lkernel32 -mwindows -lz"
+			PORTABILITY_OBJS = %w( portability_win32.o gui_interface.o gui_main.o guicore.o)
+			GPORTABILITY_OBJS = %w( portability_win32.o gui_interface.o gui_guide.o guicore.o)
+		end
 		# mingw has bugs with 64bit stuff (mostly in sprintf etc dropping upper 32bits).
 		# this allows us to use %I64u format...
 		PORT_CFLAGS = "-Wno-format -DBUILD_WIN32"
@@ -59,7 +64,7 @@ case y.to_s
 
 		var[:libs] = "-lpdcurses -llua -lz"
 		PORTABILITY_OBJS = %w( portability_unix.o  ncurses_interface.o)
-		GPORTABILITY_OBJS = %w( portability_unix.o	ncurses_interface.o)
+		GPORTABILITY_OBJS = %w( portability_unix.o  ncurses_interface.o)
 		PORT_CFLAGS = "-DBUILD_UNIXLIKE"
 	else
 		@strPlatform = "ALFC_UNIXLIKE"
@@ -72,10 +77,16 @@ case y.to_s
 		var[:gdump] = "gdump"
 		var[:exec_boot] = "./"
 
-		var[:libs] = "-lm -lncurses #{lualib} -lm -ldl -lz"
-		PORTABILITY_OBJS = %w( portability_unix.o ncurses_main.o ncurses_interface.o)
-		GPORTABILITY_OBJS = %w( portability_unix.o ncurses_guide.o ncurses_interface.o)
-		
+		if DRIVER=="NCURSES"
+			var[:libs] = "-lm -lncurses #{lualib} -ldl -lz"
+			PORTABILITY_OBJS = %w( portability_unix.o ncurses_main.o ncurses_interface.o)
+			GPORTABILITY_OBJS = %w( portability_unix.o ncurses_guide.o ncurses_interface.o)
+		else
+			var[:libs] = "-lm #{lualib} -lX11 -ldl -lz"
+			PORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_main.o guicore.o)
+			GPORTABILITY_OBJS = %w( portability_unix.o gui_interface.o gui_guide.o guicore.o)
+		end
+
 		PORT_CFLAGS="-D__USE_LARGEFILE64=1 -D_FILE_OFFSET_BITS=64 -DBUILD_UNIXLIKE"
 end
 
@@ -91,7 +102,7 @@ LIBS = ""
 header_files = %w(rantfile main.h)
 
 default_files = %w(global.lua viewer.lua startup.lua shutdown.lua options.ini core_extract.lua
-			core_hash.lua viewer_languages.lua filemanager_menu.lua hints.lua viewer_menu.lua 
+			core_hash.lua viewer_languages.lua filemanager_menu.lua hints.lua viewer_menu.lua
 			list.lua list_menu.lua)
 
 alfc = %w( dlist.o logwrite.o ini.o
@@ -101,6 +112,10 @@ alfc = %w( dlist.o logwrite.o ini.o
 			operations.o lua_hash.o md5.o rmd160.o sha1.o
 			menu.o help.o guideload.o tree.o vblist.o lua_helper_vblist.o
 			)
+
+if DRIVER=="GUI"
+	default_files += %w(font.rlf font_small.rlf)
+end
 
 desc "Build the app"
 task :all => ["auxfiles", "appx", "help"] do
@@ -137,6 +152,9 @@ end
 task :headers => header_files do |t|
 end
 
+file "#{var[:bin2c]}" => %w(bin2c.o) do |t|
+	sys "#{CC} -o #{var[:bin2c]} #{t.prerequisites.join(' ')} "
+end
 
 task :defaults => ["docs/help", "docs/manpage", "defaults.h"] do |t|
 end
@@ -155,8 +173,13 @@ file "defaults.h" => ["#{var[:bin2c]}"] + default_files	 do |t|
 	sys "#{var[:exec_boot]}#{var[:bin2c]} filemanager_menu.lua filemanager_menu_lua >> defaults.h"
 	sys "#{var[:exec_boot]}#{var[:bin2c]} hints.lua hints_lua >> defaults.h"
 	sys "#{var[:exec_boot]}#{var[:bin2c]} viewer_menu.lua viewer_menu_lua >> defaults.h"
-	sys "#{var[:exec_boot]}#{var[:bin2c]} list_menu.lua list_menu_lua >> defaults.h"	
+	sys "#{var[:exec_boot]}#{var[:bin2c]} list_menu.lua list_menu_lua >> defaults.h"
 	sys "#{var[:exec_boot]}#{var[:bin2c]} docs/help.hlp help_hlp >> defaults.h"
+	#always build gui fonts
+	sys "echo \"#ifdef DRV_GUI\" > gui_fonts.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} font.rlf gui_data_font >> gui_fonts.h"
+	sys "#{var[:exec_boot]}#{var[:bin2c]} font_small.rlf gui_data_font_small >> gui_fonts.h"
+	sys "echo \"#endif\" >> gui_fonts.h"
 end
 
 
@@ -175,12 +198,12 @@ end
 
 file "#{var[:gcomp]}" => %w(guidecompiler.o dlist.o logwrite.o) do |t|
 	sys "#{CC} -o #{var[:gcomp]} #{t.prerequisites.join(' ')} -lz"
-	sys "#{var[:exec_boot]}#{var[:gcomp]} docs/guide_create.txt guide_create.gd"
-	sys "#{var[:exec_boot]}#{var[:gcomp]} docs/help.txt help.gd"
+    sys "#{var[:exec_boot]}#{var[:gcomp]} docs/guide_create.txt guide_create.gd"
+    sys "#{var[:exec_boot]}#{var[:gcomp]} docs/help.txt help.gd"
 end
 
 file "#{var[:gdump]}" => %w(guidedump.o guideload.o dlist.o logwrite.o) do |t|
-	sys "#{CC} -o #{var[:gdump]} #{t.prerequisites.join(' ')} -lz"
+    sys "#{CC} -o #{var[:gdump]} #{t.prerequisites.join(' ')} -lz"
 end
 
 file "#{var[:guide]}" => %w(guide.o guidedisplay.o guideload.o dlist.o version.o logwrite.o) + GPORTABILITY_OBJS do |t|
@@ -289,12 +312,22 @@ task :make =>  ["clean", "#{var[:bin2c]}", "auxfiles", "docs"] do
 		fp.puts "PREFIX=/usr/local"
 		fp.puts ""
 		fp.puts "ifeq ($(PLATFORM),ALFC_WIN32)"
+		fp.puts "ifeq ($(DRIVER),NCURSES)"
 		fp.puts "PLATFORM_LIBS=-lpdcurses -llua -lregex -liberty -lkernel32 -lz"
 		fp.puts "PLATFORM_OBJS=portability_win32.o ncurses_main.o ncurses_interface.o"
 		fp.puts "else"
+		fp.puts "PLATFORM_LIBS=-llua -lregex -liberty -lkernel32 -mwindows -lz"
+		fp.puts "PLATFORM_OBJS=portability_win32.o gui_interface.o gui_main.o guicore.o"
+		fp.puts "endif"
+		fp.puts "else"
 		fp.puts "ifeq ($(PLATFORM),ALFC_UNIXLIKE)"
+		fp.puts "ifeq ($(DRIVER),NCURSES)"
 		fp.puts "PLATFORM_LIBS=-lm -lncurses -llua5.1 -lz"
 		fp.puts "PLATFORM_OBJS=portability_unix.o ncurses_main.o ncurses_interface.o"
+		fp.puts "else"
+		fp.puts "PLATFORM_LIBS=-lm -llua5.1 -lX11 -lz"
+		fp.puts "PLATFORM_OBJS=portability_unix.o gui_interface.o gui_main.o guicore.o"
+		fp.puts "endif"
 		fp.puts "else"
 		fp.puts "##error Unknown platform"
 		fp.puts "endif"
@@ -306,14 +339,22 @@ task :make =>  ["clean", "#{var[:bin2c]}", "auxfiles", "docs"] do
 
 		fp.puts ""
 		fp.puts "EXEC=#{var[:exec]}"
+		fp.puts "GUIDE=#{var[:guide]}"
 		fp.puts ""
 		fp.puts "OBJS=" + alfc.join(" ")
+		fp.puts "GOBJS=guide.o guidedisplay.o guideload.o dlist.o version.o logwrite.o"
 		fp.puts ""
 		fp.puts "LIBS=" + " $(PLATFORM_LIBS)"
+		fp.puts ""
+		fp.puts "all: alfc guide"
 		fp.puts ""
 
 		fp.puts "alfc: $(OBJS) $(PLATFORM_OBJS)"
 		fp.puts "\t$(CC) -o $(EXEC) $(OBJS) $(PLATFORM_OBJS) $(LIBS)"
+		fp.puts ""
+
+		fp.puts "guide: $(GOBJS) $(GPLATFORM_OBJS)"
+		fp.puts "\t$(CC) -o $(GUIDE) $(GOBJS) $(GPLATFORM_OBJS) $(LIBS)"
 		fp.puts ""
 
 		fp.puts "clean:"
@@ -322,6 +363,7 @@ task :make =>  ["clean", "#{var[:bin2c]}", "auxfiles", "docs"] do
 
 		fp.puts "install:"
 		fp.puts "\tinstall $(EXEC) -m 755 $(PREFIX)/bin"
+		fp.puts "\tinstall $(GUIDE) -m 755 $(PREFIX)/bin"
 		fp.puts "\tinstall -m 755 -d $(PREFIX)/share/man/man1/"
 		fp.puts "\tinstall docs/alfc.1* -m 644 -D $(PREFIX)/share/man/man1"
 		fp.puts "\tinstall docs/help.hlp -m 644 -D $(PREFIX)/share/alfc/help.hlp"
@@ -377,12 +419,13 @@ end
 desc "Install linux in /usr/local/bin"
 task :install do
 	sys "install alfc -m 755 #{PREFIX}/bin"
+	sys "install guide -m 755 #{PREFIX}/bin"
 	sys "install -m 755 -d #{PREFIX}/share/man/man1/"
 	sys "install docs/alfc.1* -m 644 -D #{PREFIX}/share/man/man1"
 	sys "install docs/help.hlp -m 644 -D #{PREFIX}/share/alfc/help.hlp"
 	if File.exists?("#{PREFIX}/share/applications/") && File.directory?("#{PREFIX}/share/applications/")
 		sys "install docs/alfc.desktop -m 644 -D #{PREFIX}/share/applications/"
-		
+
 	end
 	if File.exists?("#{PREFIX}/share/icons/") && File.directory?("#{PREFIX}/share/icons/")
 		sys "install docs/alfc.xpm -m 644 -D #{PREFIX}/share/icons/"

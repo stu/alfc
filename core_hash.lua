@@ -4,6 +4,8 @@ AddCommand(":md5 ", "Hash highlighted files vis MD5", function()
 	local buff = {}
 	local k, v, t
 
+	buff[1+#buff] = "In " .. GetCurrentWorkingDirectory()
+	
 	local map_foo = function (a)
 		if a.directory == 1 then return nil end
 
@@ -19,12 +21,24 @@ AddCommand(":md5 ", "Hash highlighted files vis MD5", function()
 	if #t == 0 then
 		t = GetHighlightedFile()
 	end
-
 	map(t, map_foo)
-
 	for k,v in pairs(t) do
 		buff[1+#buff] = v
 	end
+	
+	SwitchPanes()
+	buff[1+#buff] = ""
+	buff[1+#buff] = "In " .. GetCurrentWorkingDirectory()
+	
+	t = GetTaggedFileList()
+	if #t == 0 then
+		t = GetHighlightedFile()
+	end
+	map(t, map_foo)
+	for k,v in pairs(t) do
+		buff[1+#buff] = v
+	end	
+	SwitchPanes()
 
 	ViewLuaTable("MD5Sum Hash Buffer", buff);
 end
@@ -36,6 +50,8 @@ cmds[":sha "].desc = "Hash highlighted files vis SHA-160"
 cmds[":sha "].func = function()
 	local buff = {}
 	local k, v, t
+	
+	buff[1+#buff] = "In " .. GetCurrentWorkingDirectory()
 
 	local map_foo = function (a)
 		if a.directory == 1 then return nil end
@@ -52,12 +68,24 @@ cmds[":sha "].func = function()
 	if #t == 0 then
 		t = GetHighlightedFile()
 	end
-
 	map(t, map_foo)
-
 	for k,v in pairs(t) do
 		buff[1+#buff] = v
 	end
+	
+	SwitchPanes()
+	buff[1+#buff] = ""
+	buff[1+#buff] = "In " .. GetCurrentWorkingDirectory()
+	
+	t = GetTaggedFileList()
+	if #t == 0 then
+		t = GetHighlightedFile()
+	end
+	map(t, map_foo)
+	for k,v in pairs(t) do
+		buff[1+#buff] = v
+	end	
+	SwitchPanes()
 
 	ViewLuaTable("SHA1Sum Hash Buffer", buff);
 end
@@ -68,6 +96,8 @@ cmds[":ripemd "].func = function()
 	local buff = {}
 	local k, v, t
 
+	buff[1+#buff] = "In " .. GetCurrentWorkingDirectory()
+	
 	local map_foo = function (a)
 		if a.directory == 1 then return nil end
 
@@ -83,12 +113,24 @@ cmds[":ripemd "].func = function()
 	if #t == 0 then
 		t = GetHighlightedFile()
 	end
-
 	map(t, map_foo)
-
 	for k,v in pairs(t) do
 		buff[1+#buff] = v
 	end
+	
+	SwitchPanes()
+	buff[1+#buff] = ""
+	buff[1+#buff] = "In " .. GetCurrentWorkingDirectory()
+	
+	t = GetTaggedFileList()
+	if #t == 0 then
+		t = GetHighlightedFile()
+	end
+	map(t, map_foo)
+	for k,v in pairs(t) do
+		buff[1+#buff] = v
+	end	
+	SwitchPanes()
 
 	ViewLuaTable("RIPEMD-160 Hash Buffer", buff);
 end
