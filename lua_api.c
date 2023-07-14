@@ -1694,10 +1694,10 @@ int gme_ViewFile(lua_State *L)
 	GET_LUA_STRING(name, 1);
 
 	ViewFile(gd, name.data, NULL);
-	
+
 	if(gd->mode == eMode_Directory)
 	{
-		DrawAll(gd);	
+		DrawAll(gd);
 		gd->screen->init_dir_styles(gd->screen);
 	}
 	else if(gd->mode == eMode_Viewer)
@@ -2566,6 +2566,8 @@ int gme_Menu(lua_State *L)
 	else if (gd->mode == eMode_VB_List)
 	{
 		// TODO: eMode_VB_List
+		DrawMenu(gd, GetListData(L), 0);
+		return ListDrawAllLua(L);
 	}
 	else
 		LogInfo("UNKNOWN DRAW ALL ON MENU\n");

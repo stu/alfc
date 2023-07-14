@@ -110,7 +110,7 @@ static void help_draw_page(uWindow *w, uHelpPage *page_data)
 	w->screen->set_updates(0);
 
 	line = w->top_line;
-	width = w->width - 2;
+	width = w->width - 4;
 	w->screen->set_style(style);
 	i = 0;
 
@@ -213,7 +213,7 @@ static pHelpLink ScanForLink(uHelpPage *page, int top_line)
 
 	for (i=0; i < page->link_count; i++)
 	{
-		if (page->_links[i]->row >= top_line)
+		if (page->_links[i]->row > top_line)
 		{
 			if (j > 0)
 			{
@@ -382,7 +382,7 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 
 								dlist_remove(hdr->lstBreadCrumbs, dlist_tail(hdr->lstBreadCrumbs), (void*)&b);
 
-								px = HelpReflowPage(hdr, b->prev_link, w->width - 2, -1);
+								px = HelpReflowPage(hdr, b->prev_link, w->width - 4, -1);
 
 								if (px != NULL)
 								{
@@ -448,7 +448,7 @@ void help_help(uHelpFile *hdr, uWindow *w, char *page, void(*BuildWindowLayout)(
 					case 'q':
 					case ALFC_KEY_F01:
 					case ALFC_KEY_ESCAPE:
-					case 0x21B:	// ESC-ESC
+					case ALFC_KEY_ESCAPE_ESCAPE:	// ESC-ESC
 						qflag = 1;
 						break;
 

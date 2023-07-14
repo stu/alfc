@@ -184,10 +184,13 @@ static DList* LoadLines(uViewFile *v, GetLine LoadLine)
 	v->intLineCount = c;
 	v->lines = l;
 
-
-	sprintf(nw, "%i", v->intLineCount < 999 ? 999 : 4 + v->intLineCount);
-	v->nwidth = strlen(nw);
-	if(v->nwidth < 3) v->nwidth = 3;
+	/* calc width of line buffer */
+	sprintf(nw, "%i", v->intLineCount);
+	v->nwidth = 1 + strlen(nw);
+	if(v->nwidth < 3)
+	{
+		v->nwidth = 3;
+	}
 
 	return 0;
 }
@@ -342,7 +345,7 @@ static void PrintLine(uViewFile *v, int ln, int i)
 
 	v->w->screen->print_abs(buff);
 	v->w->screen->set_style(STYLE_NORMAL);
-	
+
 	free(buff);
 }
 
@@ -407,7 +410,7 @@ static int DisplayStatus(uViewFile *v)
 	v->w->screen->set_style(STYLE_TITLE);
 	v->w->screen->print_abs(buff);
 	v->w->screen->set_style(STYLE_NORMAL);
-	
+
 	free(buff);
 
 	return 0;
@@ -991,11 +994,12 @@ int ViewFile(uGlobalData *gd, char *fn, GetLine LoadLine)
 			{
 				switch(key)
 				{
-					
+
+					case ALFC_KEY_ESCAPE_ESCAPE:
 					case ALFC_KEY_ESCAPE:
 						v->quit_flag = 1;
 						break;
-					
+
 					case ALFC_KEY_DOWN:
 						vw_scroll_down(v);
 						break;

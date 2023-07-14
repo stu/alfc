@@ -32,7 +32,7 @@ class BuildVersion
 		@filename = filename
 
 		# read version file into memory, if it exists.
-		if File.exists?(@filename) == TRUE
+		if File.exist?(@filename) == true
 			lx = IO.readlines(@filename)
 
 			# parse lines
@@ -80,7 +80,7 @@ class BuildVersion
 
 	def WriteVersion
 		# Delete file if it exists
-		if File.exists?(@filename) == TRUE
+		if File.exist?(@filename) == true
 			File.delete(@filename)
 		end
 
@@ -94,7 +94,7 @@ class BuildVersion
 			fp.close
 		end
 
-		if File.exists?("version.h") == FALSE
+		if File.exist?("version.h") == false
 			# Open a new one and write, only if it succeeded
 			fp = File.new("version.h", "w")
 			if fp != nil
@@ -119,7 +119,7 @@ class BuildVersion
 			end
 		end
 
-		if File.exists?("version.c") == TRUE
+		if File.exist?("version.c") == true
 			File.delete("version.c")
 		end
 		fp = File.new("version.c", "w")

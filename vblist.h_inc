@@ -8,12 +8,12 @@ extern "C"{
 typedef struct udtListFile
 {
 	uWindow *w;
-	
+
 	char	*currDir;
-	
+
 	int		intColOffset;
 	int		intMaxCol;
-	
+
 	int		nwidth;
 	int		redraw;
 
@@ -21,7 +21,7 @@ typedef struct udtListFile
 	int		quit_flag;
 
 	int		compress_filesize;
-	
+
 	int		command_length;
 	char	command[128];
 
@@ -30,12 +30,12 @@ typedef struct udtListFile
 	lua_State *_GL;
 
 	char		columns[16];
-	
+
 	DList		*lstHotKeys;
-	
+
 	DList		*lstFilter;
 	DList		*lstGlob;
-	
+
 	DList		*lstFiles;
 	DList		*lstFullFiles;
 } uListFile;
@@ -43,6 +43,9 @@ typedef struct udtListFile
 
 extern int ListFile(uGlobalData *gd);
 extern int RegisterListData(uListFile *v, lua_State *l);
+extern void ListDrawAll(uListFile *lf);
+extern int ListDrawAllLua(lua_State *L);
+extern uListFile* GetListData(lua_State *L);
 
 /* LUA EXT REF */
 /* LUA END EXT REF */

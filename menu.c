@@ -1,11 +1,13 @@
 #include "headers.h"
 
-static void update_backscreen(uGlobalData *gd, uViewFile *v)
+static void update_backscreen(uGlobalData *gd, void *v)
 {
 	if(gd->mode == eMode_Directory)
 		DrawAll(gd);
 	else if(gd->mode == eMode_Viewer)
 		ViewerDrawAll(v);
+	else if(gd->mode == eMode_VB_List)
+		ListDrawAll(v);
 	else
 		LogInfo("UNKNOWN DRAW ALL IN MENU");
 }
@@ -60,7 +62,7 @@ static int GetKeyLength(uint32_t key)
 	return xx;
 }
 
-void DrawMenu(uGlobalData *gd, uViewFile *v, int menu_to_open)
+void DrawMenu(uGlobalData *gd, void *v, int menu_to_open)
 {
 	char buff[128];
 	int i;
@@ -128,7 +130,6 @@ void DrawMenu(uGlobalData *gd, uViewFile *v, int menu_to_open)
 
 						len += strlen(buff);
 
-
 						for(j=0, maxwidth=0; j<menu[i]->count; j++)
 						{
 							int xx;
@@ -151,7 +152,7 @@ void DrawMenu(uGlobalData *gd, uViewFile *v, int menu_to_open)
 						gd->screen->set_style(STYLE_TITLE);
 						gd->screen->draw_border(&w);
 
-						for(j=0; j<menu[i]->count; j++)
+						for(j=0; j < menu[i]->count; j++)
 						{
 							char *p, *q;
 
@@ -195,6 +196,8 @@ void DrawMenu(uGlobalData *gd, uViewFile *v, int menu_to_open)
 					ExecuteGlobalString(gd, menu[midx]->child[i]->code);
 				else if(gd->mode == eMode_Viewer)
 					ExecuteGlobalViewerString(v, menu[midx]->child[i]->code);
+				else if(gd->mode == eMode_VB_List)
+					ExecuteGlobalListString(v, menu[midx]->child[i]->code);
 				else
 					LogInfo("XXX TODO");
 				return;
@@ -233,9 +236,8 @@ void DrawMenu(uGlobalData *gd, uViewFile *v, int menu_to_open)
 						menu_sub_idx = 0;
 					break;
 
-				case ALFC_KEY_ALT + 0x1B:
-				case ALFC_KEY_CTRL + 0x1B:
 				case ALFC_KEY_ESCAPE:
+				case ALFC_KEY_ESCAPE_ESCAPE:
 					return;
 					break;
 
@@ -244,6 +246,8 @@ void DrawMenu(uGlobalData *gd, uViewFile *v, int menu_to_open)
 						ExecuteGlobalString(gd, menu[midx]->child[menu_sub_idx]->code);
 					else if(gd->mode == eMode_Viewer)
 						ExecuteGlobalViewerString(v, menu[midx]->child[menu_sub_idx]->code);
+					else if(gd->mode == eMode_VB_List)
+						ExecuteGlobalListString(v, menu[midx]->child[menu_sub_idx]->code);
 					else
 						LogInfo("XXX TODO");
 					return;

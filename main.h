@@ -31,6 +31,7 @@ enum
 	ALFC_KEY_TAB,
 	ALFC_KEY_SPACE,
 	ALFC_KEY_ESCAPE,
+	ALFC_KEY_ESCAPE_ESCAPE,
 
 	ALFC_KEY_SLEFT,
 	ALFC_KEY_SRIGHT,
@@ -302,6 +303,9 @@ struct udtScreenDriver
 	void (*update_window)(void);
 	void (*trigger_redraw)(void);
 	void (*going_exec)(void);
+
+	void (*enable_raw)(void);
+	void (*disable_raw)(void);
 };
 
 #define WINDOW_LEFT	0

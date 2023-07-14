@@ -833,6 +833,24 @@ void DisplayList(uListFile *lf)
 }
 
 
+int ListDrawAllLua(lua_State *L)
+{
+	uListFile *v;
+	v = GetListData(L);
+	ListDrawAll(v);
+
+	return 0;
+}
+
+int gmev_ListDrawAll(lua_State *L)
+{
+	uListFile *v;
+	v = GetListData(L);
+	ListDrawAll(v);
+
+	return 0;
+}
+
 void ListDrawAll(uListFile *lf)
 {
 	lf->w->screen->set_updates(0);
@@ -1353,10 +1371,6 @@ int ListFile(uGlobalData *gd)
 					}
 					else
 					{
-						// trigger viewer...
-						//char *strNothing = "";
-						//CallGlobalFunc(lf->_GL, "ViewFile", "s", strNothing);
-
 						uDirEntry *de;
 
 						de = NULL;
@@ -1367,8 +1381,8 @@ int ListFile(uGlobalData *gd)
 						lf->redraw = 1;
 					}
 					break;
-					
-					case 0x21B:	// ESC-ESC
+
+					case ALFC_KEY_ESCAPE_ESCAPE:	// ESC-ESC
 						lf->quit_flag = 1;
 						break;
 

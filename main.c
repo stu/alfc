@@ -1405,7 +1405,7 @@ static char* PrintNumber(uint64_t num)
 	int i;
 
 	sprintf(x, "%" PRIu64, num);
-	
+
 	memset(y, ' ', 32);
 	y[31] = 0;
 
@@ -1841,7 +1841,7 @@ void DrawMenuLine(uScreenDriver *screen, DList *lstHotKeys)
 	q = buff;
 
 	*q++ = ' ';
-	
+
 	while (e != NULL)
 	{
 		uKeyBinding *kb;
@@ -3267,7 +3267,7 @@ int ALFC_main(int start_mode, char *view_file)
 			rc = LoadGlobalScript(gdata, "$HOME/.alfc/global.lua");
 		}
 		gdata->mode = old_mode;
-		
+
 		if (rc == 0)
 		{
 			LogInfo("\n" LUA_RELEASE "; " LUA_COPYRIGHT "\n" LUA_AUTHORS "\n\n");
@@ -3298,7 +3298,7 @@ int ALFC_main(int start_mode, char *view_file)
 				gdata->screen->init_dir_styles(gdata->screen);
 				intFlag = 1;
 			}
-			
+
 			if(gdata->mode == eMode_VB_List)
 			{
 				ListFile(gdata);
@@ -3367,7 +3367,7 @@ int ALFC_main(int start_mode, char *view_file)
 							switch (key)
 							{
 
-								case 0x21B:	// ESC-ESC
+								case ALFC_KEY_ESCAPE_ESCAPE:	// ESC-ESC
 									intFlag = 1;
 									break;
 
@@ -3495,6 +3495,7 @@ int ALFC_main(int start_mode, char *view_file)
 
 		if (gdata->screen != NULL)
 		{
+			gdata->screen->disable_raw();
 			gdata->screen->deinit();
 			free(gdata->screen);
 		}

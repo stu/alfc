@@ -531,3 +531,8 @@ proprietary programs.  If your program is a subroutine library, you may
 consider it more useful to permit linking proprietary applications with the
 library.  If this is what you want to do, use the GNU Library General
 Public License instead of this License.
+
+\section{List}
+The \b{List} functionality is a kind of homage to Vernon Buerg and his
+famour \b{List.com} utility from DOS, which I could not live without
+back in the day!

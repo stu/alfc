@@ -466,6 +466,15 @@ static void gui_going_exec(void)
 	//
 }
 
+static void enable_raw(void)
+{
+}
+
+static void disable_raw(void)
+{
+}
+
+
 uScreenDriver screen =
 {
 	NULL,
@@ -498,6 +507,9 @@ uScreenDriver screen =
 	gui_isshutdown,
 	gui_update_window,
 	gui_trigger_redraw,
-	gui_going_exec
+	gui_going_exec,
+
+	enable_raw,
+	disable_raw
 };
 #endif

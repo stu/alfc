@@ -34,7 +34,9 @@ if _G["LIST_BOOTSTRAP"] ~= 1 and GetMode() == eMode_VB_List then
 		for k, v in pairs(lstPlugins) do
 			-- match 'core_' * '.lua'
 			if string.find(v.name, "^(list_).*([.]lua)$") ~= nil then
-				IncludeFile(string.gsub(v.path .. pathsep .. v.name, "\\", "/"))
+				if v.name ~= "list_menu.lua" then
+					IncludeFile(string.gsub(v.path .. pathsep .. v.name, "\\", "/"))
+				end
 			end
 		end
 		lstPlugins = nil
@@ -60,11 +62,11 @@ if _G["LIST_BOOTSTRAP"] ~= 1 and GetMode() == eMode_VB_List then
 			end
 		end
 	end
-	
+
 	function __ViewFile(command)
 		ViewFile(GetHighlightedFilename())
 	end
-	
+
 
 	AddCommand(":q ", "Quit", __QuitApp)
 

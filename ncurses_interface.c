@@ -1,10 +1,9 @@
 #ifdef DRV_NCURSES
-	#include "headers.h"
-	#ifndef __WIN32__
-		#include <signal.h>
-	#endif
-	#include <curses.h>
-	#include <ctype.h>
+#include "headers.h"
+#include <signal.h>
+#include <curses.h>
+#include <ctype.h>
+#include <termios.h>
 
 static int intCurCol;
 static int intCurRow;
@@ -16,9 +15,7 @@ static int intStyle;
 static int intUpdates;
 static int intResized;
 
-	#ifndef __WIN32__
 static void terminate_signal(int a);
-	#endif
 
 static void setcursor(int row, int col);
 
@@ -298,14 +295,39 @@ static uint32_t nc_get_keypress(void)
 		key = ALFC_KEY_F01 + (ch - KEY_F0) - 1;
 	}
 	else if ((ch == '[') || (ch == 27))
-	{ /* start of escape sequence */
+	{
+		// start of escape sequence
 		ch = wgetch(stdscr);
-		// Linux (xterm) seems to hit here for ALT keys
-		ch = toupper(ch);
-		if ((ch != '[') && (ch != 0x27)) /* ALT key */
-			key = ALFC_KEY_ALT + ch;
-		else
+		if(ch == 0x1B)
+			key = ALFC_KEY_ESCAPE_ESCAPE;
+		// SGEO: i dont like this. something funky going on with getting keypresses for home/end
+		else if(ch == 0x5B)
+		{
+			ch = wgetch(stdscr);
+			wgetch(stdscr);
+			switch(ch)
+			{
+				case 0x31:
+					key = ALFC_KEY_HOME;
+					break;
+
+				case 0x34:
+					key = ALFC_KEY_END;
+					break;
+			}
 			ch = 0;
+		}
+		// SGEO: i dont like this. something funky going on with getting keypresses for home/end
+		else
+		{
+			// Linux (xterm) seems to hit here for ALT keys
+			ch = toupper(ch);
+			if ((ch != '[') && (ch != 0x1B)) // ALT key
+				key = ALFC_KEY_ALT + ch;
+			else
+				ch = 0;
+		}
+
 	}
 	else if (ch == '`')
 	{
@@ -613,20 +635,23 @@ static int nc_screen_init(uScreenDriver *scr)
 {
 	int i;
 
+	signal(SIGKILL, terminate_signal);
+
 #ifndef __WIN32__
-	signal(SIGKILL, terminate_signal); /*setting SIGKILL signal handler*/
+	//signal(SIGKILL, terminate_signal); /*setting SIGKILL signal handler*/
 	signal(SIGQUIT, terminate_signal); /*setting SIGQUIT signal handler*/
 	signal(SIGSEGV, terminate_signal); /*setting SIGSEGV signal handler*/
 #endif
 
-	/*
-	 tcgetattr(STDIN_FILENO, &tattr);
-	 tcgetattr(STDIN_FILENO, &tattr_bak);
-	 tattr.c_lflag &= ~(ICANON|ECHO);
-	 tattr.c_cc[VMIN]=1;
-	 tattr.c_cc[VTIME]=0;
-	 tcsetattr(STDIN_FILENO, TCSAFLUSH, &tattr);
-	 */
+
+/*
+	tcgetattr(STDIN_FILENO, &tattr);
+	tcgetattr(STDIN_FILENO, &tattr_bak);
+	tattr.c_lflag &= ~(ICANON|ECHO);
+	tattr.c_cc[VMIN]=1;
+	tattr.c_cc[VTIME]=0;
+	tcsetattr(STDIN_FILENO, TCSAFLUSH, &tattr);
+*/
 
 	// initialise ncurses
 	initscr();
@@ -636,11 +661,11 @@ static int nc_screen_init(uScreenDriver *scr)
 
 	noecho();
 	nonl();
-	cbreak();
+	//cbreak();
 
-	keypad(stdscr, TRUE); // gimme the keypad
-	raw(); // fork me raw
-	meta(stdscr, TRUE);	// fork me meta
+	keypad(stdscr, TRUE);	// gimme the keypad
+	raw(); 					// raw
+	meta(stdscr, TRUE);		// + meta
 
 	intMaxHeight = scr->get_screen_height();
 	intMaxWidth = scr->get_screen_width();
@@ -678,6 +703,8 @@ static int nc_screen_init(uScreenDriver *scr)
 	init_dir_styles_masterlist(scr);
 
 	scr->set_style(STYLE_NORMAL);
+
+	scr->enable_raw();
 
 	return 0;
 }
@@ -718,6 +745,8 @@ static int nc_screen_deinit(void)
 	//curs_set(i);
 #endif
 
+
+	noraw();
 	endwin();
 
 	return 0;
@@ -753,13 +782,11 @@ static void nc_set_style(int style)
 	setcolour(style, styles[style].s_on);
 }
 
-	#ifndef __WIN32__
 static void terminate_signal(int a)
 {
 	nc_screen_deinit();
 	exit(-1);
 }
-	#endif
 
 static int nc_resized(void)
 {
@@ -806,7 +833,28 @@ static void nc_trigger_redraw(void)
 // need this for our exec
 static void nc_going_exec(void)
 {
+	noraw();
 	endwin();
+}
+
+struct termios orig_termios;
+static void disable_raw(void)
+{
+#ifdef BUILD_UNIXLIKE
+	tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+#endif
+}
+
+static void enable_raw(void)
+{
+#ifdef BUILD_UNIXLIKE
+	tcgetattr(STDIN_FILENO, &orig_termios);
+	atexit(endwin);
+	atexit(noraw);
+	struct termios raw = orig_termios;
+	raw.c_lflag &= ~(ECHO);
+	tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+#endif
 }
 
 uScreenDriver screen =
@@ -841,6 +889,9 @@ uScreenDriver screen =
 	nc_isshutdown,
 	nc_updatewindow,
 	nc_trigger_redraw,
-	nc_going_exec
+	nc_going_exec,
+
+	enable_raw,
+	disable_raw
 };
 #endif

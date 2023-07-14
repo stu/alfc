@@ -291,7 +291,7 @@ end
 ##############################################################################
 desc "Create Makefile"
 task :make =>  ["clean", "#{var[:bin2c]}", "auxfiles", "docs"] do
-	if File.exists?("Makefile") == TRUE
+	if File.exist?("Makefile") == TRUE
 		File.delete("Makefile")
 	end
 
@@ -365,6 +365,7 @@ task :make =>  ["clean", "#{var[:bin2c]}", "auxfiles", "docs"] do
 		fp.puts "\tinstall $(EXEC) -m 755 $(PREFIX)/bin"
 		fp.puts "\tinstall $(GUIDE) -m 755 $(PREFIX)/bin"
 		fp.puts "\tinstall -m 755 -d $(PREFIX)/share/man/man1/"
+                fp.puts "\tinstall -m 755 -d $(PREFIX)/share/alfc/"
 		fp.puts "\tinstall docs/alfc.1* -m 644 -D $(PREFIX)/share/man/man1"
 		fp.puts "\tinstall docs/help.hlp -m 644 -D $(PREFIX)/share/alfc/help.hlp"
 
@@ -404,12 +405,12 @@ task :make =>  ["clean", "#{var[:bin2c]}", "auxfiles", "docs"] do
 
 	files = Dir["xxlua_*"]
 	files.each do |t|
-		if File.exists?("#{ALFCREL}/#{t}") == TRUE
+		if File.exist?("#{ALFCREL}/#{t}") == TRUE
 			File.delete("#{ALFCREL}/#{t}")
 		end
 	end
 
-	if File.exists?(" #{ALFCREL}.tar.bz2") == TRUE
+	if File.exist?(" #{ALFCREL}.tar.bz2") == TRUE
 		File.delete(" #{ALFCREL}.tar.bz2")
 	end
 	sys "tar cvfj #{ALFCREL}.tar.bz2 #{ALFCREL}"
@@ -422,12 +423,13 @@ task :install do
 	sys "install guide -m 755 #{PREFIX}/bin"
 	sys "install -m 755 -d #{PREFIX}/share/man/man1/"
 	sys "install docs/alfc.1* -m 644 -D #{PREFIX}/share/man/man1"
+        sys "install -m 755 -d #{PREFIX}/share/alfc/"
 	sys "install docs/help.hlp -m 644 -D #{PREFIX}/share/alfc/help.hlp"
-	if File.exists?("#{PREFIX}/share/applications/") && File.directory?("#{PREFIX}/share/applications/")
+	if File.exist?("#{PREFIX}/share/applications/") && File.directory?("#{PREFIX}/share/applications/")
 		sys "install docs/alfc.desktop -m 644 -D #{PREFIX}/share/applications/"
 
 	end
-	if File.exists?("#{PREFIX}/share/icons/") && File.directory?("#{PREFIX}/share/icons/")
+	if File.exist?("#{PREFIX}/share/icons/") && File.directory?("#{PREFIX}/share/icons/")
 		sys "install docs/alfc.xpm -m 644 -D #{PREFIX}/share/icons/"
 	end
 end

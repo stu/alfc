@@ -257,13 +257,43 @@ def ParseSections(hlp, txt)
 
 	hlp.sections.sort!{|a,b|a.name <=> b.name}
 end
+def ValidateLinks(hlp)
+	h = Hash.new
+
+	hlp.sections.each do |s|
+		h[s.name] = s
+	end
+
+	hlp.sections.each do |s|
+		s.lines.each do |l|
+			## scan for \link and reference it
+			qlink = hlp.bust_attr(l, "\\link{")
+
+			if qlink.length > 0  then
+				if qlink.index('|') != nil then
+					qlink = qlink[0..qlink.index('|')-1]
+				end
+
+				## look up qlink reference
+				bSection = false
+				hlp.sections
+				if h[qlink] == nil then
+					puts "Section #{qlink} does not exist"
+					exit
+				else
+					#puts "Section #{qlink} exists"
+				end
+			end
+		end
+	end
+end
 
 @in_size = 0
 @out_size = 0
 
 if __FILE__ == $0
 	if ARGV.length == 2
-		if File.exists?(ARGV[0].to_s)
+		if File.exist?(ARGV[0].to_s)
 
 			hlp = HelpFile.new()
 
@@ -271,6 +301,8 @@ if __FILE__ == $0
 
 			PutHeaders(hlp, txt)
 			ParseSections(hlp, txt)
+			ValidateLinks(hlp);
+
 
 			ofp = File.open(ARGV[1].to_s, "wb")
 			in_size, out_size = hlp.compile(ofp)

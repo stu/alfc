@@ -55,6 +55,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	return ALFC_main(start_mode, view_file);
+	return  ALFC_main(start_mode, view_file);
 }
 
